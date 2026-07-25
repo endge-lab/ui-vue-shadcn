@@ -407,6 +407,7 @@ function assignThemeColor(
       danger: 'var(--endge-tone-danger-text, var(--destructive, #dc2626))',
       success: 'var(--endge-tone-success-text, #15803d)',
       warning: 'var(--endge-tone-warning-text, #b45309)',
+      neutral: 'var(--endge-tone-neutral-text, var(--muted-foreground, #71717a))',
     },
     background: {
       background: 'var(--background, #fff)',
@@ -415,6 +416,7 @@ function assignThemeColor(
       danger: 'var(--endge-tone-danger-background, #fef2f2)',
       success: 'var(--endge-tone-success-background, #f0fdf4)',
       warning: 'var(--endge-tone-warning-background, #fffbeb)',
+      neutral: 'var(--endge-tone-neutral-background, var(--muted, #f4f4f5))',
     },
     border: {
       default: 'var(--border, #e4e4e7)',
