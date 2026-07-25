@@ -6,6 +6,7 @@
 .endge-shadcn-checkbox-field,
 .endge-shadcn-input,
 .endge-shadcn-textarea,
+.endge-shadcn-select,
 .endge-shadcn-select-field {
   box-sizing: border-box;
   font: inherit;
@@ -323,7 +324,7 @@
   height: 2.5rem;
   padding: 0;
   position: relative;
-  text-align: left;
+  text-align: center;
   vertical-align: middle;
 }
 
@@ -348,10 +349,12 @@
   font-weight: 580;
   gap: 0.4rem;
   height: 100%;
+  justify-content: center;
   min-width: 0;
   outline: none;
   padding: 0 0.65rem;
-  text-align: left;
+  position: relative;
+  text-align: center;
   width: 100%;
 }
 
@@ -368,11 +371,16 @@
 }
 
 .endge-shadcn-table__head-title {
+  box-sizing: border-box;
   display: block;
+  flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
+  padding: 0 1.25rem;
+  text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
+  width: 100%;
 }
 
 .endge-shadcn-table__sort-icon {
@@ -380,7 +388,8 @@
   color: var(--muted-foreground, #71717a);
   display: inline-flex;
   flex: none;
-  position: relative;
+  position: absolute;
+  right: 0.65rem;
 }
 
 .endge-shadcn-table__sort--enabled .endge-shadcn-table__sort-icon {
@@ -817,6 +826,7 @@
   display: inline-grid;
   min-width: 12rem;
   position: relative;
+  width: 100%;
 }
 
 .endge-shadcn-select-field:not([data-multiple])::after {
@@ -834,7 +844,7 @@
 
 .endge-shadcn-select {
   appearance: none;
-  height: 2.5rem;
+  height: 2.25rem;
   padding: 0 2.5rem 0 0.75rem;
   width: 100%;
 }

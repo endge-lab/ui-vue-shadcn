@@ -93,7 +93,7 @@ export function createSFCBaseAttrs(
     key: resolveKey(node, props),
   }
 
-  const style = createSFCStyle(props)
+  const style = createSFCStyle(node, props)
   if (Object.keys(style).length > 0) attrs.style = style
 
   if (props.tooltip != null) attrs.title = String(props.tooltip)
@@ -347,7 +347,10 @@ function createForEntries(source: unknown): Array<[unknown, unknown]> | null {
   return null
 }
 
-function createSFCStyle(props: Record<string, unknown>): Record<string, string> {
+function createSFCStyle(
+  node: RComponentSFC_IR_ElementNode,
+  props: Record<string, unknown>,
+): Record<string, string> {
   const style: Record<string, string> = {}
 
   assignSpacing(style, 'padding', props.p)
@@ -364,8 +367,11 @@ function createSFCStyle(props: Record<string, unknown>): Record<string, string> 
   assignSemanticTone(style, 'color', props.textTone, 'text')
   assignSemanticTone(style, 'background', props.backgroundTone, 'background')
   assignFontWeight(style, props.fontWeight ?? props.weight)
-  assignStyle(style, 'color', props.color)
-  assignStyle(style, 'background', props.bg)
+  assignThemeColor(style, 'color', props.color, 'text')
+  assignThemeColor(style, 'background', props.bg, 'background')
+  assignThemeColor(style, 'borderColor', props.borderColor, 'border')
+  assignStyle(style, 'borderWidth', props.borderWidth)
+  assignStyle(style, 'borderRadius', props.r)
   assignStyle(style, 'width', props.w)
   assignStyle(style, 'height', props.h)
   assignStyle(style, 'minWidth', props.minW)
@@ -375,8 +381,56 @@ function createSFCStyle(props: Record<string, unknown>): Record<string, string> 
   assignStyle(style, 'flex', props.flex)
   assignGridPlacement(style, 'gridColumn', props.colStart, props.colSpan)
   assignGridPlacement(style, 'gridRow', props.rowStart, props.rowSpan)
+  if (node.tag === 'Text' || node.tag === 'DateTime' || node.tag === 'Number') {
+    assignStyle(style, 'fontSize', props.size)
+    assignTextAlignment(style, props.align)
+  }
 
   return style
+}
+
+function assignThemeColor(
+  style: Record<string, string>,
+  key: 'color' | 'background' | 'borderColor',
+  value: unknown,
+  surface: 'text' | 'background' | 'border',
+): void {
+  const token = String(value ?? '').trim()
+  if (!token)
+    return
+
+  const semanticTokens: Record<typeof surface, Record<string, string>> = {
+    text: {
+      default: 'var(--foreground, #18181b)',
+      foreground: 'var(--foreground, #18181b)',
+      muted: 'var(--muted-foreground, #71717a)',
+      danger: 'var(--endge-tone-danger-text, var(--destructive, #dc2626))',
+      success: 'var(--endge-tone-success-text, #15803d)',
+      warning: 'var(--endge-tone-warning-text, #b45309)',
+    },
+    background: {
+      background: 'var(--background, #fff)',
+      surface: 'var(--card, var(--background, #fff))',
+      muted: 'var(--muted, #f4f4f5)',
+      danger: 'var(--endge-tone-danger-background, #fef2f2)',
+      success: 'var(--endge-tone-success-background, #f0fdf4)',
+      warning: 'var(--endge-tone-warning-background, #fffbeb)',
+    },
+    border: {
+      default: 'var(--border, #e4e4e7)',
+      border: 'var(--border, #e4e4e7)',
+      muted: 'var(--border, #e4e4e7)',
+      danger: 'var(--destructive, #dc2626)',
+    },
+  }
+
+  style[key] = semanticTokens[surface][token] ?? token
+}
+
+function assignTextAlignment(style: Record<string, string>, value: unknown): void {
+  const alignment = String(value ?? '').trim()
+  if (alignment === 'left' || alignment === 'center' || alignment === 'right' || alignment === 'justify')
+    style.textAlign = alignment
 }
 
 function assignSemanticTone(

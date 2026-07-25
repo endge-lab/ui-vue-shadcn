@@ -6,6 +6,7 @@ import {
   onBeforeUnmount,
   onMounted,
   ref,
+  useAttrs,
   useId,
   watch,
 } from 'vue'
@@ -24,11 +25,14 @@ const props = defineProps<{
   disabled?: boolean
 }>()
 
+const attrs = useAttrs()
 const root = ref<HTMLElement | null>(null)
 const hiddenSelect = ref<HTMLSelectElement | null>(null)
 const open = ref(false)
 const localValues = ref<string[]>([])
 const listboxId = `endge-shadcn-multiselect-${useId()}`
+const multiSelectControlAttrs = computed(() => filterAttrs(attrs, false))
+const multiSelectValueEventAttrs = computed(() => filterAttrs(attrs, true))
 const selectedValues = computed(() => new Set(props.multiple ? localValues.value : props.selectedValues))
 const hasSelectedOption = computed(() => props.options.some(option => selectedValues.value.has(String(option.value))))
 const selectedLabels = computed(() => props.options
@@ -92,18 +96,30 @@ function handleTriggerKeydown(event: KeyboardEvent): void {
       open.value = true
   }
 }
+
+function filterAttrs(
+  source: Record<string, unknown>,
+  valueEvents: boolean,
+): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(source)
+    .filter(([key]) => isValueEventAttr(key) === valueEvents))
+}
+
+function isValueEventAttr(key: string): boolean {
+  return /^on(?:Input|Change)(?:Once|Capture|Passive)*$/.test(key)
+}
 </script>
 
 <template>
   <span
     ref="root"
-    v-bind="$attrs"
     class="endge-shadcn-select-field"
     :data-multiple="multiple ? '' : undefined"
     :data-open="multiple && open ? '' : undefined"
   >
     <select
       v-if="!multiple"
+      v-bind="$attrs"
       class="endge-shadcn-select"
       :disabled="disabled"
       :aria-readonly="readonly ? 'true' : undefined"
@@ -128,6 +144,7 @@ function handleTriggerKeydown(event: KeyboardEvent): void {
 
     <template v-else>
       <button
+        v-bind="multiSelectControlAttrs"
         type="button"
         class="endge-shadcn-select endge-shadcn-multiselect-trigger"
         role="combobox"
@@ -185,6 +202,7 @@ function handleTriggerKeydown(event: KeyboardEvent): void {
 
       <select
         ref="hiddenSelect"
+        v-bind="multiSelectValueEventAttrs"
         class="endge-shadcn-multiselect-native"
         multiple
         tabindex="-1"
