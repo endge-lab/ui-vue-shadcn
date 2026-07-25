@@ -15,7 +15,8 @@ export const SFCRender_Component: SFCVueRenderFunction = SFCRender_Base((input) 
   if (input.context.componentStack.includes(identity))
     return renderComponentError(input, `component cycle: ${[...input.context.componentStack, identity].join(' -> ')}`)
 
-  const artifact = Endge.program.getArtifact<ComponentSFCProgramPayload>('component-sfc', identity)
+  const artifacts = input.context.host?.getArtifactReader() ?? Endge.program
+  const artifact = artifacts.getArtifact<ComponentSFCProgramPayload>('component-sfc', identity)
   if (!artifact?.payload.ir || !artifact.capabilities.includes('renderable'))
     return renderComponentError(input, `component:${identity}`)
 
@@ -35,6 +36,7 @@ export const SFCRender_Component: SFCVueRenderFunction = SFCRender_Base((input) 
     input.context.styleArtifacts,
     childBoundary,
     input.context.inspection,
+    artifact.metadata,
   )
   childContext.styleParent = input.context.styleParent
   childContext.inspectionParentId = input.context.inspectionParentId

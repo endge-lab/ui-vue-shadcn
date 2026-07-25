@@ -15,6 +15,7 @@ import type {
   UIRenderAdapter,
   EndgeStyleMatchNode,
   EndgeStyleSheetArtifact,
+  ProgramMetadata,
 } from '@endge/core'
 import { ENDGE_SFC_RENDER_ADAPTER_REQUIRED_KEYS } from '@endge/core'
 import type { h as VueH, VNode } from 'vue'
@@ -71,6 +72,8 @@ export interface SFCVueRenderContext {
   inspection?: SFCRenderInspectionSessionLike | null
   /** Parent live-instance id in the semantic inspection tree. */
   inspectionParentId?: string | null
+  /** Compiled metadata текущего Component SFC artifact. */
+  metadata: ProgramMetadata | null
 }
 
 /** Structural runtime-state controller contract used by Vue render adapters. */

@@ -40,7 +40,7 @@ const TEST_WORKSPACE: EndgeWorkspaceDefinition = {
     ],
     defaultTheme: 'light',
     defaultAuthProfileIdentity: null,
-    sfcAdapterIds: ['native-vue', 'vue-shadcn'],
+    sfcAdapterIds: ['vue-native', 'vue-shadcn'],
     defaultSfcAdapterId: 'vue-shadcn',
     diagnostics: createDiagnosticsConfiguration(),
   },

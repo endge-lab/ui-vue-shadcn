@@ -230,7 +230,9 @@ function normalizeIntrinsicEvent(event: Event): Record<string, unknown> {
     payload.deltaY = Number(source.deltaY ?? 0)
   }
   if (target && ('value' in target || 'checked' in target)) {
-    payload.value = target.value
+    payload.value = target instanceof HTMLSelectElement && target.multiple
+      ? Array.from(target.selectedOptions, option => option.value)
+      : target.value
     if (typeof target.checked === 'boolean') payload.checked = target.checked
   }
   return payload
@@ -252,7 +254,9 @@ function renderForDirective(
     .map(([key, value], index) => renderForItem(input, renderFn, directive, key, value, index, entries.length, logicalSiblings))
     .filter((child): child is Exclude<SFCVueRenderResult, null> => child !== null)
 
-  return input.h('span', null, children)
+  return input.h('span', {
+    style: { display: 'contents' },
+  }, children)
 }
 
 function renderForItem(
@@ -357,6 +361,9 @@ function createSFCStyle(props: Record<string, unknown>): Record<string, string> 
   assignSpacing(style, 'marginBottom', props.mb)
   assignSpacing(style, 'marginLeft', props.ml)
 
+  assignSemanticTone(style, 'color', props.textTone, 'text')
+  assignSemanticTone(style, 'background', props.backgroundTone, 'background')
+  assignFontWeight(style, props.fontWeight ?? props.weight)
   assignStyle(style, 'color', props.color)
   assignStyle(style, 'background', props.bg)
   assignStyle(style, 'width', props.w)
@@ -365,10 +372,59 @@ function createSFCStyle(props: Record<string, unknown>): Record<string, string> 
   assignStyle(style, 'minHeight', props.minH)
   assignStyle(style, 'maxWidth', props.maxW)
   assignStyle(style, 'maxHeight', props.maxH)
+  assignStyle(style, 'flex', props.flex)
   assignGridPlacement(style, 'gridColumn', props.colStart, props.colSpan)
   assignGridPlacement(style, 'gridRow', props.rowStart, props.rowSpan)
 
   return style
+}
+
+function assignSemanticTone(
+  style: Record<string, string>,
+  key: 'color' | 'background',
+  value: unknown,
+  surface: 'text' | 'background',
+): void {
+  const tone = String(value ?? '').trim()
+  if (!tone || tone === 'default')
+    return
+
+  const fallbacks: Record<string, string> = surface === 'background'
+    ? {
+        danger: '#fee2e2',
+        success: '#dcfce7',
+        warning: '#fef3c7',
+      }
+    : {
+        danger: '#dc2626',
+        success: '#047857',
+        warning: '#b45309',
+      }
+  const fallback = fallbacks[tone]
+  if (!fallback)
+    return
+
+  style[key] = `var(--endge-tone-${tone}-${surface}, ${fallback})`
+}
+
+function assignFontWeight(style: Record<string, string>, value: unknown): void {
+  const weight = String(value ?? '').trim()
+  if (!weight)
+    return
+  if (weight === 'normal') {
+    style.fontWeight = '400'
+    return
+  }
+  if (weight === 'semibold') {
+    style.fontWeight = '600'
+    return
+  }
+  if (weight === 'bold') {
+    style.fontWeight = '700'
+    return
+  }
+  if (/^[1-9]00$/.test(weight))
+    style.fontWeight = weight
 }
 
 function assignGridPlacement(

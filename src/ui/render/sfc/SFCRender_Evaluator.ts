@@ -68,7 +68,19 @@ export function readSFCPath(path: string, context: SFCVueRenderContext): unknown
       ? context.locals[head.key]
       : context.props[head.key]
 
-  return tail.reduce<unknown>((current, segment) => {
+  return readSFCObjectPathSegments(root, tail)
+}
+
+/** Читает относительный DataPath, включая array selectors, из переданного объекта. */
+export function readSFCObjectPath(path: string, source: unknown): unknown {
+  return readSFCObjectPathSegments(source, parseSFCPath(path))
+}
+
+function readSFCObjectPathSegments(
+  source: unknown,
+  segments: ReturnType<DataPath['segments']>,
+): unknown {
+  return segments.reduce<unknown>((current, segment) => {
     if (current == null) return undefined
 
     if (segment.key != null) {
@@ -90,7 +102,7 @@ export function readSFCPath(path: string, context: SFCVueRenderContext): unknown
     }
 
     return undefined
-  }, root)
+  }, source)
 }
 
 /**
@@ -503,6 +515,22 @@ function callSafeGlobal(
       return UNSUPPORTED_EXPRESSION
     const fallback = args[1] == null ? undefined : String(args[1])
     return context.host?.translate(args[0], fallback) ?? fallback ?? `{{${args[0]}}}`
+  }
+  if (name === 'vocab') {
+    if (
+      typeof args[0] !== 'string'
+      || args.length > 2
+      || (
+        args[1] != null
+        && (typeof args[1] !== 'object' || Array.isArray(args[1]))
+      )
+    ) {
+      return UNSUPPORTED_EXPRESSION
+    }
+    return context.host?.resolveVocabOptions(
+      args[0],
+      args[1] as { valuePath?: string, labelPath?: string } | undefined,
+    ) ?? []
   }
   if (name === 'Boolean') return Boolean(args[0])
   if (name === 'Number') return Number(args[0])

@@ -2,6 +2,9 @@
 
 Self-contained `vue-shadcn` UI adapter for Endge.
 
+Its current application owner is Configurator. It is not the AODB Shadcn adapter
+and does not share AODB-specific components, aliases, or runtime policy.
+
 The package owns its primitive source and CSS, so configurator previews do not depend on customer aliases such as `@/components/ui`. Its controls use the same Shadcn tokens and restrained visual language as Starter Template.
 
 It implements every visual SFC adapter tag. The compound `Table` tag uses TanStack Table with pagination and TanStack Virtual enabled by default. The default page size is 100 rows, and virtualization is applied inside the active page. It supports nested SFC cell components, sorting, pinning, resizing, column order and visibility, runtime-state persistence, EndgeCSS surfaces, context menus, and runtime boundary patches. Adapter renderers remain display-only: runtime update callbacks and two-way bindings stay owned by the render host.

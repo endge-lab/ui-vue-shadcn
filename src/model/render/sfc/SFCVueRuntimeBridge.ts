@@ -33,6 +33,10 @@ export class SFCVueRuntimeBridge {
     if (this._isMounted)
       this._emitResolvedProps()
   }
+  private readonly _resourceDirtyHandler = (): void => {
+    if (this._isMounted)
+      this._emitResolvedProps()
+  }
 
   constructor(input: {
     host: ComponentSFCRuntimeHost
@@ -58,6 +62,7 @@ export class SFCVueRuntimeBridge {
     this._host.on('props:dirty', this._propsDirtyHandler)
     this._host.on('boundary:dirty', this._boundaryDirtyHandler)
     this._host.on('computation:dirty', this._computationDirtyHandler)
+    this._host.on('resource:dirty', this._resourceDirtyHandler)
     this._emitResolvedProps()
   }
 
@@ -79,6 +84,7 @@ export class SFCVueRuntimeBridge {
     this._host.off('props:dirty', this._propsDirtyHandler)
     this._host.off('boundary:dirty', this._boundaryDirtyHandler)
     this._host.off('computation:dirty', this._computationDirtyHandler)
+    this._host.off('resource:dirty', this._resourceDirtyHandler)
     this._isMounted = false
   }
 
@@ -118,4 +124,3 @@ export class SFCVueRuntimeBridge {
     return props
   }
 }
-
