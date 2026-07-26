@@ -72,6 +72,26 @@ describe('VueShadcnSFCAdapter', () => {
     expect(Object.keys(VueShadcnSFCAdapter.roots)).toEqual(['shell', 'sfc', 'sfc-runtime', 'filter-view'])
   })
 
+  it('maps the neutral background tone used by GroundHandlingProcess', () => {
+    const node: RComponentSFC_IR_ElementNode = {
+      id: 'test-neutral-flex',
+      kind: 'element',
+      tag: 'Flex',
+      props: {
+        backgroundTone: literal('neutral'),
+      },
+      directives: {},
+      children: [],
+    }
+    const result = renderSFCNode(h, node, createSFCVueRenderContext({}))
+    if (!isVNode(result))
+      throw new Error('Flex did not render a VNode')
+
+    expect(result.props?.style).toMatchObject({
+      background: 'var(--endge-tone-neutral-background, #e5e7eb)',
+    })
+  })
+
   it.each([
     ['String', 'text', 'SU 1402'],
     ['Number', 'number', '15'],

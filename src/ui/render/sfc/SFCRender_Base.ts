@@ -450,11 +450,13 @@ function assignSemanticTone(
         danger: '#fee2e2',
         success: '#dcfce7',
         warning: '#fef3c7',
+        neutral: '#e5e7eb',
       }
     : {
         danger: '#dc2626',
         success: '#047857',
         warning: '#b45309',
+        neutral: '#374151',
       }
   const fallback = fallbacks[tone]
   if (!fallback)
