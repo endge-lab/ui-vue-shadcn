@@ -231,7 +231,14 @@ function normalizeSelectedValues(value: unknown, multiple: boolean): string[] {
 function formatDateTime(value: unknown, format: unknown): string {
   if (value == null) return ''
 
-  const date = new Date(String(value))
+  const text = String(value).trim()
+  const timeOnly = format === 'HH:mm'
+    ? text.match(/^(\d{2}):(\d{2})(?::\d{2})?$/)
+    : null
+  if (timeOnly)
+    return `${timeOnly[1]}:${timeOnly[2]}`
+
+  const date = new Date(text)
   if (Number.isNaN(date.getTime())) return String(value)
   if (format === 'HH:mm') {
     return new Intl.DateTimeFormat(undefined, {
