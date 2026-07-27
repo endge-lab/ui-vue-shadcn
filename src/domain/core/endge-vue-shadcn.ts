@@ -3,6 +3,7 @@ import {
   ENDGE_SFC_RENDER_ADAPTER_PROTOCOL_VERSION,
   Endge,
   EndgeModule,
+  type EndgeBootContext,
   type EndgeStylePlacement,
   type EndgePlugin,
 } from '@endge/core'
@@ -14,6 +15,7 @@ import { EndgeDOMStyleRuntime } from '@/model/style/EndgeDOMStyleRuntime'
 /** Регистрирует системный vue-shadcn adapter в общем UI registry. */
 export class EndgeVueShadcnModule extends EndgeModule {
   private _started = false
+  private _adapterFallbackIds: readonly string[] = []
   private _unsubscribeWorkspace: (() => void) | null = null
   private _unsubscribeStyles: (() => void) | null = null
   private _unsubscribeProgram: (() => void) | null = null
@@ -21,7 +23,8 @@ export class EndgeVueShadcnModule extends EndgeModule {
   private _unsubscribeRuntimeScopes: (() => void) | null = null
   private readonly _styleRuntime = new EndgeDOMStyleRuntime()
 
-  public override setup(): void {
+  public override setup(ctx?: EndgeBootContext): void {
+    this._adapterFallbackIds = ctx?.ui?.adapterFallbackIds ?? []
     Endge.uiRegistry.adapters.register(VueShadcnSFCAdapter)
   }
 
@@ -55,12 +58,16 @@ export class EndgeVueShadcnModule extends EndgeModule {
     this._unsubscribeUIRegistry = null
     this._unsubscribeRuntimeScopes = null
     this._styleRuntime.reset()
+    this._adapterFallbackIds = []
     this._started = false
   }
 
   private _activateWorkspaceAdapter(): void {
     const selectedId = Endge.workspace.defaultSfcAdapterId
-    const selected = Endge.uiRegistry.adapters.get(selectedId)
+    const selected = Endge.uiRegistry.adapters.resolveAvailable(
+      selectedId,
+      this._adapterFallbackIds,
+    )
     if (!selected) {
       Endge.uiRegistry.adapters.require({ id: selectedId })
       return
