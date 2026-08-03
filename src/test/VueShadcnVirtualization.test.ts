@@ -323,12 +323,14 @@ function createStyleContract(): SFCTableStyleContract {
     runtimeState: null,
     componentStack: [],
     consumerScope: 'virtualization-test',
+    variant: 'default',
     styleArtifacts: [],
     styleParent: undefined,
     styleSiblings: [],
     styleSiblingCount: 0,
     styleOwnerScopeId: undefined,
     runtimeScopeIds: [],
+    metadata: null,
   } satisfies SFCVueRenderContext
 
   return {

@@ -117,6 +117,7 @@ describe('VueShadcnRender_Table', () => {
       id: 'host-test',
       entityIdentity: 'table-test',
       runtimeState,
+      getArtifact: vi.fn(() => null),
     } as unknown as ComponentSFCRuntimeHost
     const mounted = await mountTable(host)
 

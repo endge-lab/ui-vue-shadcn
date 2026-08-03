@@ -5,6 +5,7 @@ import type { SFCVueRenderContext, SFCVueRenderFunction } from '@/domain/types/s
 import { SFCRender_Base } from '@/ui/render/sfc/SFCRender_Base'
 import { renderSFCNodes } from '@/ui/render/sfc/SFCRender_Node'
 import { createSFCVueRenderContext } from '@/ui/render/sfc/SFCRender_Context'
+import { commitSFCEditableChild, editableConsumerKey } from '@/ui/render/sfc/SFCRender_Editable'
 
 /** Рендерит вложенный SFC artifact через тот же renderer-neutral IR pipeline. */
 export const SFCRender_Component: SFCVueRenderFunction = SFCRender_Base((input) => {
@@ -20,12 +21,20 @@ export const SFCRender_Component: SFCVueRenderFunction = SFCRender_Base((input) 
   if (!artifact?.payload.ir || !artifact.capabilities.includes('renderable'))
     return renderComponentError(input, `component:${identity}`)
 
+  const editKey = editableConsumerKey(input.node, input.context)
+  const activeEdit = input.node.editable ? input.context.host?.getEditSession(editKey) : null
   const childBoundary = input.context.eventBoundary?.createChild(identity, artifact.payload.ir.script.ports, {
     nodeId: input.node.id,
     ref: literalString(input.node.props.ref),
     componentIdentity: identity,
     componentTag: input.node.componentTag ?? 'Component',
-  }, input.node.events ?? []) ?? null
+  }, input.node.events ?? [], input.node.editable
+    ? (event, payload) => {
+        if (event !== 'edited') return { event, payload }
+        const committed = commitSFCEditableChild(input.node, input.context, payload)
+        return committed ? { event, payload: committed } : null
+      }
+    : undefined) ?? null
   const childContext: SFCVueRenderContext = createSFCVueRenderContext(
     createChildProps(input.props),
     input.context.renderVersion,
@@ -37,6 +46,7 @@ export const SFCRender_Component: SFCVueRenderFunction = SFCRender_Base((input) 
     childBoundary,
     input.context.inspection,
     artifact.metadata,
+    activeEdit ? 'edit' : String(input.props.variant ?? 'default'),
   )
   childContext.styleParent = input.context.styleParent
   childContext.inspectionParentId = input.context.inspectionParentId
@@ -48,6 +58,13 @@ export const SFCRender_Component: SFCVueRenderFunction = SFCRender_Base((input) 
   )
 
   if (children.length === 0) return null
+  if (input.node.editable) {
+    return input.h('span', {
+      ...input.attrs,
+      class: ['endge-sfc-editable-component', input.props.class],
+      style: { display: 'contents' },
+    }, children)
+  }
   if (children.length === 1) return children[0]!
 
   // RevoGrid cell templates provide a DOM hyperscript function that accepts
@@ -62,6 +79,7 @@ function createChildProps(props: Record<string, unknown>): Record<string, unknow
   const childProps = { ...props }
   delete childProps.is
   delete childProps.identity
+  delete childProps.variant
   return childProps
 }
 

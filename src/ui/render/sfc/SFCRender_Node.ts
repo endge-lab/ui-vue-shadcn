@@ -1,9 +1,4 @@
 import type { RComponentSFC_IR_ElementNode, RComponentSFC_IR_Node } from '@endge/core'
-import {
-  ENDGE_SFC_RENDER_ADAPTER_PROTOCOL,
-  ENDGE_SFC_RENDER_ADAPTER_PROTOCOL_VERSION,
-  Endge,
-} from '@endge/core'
 import type {
   SFCVueRenderAdapterKey,
   SFCVueRenderContext,
@@ -14,36 +9,40 @@ import type {
 } from '@/domain/types/sfc-render.type'
 import { SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS } from '@/domain/types/sfc-render.type'
 import { resolveSFCConditionState, SFCRender_Base } from '@/ui/render/sfc/SFCRender_Base'
-import { evaluateSFCValue } from '@/ui/render/sfc/SFCRender_Evaluator'
+import { evaluateSFCProps, evaluateSFCValue } from '@/ui/render/sfc/SFCRender_Evaluator'
 import { SFCRender_Component } from '@/ui/render/sfc/SFCRender_Component'
 import { registerSFCInspectionDefinitionTree, registerSFCInspectionValueNode } from '@/model/render/sfc/SFCVueRenderInspection'
+import { requireSFCAdapterRenderer } from '@/ui/render/sfc/SFCRender_Adapter'
+
+const SFCRender_Variant: SFCVueRenderFunction = (input) => {
+  const props = evaluateSFCProps(input.node.props, input.context)
+  if (String(props.name ?? '') !== input.context.variant) return null
+  const children = input.renderChildren(input.context)
+  if (children.length === 0) return null
+  if (children.length === 1) return children[0]!
+  return input.h('span', { style: { display: 'contents' } }, children)
+}
+
+const SFCRender_Editable: SFCVueRenderFunction = SFCRender_Base((input) => {
+  return input.h('span', {
+    ...input.attrs,
+    class: ['endge-sfc-editable', input.props.class],
+    style: { display: 'contents' },
+  }, input.children)
+})
 
 const SFCRender_Structural: SFCVueRenderFunction = (input) => {
   if (input.context.inspection) registerSFCInspectionDefinitionTree(input.node, input.context)
   return null
 }
 const SFCRender_CompoundAdapter: SFCVueRenderFunction = (input) => {
-  const renderFn = requireAdapterRenderer(input.node.tag as SFCVueRenderAdapterKey)
+  const renderFn = requireSFCAdapterRenderer(input.node.tag as SFCVueRenderAdapterKey)
   return renderFn(input)
 }
 const SFCRender_Adapter: SFCVueRenderFunction = SFCRender_Base((input) => {
-  const renderFn = requireAdapterRenderer(input.node.tag as SFCVueRenderAdapterKey)
+  const renderFn = requireSFCAdapterRenderer(input.node.tag as SFCVueRenderAdapterKey)
   return renderFn(input)
 })
-
-function requireAdapterRenderer(tag: SFCVueRenderAdapterKey): SFCVueRenderFunction {
-  const adapter = Endge.uiRegistry.adapters.requireActive<SFCVueRenderFunction>({
-    protocol: ENDGE_SFC_RENDER_ADAPTER_PROTOCOL,
-    protocolVersion: ENDGE_SFC_RENDER_ADAPTER_PROTOCOL_VERSION,
-    renderer: 'vue-shadcn',
-    requiredRendererKeys: SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS,
-  })
-  const renderFn = adapter.renderers[tag]
-  if (!renderFn) {
-    throw new Error(`[SFCRender_Node] adapter "${adapter.id}" has no renderer for "${tag}"`)
-  }
-  return renderFn
-}
 
 /** Рендерит список SFC IR узлов с учетом sibling if / else-if / else chain. */
 export function renderSFCNodes(
@@ -126,6 +125,10 @@ function getSFCElementRenderer(
   switch (node.tag) {
     case 'Component':
       return SFCRender_Component
+    case 'Editable':
+      return SFCRender_Editable
+    case 'Variant':
+      return SFCRender_Variant
     case 'Column':
     case 'Cell':
     case 'ColumnMenu':

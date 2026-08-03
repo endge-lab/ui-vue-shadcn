@@ -54,6 +54,8 @@ export interface SFCVueRenderContext {
   componentStack: readonly string[]
   /** Stable renderer scope used to isolate host-owned computation resources. */
   consumerScope: string
+  /** Активный renderer-neutral вариант текущего component boundary. */
+  variant: string
   /** Effective global, ancestor and local style artifacts for this boundary. */
   styleArtifacts: readonly EndgeStyleSheetArtifact[]
   /** Logical parent in the abstract SFC tree. */

@@ -93,7 +93,10 @@ export const VueShadcnRender_Table: SFCVueRenderFunction = SFCRender_Base((input
         const cellContext = extendSFCVueRenderContext(tableContext, {
           row,
           rowIndex,
-          rowKey: rowId,
+          // TanStack requires its internal row id to be a string, but the SFC
+          // lexical rowKey must preserve the authored data type. Store
+          // selectors commonly compare numeric ids and must receive a number.
+          rowKey: resolveLexicalRowKey(row[rowKey], rowId),
           columnKey: column.key,
           value: row[column.key],
         }, tableContext.iteration, `${tableContext.consumerScope}/row:${rowId}/column:${column.key}`)
@@ -173,6 +176,10 @@ function normalizeColumnKey(
 function normalizeRows(value: unknown): Record<string, unknown>[] {
   if (!Array.isArray(value)) return []
   return value.map((row, index) => isPlainObject(row) ? row : { id: index, value: row })
+}
+
+function resolveLexicalRowKey(value: unknown, fallback: string): unknown {
+  return String(value ?? '').trim() ? value : fallback
 }
 
 function normalizeText(value: unknown, fallback: string): string {

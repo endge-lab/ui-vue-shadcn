@@ -15,6 +15,7 @@ export function createSFCVueRenderContext(
   inheritedEventBoundary?: ComponentSFCEventBoundary | null,
   inspection: SFCRenderInspectionSessionLike | null = null,
   metadata?: ProgramMetadata | null,
+  variant = 'default',
 ): SFCVueRenderContext {
   const lifecycleScope = host ? Endge.runtime.getRuntimeScopeByHost(host.id) : null
   const runtimeScopeIds: string[] = []
@@ -33,6 +34,7 @@ export function createSFCVueRenderContext(
     runtimeState: (host as any)?.runtimeState ?? null,
     componentStack,
     consumerScope,
+    variant,
     styleArtifacts,
     styleParent: undefined,
     styleSiblings: [],
@@ -69,6 +71,7 @@ export function extendSFCVueRenderContext(
     runtimeState: context.runtimeState,
     componentStack: context.componentStack,
     consumerScope,
+    variant: context.variant,
     styleArtifacts: context.styleArtifacts,
     styleParent: context.styleParent,
     styleSiblings: context.styleSiblings,

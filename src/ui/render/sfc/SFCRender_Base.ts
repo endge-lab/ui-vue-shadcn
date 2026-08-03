@@ -17,6 +17,11 @@ import { extendSFCVueRenderContext, extendSFCVueStyleContext } from '@/ui/render
 import { evaluateSFCProps, evaluateSFCValue, isTruthySFCValue } from '@/ui/render/sfc/SFCRender_Evaluator'
 import { getEndgeDOMStyleClasses } from '@/model/style/endge-dom-style'
 import { createSFCInspectionAttrs, registerSFCInspectionElement } from '@/model/render/sfc/SFCVueRenderInspection'
+import {
+  attachSFCEditableAttrs,
+  isSFCEditableActive,
+  renderSFCEditablePrimitive,
+} from '@/ui/render/sfc/SFCRender_Editable'
 
 /** Выполняет общий SFC render pipeline вокруг primitive renderer-а. */
 export function SFCRender_Base(renderFn: SFCVueRenderFunction): SFCVueRenderFunction {
@@ -139,9 +144,24 @@ function renderOnce(
     ...(inspectionId ? createSFCInspectionAttrs(input.context, inspectionId) : {}),
     ...input.attrs,
   }
+  attachSFCEditableAttrs(attrs, input.node, props, input.context)
   const childContext = extendSFCVueStyleContext(input.context, styleNode)
+  if (input.node.tag === 'Editable') {
+    childContext.variant = isSFCEditableActive(input.node, input.context)
+      ? 'edit'
+      : String(props.variant ?? input.context.variant ?? 'default')
+  }
   childContext.inspectionParentId = inspectionId ?? input.context.inspectionParentId
   const children = input.renderChildren(childContext)
+
+  const editablePrimitive = renderSFCEditablePrimitive({
+    ...input,
+    context: childContext,
+    children,
+    props,
+    attrs,
+  })
+  if (editablePrimitive !== undefined) return editablePrimitive
 
   return renderFn({
     ...input,
@@ -190,7 +210,15 @@ function createSFCEventAttrs(
         ...source,
         target: source.target ? { ...source.target, value: event.currentTarget } : undefined,
       }
-      void boundary.routeChild(runtimeSource, definition.name, normalizeIntrinsicEvent(event), activeBindings)
+      void boundary.routeChild(
+        runtimeSource,
+        definition.name,
+        normalizeIntrinsicEvent(event),
+        activeBindings,
+        [],
+        0,
+        { ...context.props, ...context.locals },
+      )
     }
   }
   return attrs
