@@ -272,22 +272,25 @@ describe('VueShadcnSfcDataTable virtualization', () => {
     expect(routeChild).not.toHaveBeenCalled()
 
     const row = root.querySelector<HTMLElement>('.endge-shadcn-table__row')!
+    row.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: 12, clientY: 24 }))
+    await nextTick()
+    expect(routeChild.mock.calls.map(call => call[1])).toEqual(['rowContextMenuRequested'])
+
     row.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     row.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
-    row.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: 12, clientY: 24 }))
     await nextTick()
 
     expect(routeChild.mock.calls.map(call => call[1])).toEqual([
+      'rowContextMenuRequested',
       'selectionChanged',
       'rowActivated',
-      'rowContextMenuRequested',
     ])
-    expect(routeChild.mock.calls[0]?.[2]).toMatchObject({
+    expect(routeChild.mock.calls[1]?.[2]).toMatchObject({
       tableId: 'flights',
       mode: 'multiple',
       selectedRowIds: ['1'],
     })
-    expect(routeChild.mock.calls[2]?.[2]).toMatchObject({
+    expect(routeChild.mock.calls[0]?.[2]).toMatchObject({
       rowId: '1',
       anchor: { x: 12, y: 24 },
     })

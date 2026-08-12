@@ -15,6 +15,7 @@ import {
 const menuRef = ref<HTMLElement | null>(null)
 const i18nVersion = ref(0)
 const position = ref({ left: '0px', top: '0px' })
+const executing = ref(false)
 let unsubscribeI18n: (() => void) | null = null
 
 const menuItems = computed(() => {
@@ -69,13 +70,17 @@ function onDocumentKeydown(event: KeyboardEvent): void {
     closeShadcnMenu()
     return
   }
-  if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return
+  if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return
   const buttons = [...(menuRef.value?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') ?? [])]
   if (buttons.length === 0) return
   event.preventDefault()
   const current = buttons.indexOf(document.activeElement as HTMLButtonElement)
-  const delta = event.key === 'ArrowDown' ? 1 : -1
-  buttons[(current + delta + buttons.length) % buttons.length]?.focus()
+  const next = event.key === 'Home'
+    ? 0
+    : event.key === 'End'
+      ? buttons.length - 1
+      : (current + (event.key === 'ArrowDown' ? 1 : -1) + buttons.length) % buttons.length
+  buttons[next]?.focus()
 }
 
 function closeOnViewportChange(): void {
@@ -95,7 +100,17 @@ function placeMenu(): void {
 }
 
 async function runItem(item: ContextMenuItemDescriptor): Promise<void> {
-  await executeShadcnMenuItem(item)
+  if (executing.value) return
+  executing.value = true
+  try {
+    await executeShadcnMenuItem(item)
+  }
+  catch (error) {
+    console.error('[ShadcnMenu] Action failed.', { action: item.action, error })
+  }
+  finally {
+    executing.value = false
+  }
 }
 </script>
 
@@ -123,6 +138,7 @@ async function runItem(item: ContextMenuItemDescriptor): Promise<void> {
           role="menuitem"
           data-slot="dropdown-menu-item"
           class="endge-shadcn-menu-root__item"
+          :disabled="executing"
           @click="runItem(item)"
         >
           <ShadcnIcon
@@ -131,7 +147,7 @@ async function runItem(item: ContextMenuItemDescriptor): Promise<void> {
             :name="item.icon"
             :size="14"
           />
-          <span>{{ resolveShadcnMenuItemLabel(item) }}</span>
+          <span class="endge-shadcn-menu-root__label">{{ resolveShadcnMenuItemLabel(item) }}</span>
         </button>
       </template>
     </div>

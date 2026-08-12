@@ -1,5 +1,6 @@
 import type {
   ComponentSFCTableColumnMenuDescriptor,
+  ComponentSFCTableRowMenuDescriptor,
   ComponentSFCTableColumnPinMode,
   ComponentSFCTableColumnPinStateItem,
   ComponentSFCTableSortComparator,
@@ -11,6 +12,7 @@ import type {
   TableSelectionMode,
 } from '@endge/core'
 import type {
+  SFCVueRenderContext,
   SFCVueRenderResult,
   SFCVueRuntimeStateController,
 } from '@/domain/types/sfc-render.type'
@@ -53,6 +55,8 @@ export interface EndgeShadcnTableProps {
   sortMode: ComponentSFCTableSortMode
   pinMode: ComponentSFCTableColumnPinMode
   columnMenu: ComponentSFCTableColumnMenuDescriptor
+  rowMenu?: ComponentSFCTableRowMenuDescriptor
+  menuContext?: SFCVueRenderContext
   defaultSort: ComponentSFCTableSortStateItem[]
   defaultPin: ComponentSFCTableColumnPinStateItem[]
   defaultHidden: string[]

@@ -1,6 +1,7 @@
 import type { RComponentSFC_IR_ElementNode, RComponentSFC_IR_Node } from '@endge/core'
 import {
   normalizeComponentSFCTableColumnMenu,
+  normalizeComponentSFCTableRowMenu,
   normalizeComponentSFCTableColumnPin,
   normalizeComponentSFCTableColumnPinMode,
   normalizeComponentSFCTableColumnVisibility,
@@ -13,7 +14,7 @@ import {
   createSFCTableStyleContract,
   getSFCTableCellStyleSurfaces,
 } from '@/ui/render/sfc/SFCRender_TableStyle'
-import { evaluateSFCProps, evaluateSFCValue } from '@/ui/render/sfc/SFCRender_Evaluator'
+import { evaluateSFCProps, evaluateSFCValue, readSFCObjectPath } from '@/ui/render/sfc/SFCRender_Evaluator'
 import { extendSFCVueRenderContext } from '@/ui/render/sfc/SFCRender_Context'
 import { renderSFCNodes } from '@/ui/render/sfc/SFCRender_Node'
 import { SFCRender_Base } from '@/ui/render/sfc/SFCRender_Base'
@@ -31,7 +32,8 @@ export const VueShadcnRender_Table: SFCVueRenderFunction = SFCRender_Base((input
   const sortDescriptor = normalizeComponentSFCTableSort(input.node)
   const pinDescriptor = normalizeComponentSFCTableColumnPin(input.node)
   const visibilityDescriptor = normalizeComponentSFCTableColumnVisibility(input.node)
-  const columnMenuDescriptor = normalizeComponentSFCTableColumnMenu(input.node)
+  const columnMenuDescriptor = input.node.tableMenus?.column ?? normalizeComponentSFCTableColumnMenu(input.node)
+  const rowMenuDescriptor = input.node.tableMenus?.row ?? normalizeComponentSFCTableRowMenu(input.node)
   const styleContract = createSFCTableStyleContract(input.context)
   const columns = collectTableColumns(input.node, input.context, sortDescriptor, pinDescriptor, styleContract)
   const tableId = normalizeText(input.props.id ?? input.props.tableId ?? input.attrs.id, '')
@@ -75,6 +77,8 @@ export const VueShadcnRender_Table: SFCVueRenderFunction = SFCRender_Base((input
       sortMode: normalizeComponentSFCTableSortMode(input.props['sort-mode'] ?? input.props.sortMode ?? sortDescriptor.mode),
       pinMode: normalizeComponentSFCTableColumnPinMode(input.props['column-pin'] ?? input.props.columnPin ?? pinDescriptor.mode),
       columnMenu: columnMenuDescriptor,
+      rowMenu: rowMenuDescriptor,
+      menuContext: tableContext,
       defaultSort: sortDescriptor.defaultSort,
       defaultPin: pinDescriptor.defaultPin,
       defaultHidden: visibilityDescriptor.defaultHidden,
@@ -98,7 +102,7 @@ export const VueShadcnRender_Table: SFCVueRenderFunction = SFCRender_Base((input
           // selectors commonly compare numeric ids and must receive a number.
           rowKey: resolveLexicalRowKey(row[rowKey], rowId),
           columnKey: column.key,
-          value: row[column.key],
+          value: readSFCObjectPath(column.key, row),
         }, tableContext.iteration, `${tableContext.consumerScope}/row:${rowId}/column:${column.key}`)
         const children = renderSFCNodes(input.h, column.cellNodes, cellContext)
         const contentAttrs = getSFCTableCellStyleSurfaces(row, column.index)?.cellContent.attrs
@@ -245,7 +249,7 @@ function isElementNode(node: RComponentSFC_IR_Node): node is RComponentSFC_IR_El
 
 function isTableMenuNode(node: RComponentSFC_IR_Node): boolean {
   return node.kind === 'element'
-    && (node.tag === 'ColumnMenu' || node.tag === 'MenuItem' || node.tag === 'MenuSeparator')
+    && (node.tag === 'ColumnMenu' || node.tag === 'RowMenu' || node.tag === 'MenuItem' || node.tag === 'MenuSeparator')
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {

@@ -83,8 +83,12 @@ export async function executeShadcnMenuItem(item: ContextMenuItemDescriptor): Pr
   if (!context)
     return
 
-  await Endge.runtime.actions.execute(item.action, context, item.input)
-  closeShadcnMenu()
+  try {
+    await Endge.runtime.actions.execute(item.action, context, item.input)
+  }
+  finally {
+    closeShadcnMenu()
+  }
 }
 
 export function resolveShadcnMenuItemLabel(item: ContextMenuItemDescriptor): string {

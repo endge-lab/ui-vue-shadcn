@@ -19,6 +19,7 @@ import type {
   ContextMenuDescriptor,
   RuntimeBoundaryPatch,
   TableColumnActionContext,
+  TableRowActionContext,
   TableColumnPinSide,
   TableRuntimeActionTarget,
   TableEventMap,
@@ -72,6 +73,9 @@ import ShadcnInput from '@/ui/primitives/ShadcnInput.vue'
 import VueShadcnFilterRenderer from '@/ui/filter/VueShadcnFilterRenderer.vue'
 import ShadcnTableColumnManager from './ShadcnTableColumnManager.vue'
 import { ShadcnTableRuntimeContextKey } from './shadcn-table-runtime-context'
+import { extendSFCVueRenderContext } from '@/ui/render/sfc/SFCRender_Context'
+import { readSFCObjectPath } from '@/ui/render/sfc/SFCRender_Evaluator'
+import { resolveSFCTableMenu } from '@/model/render/sfc/resolve-sfc-table-menu'
 
 defineOptions({ name: 'EndgeShadcnSfcDataTable' })
 
@@ -88,6 +92,7 @@ const props = withDefaults(defineProps<EndgeShadcnTableProps>(), {
   pageSizes: () => [10, 25, 50, 100],
   lazy: false,
   selectionMode: 'none',
+  rowMenu: () => ({ mode: 'none', menu: null, diagnostics: [] }),
 })
 const tableColumns = computed<EndgeShadcnTableColumn[]>(() => Array.isArray(props.columns) ? props.columns : [])
 const defaultSortItems = computed<ComponentSFCTableSortStateItem[]>(() => Array.isArray(props.defaultSort) ? props.defaultSort : [])
@@ -550,7 +555,7 @@ function onColumnHeaderClick(column: Column<Record<string, unknown>>, event: Mou
 
 function resolveColumnMenu(_column: EndgeShadcnTableColumn): ContextMenuDescriptor | null {
   if (props.columnMenu.mode === 'disabled') return null
-  if (props.columnMenu.mode === 'inline') return props.columnMenu.menu
+  if (props.columnMenu.mode === 'inline') return props.menuContext ? resolveSFCTableMenu(props.columnMenu.menu, props.menuContext) : null
   return defaultColumnMenu
 }
 
@@ -692,13 +697,48 @@ function activateRow(entry: VirtualTableRow, event: MouseEvent | KeyboardEvent):
 
 function requestRowContextMenu(entry: VirtualTableRow, event: MouseEvent): void {
   event.preventDefault()
+  const columnKey = resolveColumnKey(event) ?? ''
+  const row = entry.row.original
+  const value = columnKey ? readSFCObjectPath(columnKey, row) : undefined
   emitTableEvent('rowContextMenuRequested', {
     tableId: effectiveTableId(),
     rowId: entry.row.id,
     rowIndex: entry.rowIndex,
-    row: entry.row.original,
-    columnKey: resolveColumnKey(event),
+    row,
+    columnKey: columnKey || null,
     anchor: { x: event.clientX, y: event.clientY },
+  })
+  if (props.rowMenu.mode !== 'inline' || !props.rowMenu.menu || !props.menuContext) return
+  const baseMenuContext = props.menuContext
+  const menuContext = extendSFCVueRenderContext(
+    baseMenuContext,
+    { row, rowId: entry.row.id, rowIndex: entry.rowIndex, columnKey, value },
+    baseMenuContext.iteration,
+    `${baseMenuContext.consumerScope}/row-menu:${entry.row.id}:${columnKey}`,
+  )
+  const menu = resolveSFCTableMenu(props.rowMenu.menu, menuContext)
+  const context: TableRowActionContext = {
+    surface: 'table-row',
+    runtimeId: props.runtimeState?.runtimeId ?? props.boundaryId,
+    tableRuntimeId: props.runtimeState?.runtimeId ?? props.boundaryId,
+    tableId: effectiveTableId(),
+    target: tableActionTarget,
+    row,
+    rowId: entry.row.id,
+    rowIndex: entry.rowIndex,
+    columnKey,
+    value,
+  }
+  if (!menu || !menu.items.some(item => item.kind === 'item' && Endge.runtime.actions.canExecute(item.action, context, item.input))) {
+    closeShadcnMenu(props.boundaryId)
+    return
+  }
+  event.stopPropagation()
+  openShadcnMenu({
+    ownerId: props.boundaryId,
+    anchor: pointMenuAnchor(event.clientX, event.clientY),
+    menu,
+    context,
   })
 }
 
