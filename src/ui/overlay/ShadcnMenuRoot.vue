@@ -106,7 +106,7 @@ async function runItem(item: ContextMenuItemDescriptor): Promise<void> {
     await executeShadcnMenuItem(item)
   }
   catch (error) {
-    console.error('[ShadcnMenu] Action failed.', { action: item.action, error })
+    console.error(`[ShadcnMenu] Action "${item.action}" failed: ${error instanceof Error ? error.message : String(error)}`)
   }
   finally {
     executing.value = false
