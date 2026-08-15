@@ -442,16 +442,28 @@
 
 .endge-shadcn-table__row {
   background: var(--background, #fff);
-  transition: background-color 90ms ease;
   will-change: transform;
 }
 
-.endge-shadcn-table__row:hover {
-  background: var(--muted, #f4f4f5);
+.endge-shadcn-table__row:hover > .endge-shadcn-table__cell::after,
+.endge-shadcn-table__row--selected > .endge-shadcn-table__cell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
 }
 
-.endge-shadcn-table__row--selected {
-  background: var(--accent, #e4e4e7);
+.endge-shadcn-table__row:hover > .endge-shadcn-table__cell::after {
+  background: var(--endge-table-hover, rgba(59, 130, 246, 0.12));
+}
+
+.endge-shadcn-table__row--selected > .endge-shadcn-table__cell::after {
+  background: var(--endge-table-selection, rgba(59, 130, 246, 0.2));
+}
+
+.endge-shadcn-table__row--selected > .endge-shadcn-table__cell:first-child::after {
+  box-shadow: inset 3px 0 0 var(--endge-table-selection-marker, #3b82f6);
 }
 
 .endge-shadcn-table__row:focus-visible {
@@ -460,6 +472,7 @@
 }
 
 .endge-shadcn-table__cell {
+  position: relative;
   background: inherit;
   border-bottom: 1px solid var(--border, #e4e4e7);
   box-sizing: border-box;
