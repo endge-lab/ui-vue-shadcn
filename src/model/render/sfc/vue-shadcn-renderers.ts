@@ -170,14 +170,18 @@ export const VueShadcnRender_Checkbox: SFCVueRenderAdapterFunction = (input) => 
 
 export const VueShadcnRender_Select: SFCVueRenderAdapterFunction = (input) => {
   const multiple = input.props.multiple === true
+  const options = normalizeOptions(input.props.options)
+  const autoOptimize = options.length > 10
 
   return input.h(ShadcnSelect, {
     ...input.attrs,
     class: ['endge-sfc-select', input.props.class],
-    options: normalizeOptions(input.props.options),
+    options,
     selectedValues: normalizeSelectedValues(input.props.value, multiple),
     placeholder: toOptionalString(input.props.placeholder),
     multiple,
+    searchable: typeof input.props.searchable === 'boolean' ? input.props.searchable : autoOptimize,
+    virtualized: typeof input.props.virtualized === 'boolean' ? input.props.virtualized : autoOptimize,
     readonly: input.props.readonly === true,
     disabled: input.props.disabled === true,
   })

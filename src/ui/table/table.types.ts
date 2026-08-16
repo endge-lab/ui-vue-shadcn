@@ -10,6 +10,7 @@ import type {
   RComponentSFC_IR_EventBinding,
   RComponentSFC_IR_Node,
   TableSelectionMode,
+  TableSelectionTrigger,
 } from '@endge/core'
 import type {
   SFCVueRenderContext,
@@ -47,6 +48,7 @@ export interface EndgeShadcnTableProps {
   eventBoundary?: ComponentSFCEventBoundary | null
   eventBindings?: RComponentSFC_IR_EventBinding[]
   selectionMode?: TableSelectionMode
+  selectionTrigger?: TableSelectionTrigger
   runtimeState: SFCVueRuntimeStateController | null
   columns: EndgeShadcnTableColumn[]
   source: Record<string, unknown>[]

@@ -1,4 +1,4 @@
-import type { RComponentSFC_IR_ElementNode, RComponentSFC_IR_Node } from '@endge/core'
+import type { RComponentSFC_IR_ElementNode, RComponentSFC_IR_Node, TableSelectionTrigger } from '@endge/core'
 import {
   normalizeComponentSFCTableColumnMenu,
   normalizeComponentSFCTableRowMenu,
@@ -69,6 +69,7 @@ export const VueShadcnRender_Table: SFCVueRenderFunction = SFCRender_Base((input
       eventBoundary: input.context.eventBoundary,
       eventBindings: input.node.events ?? [],
       selectionMode: normalizeSelectionMode(input.props['selection-mode'] ?? input.props.selectionMode),
+      selectionTrigger: normalizeSelectionTrigger(input.props['selection-trigger'] ?? input.props.selectionTrigger),
       runtimeState: input.context.runtimeState,
       columns,
       source: rows,
@@ -198,6 +199,10 @@ function normalizeOptionalText(value: unknown): string | null {
 
 function normalizeSelectionMode(value: unknown): 'none' | 'single' | 'multiple' {
   return value === 'single' || value === 'multiple' ? value : 'none'
+}
+
+function normalizeSelectionTrigger(value: unknown): TableSelectionTrigger {
+  return value === 'control' || value === 'row' || value === 'both' ? value : 'auto'
 }
 
 function normalizeNumber(value: unknown, fallback: number): number {

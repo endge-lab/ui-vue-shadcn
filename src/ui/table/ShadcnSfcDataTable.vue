@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type {
+  Cell,
   Column,
   ColumnDef,
   ColumnOrderState,
@@ -92,8 +93,10 @@ const props = withDefaults(defineProps<EndgeShadcnTableProps>(), {
   pageSizes: () => [10, 25, 50, 100],
   lazy: false,
   selectionMode: 'none',
+  selectionTrigger: 'auto',
   rowMenu: () => ({ mode: 'none', menu: null, diagnostics: [] }),
 })
+const SELECTION_COLUMN_ID = '__endge_selection__'
 const tableColumns = computed<EndgeShadcnTableColumn[]>(() => Array.isArray(props.columns) ? props.columns : [])
 const defaultSortItems = computed<ComponentSFCTableSortStateItem[]>(() => Array.isArray(props.defaultSort) ? props.defaultSort : [])
 const defaultPinItems = computed<ComponentSFCTableColumnPinStateItem[]>(() => Array.isArray(props.defaultPin) ? props.defaultPin : [])
@@ -122,24 +125,50 @@ const columnSizing = ref<ColumnSizingState>(readTableRecordState('sizing', {}))
 const pagination = ref<PaginationState>(readInitialPagination())
 const selectedRowIds = shallowRef<Set<string>>(new Set())
 const selectionAnchorId = ref<string | null>(null)
+const resolvedSelectionTrigger = computed(() => props.selectionTrigger === 'auto' ? 'row' : props.selectionTrigger)
+const showSelectionControl = computed(() => props.selectionMode !== 'none'
+  && (resolvedSelectionTrigger.value === 'control' || resolvedSelectionTrigger.value === 'both'))
+const selectOnRow = computed(() => props.selectionMode !== 'none'
+  && (resolvedSelectionTrigger.value === 'row' || resolvedSelectionTrigger.value === 'both'))
+const resolvedColumnOrder = computed<ColumnOrderState>(() => showSelectionControl.value
+  ? [SELECTION_COLUMN_ID, ...columnOrder.value.filter(key => key !== SELECTION_COLUMN_ID)]
+  : columnOrder.value.filter(key => key !== SELECTION_COLUMN_ID))
 let columnSizeTimer: ReturnType<typeof setTimeout> | null = null
-const columnDefinitions = computed<ColumnDef<Record<string, unknown>>[]>(() => tableColumns.value.map(column => ({
-  id: column.key,
-  accessorFn: row => row[column.key],
-  header: column.title,
-  size: column.width ?? 150,
-  minSize: column.minWidth,
-  maxSize: column.maxWidth,
-  enableHiding: true,
-  enablePinning: props.pinMode !== 'disabled' && column.pinnable,
-  enableSorting: props.sortMode !== 'disabled' && column.sort?.sortable === true,
-  sortingFn: (left, right) => compareRows(left.original, right.original, column),
-  cell: ({ row }) => renderTableCell(column, row),
-  meta: {
-    title: column.title,
-    endgeColumn: column,
-  },
-})))
+const columnDefinitions = computed<ColumnDef<Record<string, unknown>>[]>(() => [
+  ...(showSelectionControl.value
+    ? [{
+        id: SELECTION_COLUMN_ID,
+        header: '',
+        size: 44,
+        minSize: 44,
+        maxSize: 44,
+        enableHiding: false,
+        enablePinning: false,
+        enableSorting: false,
+        enableResizing: false,
+      } satisfies ColumnDef<Record<string, unknown>>]
+    : []),
+  ...tableColumns.value.map(column => ({
+    id: column.key,
+    accessorFn: (row: Record<string, unknown>) => row[column.key],
+    header: column.title,
+    size: column.width ?? 150,
+    minSize: column.minWidth,
+    maxSize: column.maxWidth,
+    enableHiding: true,
+    enablePinning: props.pinMode !== 'disabled' && column.pinnable,
+    enableSorting: props.sortMode !== 'disabled' && column.sort?.sortable === true,
+    sortingFn: (
+      left: Row<Record<string, unknown>>,
+      right: Row<Record<string, unknown>>,
+    ) => compareRows(left.original, right.original, column),
+    cell: ({ row }: { row: Row<Record<string, unknown>> }) => renderTableCell(column, row),
+    meta: {
+      title: column.title,
+      endgeColumn: column,
+    },
+  })),
+])
 
 const table = useVueTable({
   get data() { return baseRows.value },
@@ -155,7 +184,7 @@ const table = useVueTable({
   state: {
     get sorting() { return sorting.value },
     get columnPinning() { return columnPinning.value },
-    get columnOrder() { return columnOrder.value },
+    get columnOrder() { return resolvedColumnOrder.value },
     get columnVisibility() { return columnVisibility.value },
     get columnSizing() { return columnSizing.value },
     get pagination() { return pagination.value },
@@ -168,9 +197,53 @@ const table = useVueTable({
   onPaginationChange: updatePagination,
 })
 
+const flatHeaders = computed(() => {
+  void resolvedColumnOrder.value
+  void columnVisibility.value
+  void columnPinning.value
+  return table.getFlatHeaders()
+})
+
+const stableCells = new WeakMap<
+  Row<Record<string, unknown>>,
+  Map<string, Cell<Record<string, unknown>, unknown>>
+>()
+
+/**
+ * Сохраняет Cell context при чистой перестановке колонок, чтобы не рендерить
+ * повторно всё SFC-содержимое строки.
+ */
+function getStableVisibleCells(
+  row: Row<Record<string, unknown>>,
+): Cell<Record<string, unknown>, unknown>[] {
+  void resolvedColumnOrder.value
+  void columnVisibility.value
+  void columnPinning.value
+
+  let rowCells = stableCells.get(row)
+  if (!rowCells) {
+    rowCells = new Map()
+    stableCells.set(row, rowCells)
+  }
+
+  return row.getVisibleCells().map((cell) => {
+    const cached = rowCells.get(cell.column.id)
+    if (cached?.column === cell.column)
+      return cached
+
+    rowCells.set(cell.column.id, cell)
+    return cell
+  })
+}
+
 const tableRows = computed(() => props.paging === 'virtual'
   ? table.getPrePaginationRowModel().rows
   : table.getRowModel().rows)
+const visibleRowIds = computed(() => tableRows.value.map(row => row.id))
+const allVisibleRowsSelected = computed(() => visibleRowIds.value.length > 0
+  && visibleRowIds.value.every(rowId => selectedRowIds.value.has(rowId)))
+const someVisibleRowsSelected = computed(() => !allVisibleRowsSelected.value
+  && visibleRowIds.value.some(rowId => selectedRowIds.value.has(rowId)))
 const totalRowCount = computed(() => table.getPrePaginationRowModel().rows.length)
 const pageCount = computed(() => Math.max(1, table.getPageCount()))
 const currentPage = computed(() => Math.min(pagination.value.pageIndex + 1, pageCount.value))
@@ -296,6 +369,18 @@ watch(
     columnVisibility.value = readInitialVisibility()
   },
 )
+watch(
+  () => [props.selectionMode, props.selectionTrigger] as const,
+  ([selectionMode]) => {
+    if (selectionMode === 'none') {
+      selectedRowIds.value = new Set()
+      selectionAnchorId.value = null
+    }
+    else if (selectionMode === 'single' && selectedRowIds.value.size > 1) {
+      selectedRowIds.value = new Set([...selectedRowIds.value].slice(0, 1))
+    }
+  },
+)
 
 onBeforeUnmount(() => {
   if (columnSizeTimer) clearTimeout(columnSizeTimer)
@@ -396,7 +481,8 @@ function updatePinning(updater: Updater<ColumnPinningState>): void {
 }
 
 function updateColumnOrder(updater: Updater<ColumnOrderState>): void {
-  const next = resolveUpdater(updater, columnOrder.value)
+  const next = resolveUpdater(updater, resolvedColumnOrder.value)
+    .filter(key => key !== SELECTION_COLUMN_ID)
   if (JSON.stringify(next) === JSON.stringify(columnOrder.value)) return
   columnOrder.value = next
   persistTableState('order', next)
@@ -616,6 +702,41 @@ function getColumnDescriptor(column: Column<Record<string, unknown>>): EndgeShad
   return (column.columnDef.meta as any).endgeColumn as EndgeShadcnTableColumn
 }
 
+function isSelectionColumn(column: Column<Record<string, unknown>>): boolean {
+  return column.id === SELECTION_COLUMN_ID
+}
+
+function toggleVisibleRows(checked: boolean): void {
+  if (props.selectionMode !== 'multiple') return
+  const next = new Set(selectedRowIds.value)
+  for (const rowId of visibleRowIds.value) {
+    if (checked) next.add(rowId)
+    else next.delete(rowId)
+  }
+  commitSelection(next)
+}
+
+function toggleRowFromControl(row: Row<Record<string, unknown>>, checked: boolean): void {
+  if (props.selectionMode === 'none') return
+  const next = new Set(selectedRowIds.value)
+  if (props.selectionMode === 'single') {
+    if (!checked) return
+    next.clear()
+  }
+  if (checked) next.add(row.id)
+  else next.delete(row.id)
+  selectionAnchorId.value = row.id
+  commitSelection(next)
+}
+
+function handleSelectionControlChange(row: Row<Record<string, unknown>>, event: Event): void {
+  toggleRowFromControl(row, (event.target as HTMLInputElement).checked)
+}
+
+function handleVisibleSelectionChange(event: Event): void {
+  toggleVisibleRows((event.target as HTMLInputElement).checked)
+}
+
 function getPinnedStyle(column: Column<Record<string, unknown>>): CSSProperties {
   const pinned = column.getIsPinned()
   return {
@@ -681,7 +802,8 @@ function emitTableEvent<TName extends TableEventName>(name: TName, payload: Tabl
 function resolveColumnKey(event: MouseEvent | KeyboardEvent): string | null {
   const element = event.target instanceof Element ? event.target.closest('td') : null
   const index = element ? Array.from(element.parentElement?.children ?? []).indexOf(element) : -1
-  return index >= 0 ? table.getVisibleLeafColumns()[index]?.id ?? null : null
+  const columnId = index >= 0 ? table.getVisibleLeafColumns()[index]?.id ?? null : null
+  return columnId === SELECTION_COLUMN_ID ? null : columnId
 }
 
 function activateRow(entry: VirtualTableRow, event: MouseEvent | KeyboardEvent): void {
@@ -743,7 +865,7 @@ function requestRowContextMenu(entry: VirtualTableRow, event: MouseEvent): void 
 }
 
 function onRowClick(entry: VirtualTableRow, event: MouseEvent): void {
-  if (props.selectionMode === 'none') return
+  if (!selectOnRow.value) return
   const next = new Set(selectedRowIds.value)
   if (props.selectionMode === 'single') {
     next.clear()
@@ -975,15 +1097,29 @@ function menuItem(id: string, label: string, icon: string) {
         <thead v-bind="styleContract.header.attrs" class="endge-shadcn-table__header">
           <tr>
             <th
-              v-for="header in table.getFlatHeaders()"
+              v-for="header in flatHeaders"
               :key="header.id"
-              v-bind="getColumnDescriptor(header.column).styleSurfaces.headerCell.attrs"
+              v-bind="isSelectionColumn(header.column) ? {} : getColumnDescriptor(header.column).styleSurfaces.headerCell.attrs"
               class="endge-shadcn-table__head"
-              :class="{ 'endge-shadcn-table__head--pinned': header.column.getIsPinned() }"
+              :class="{
+                'endge-shadcn-table__head--pinned': header.column.getIsPinned(),
+                'endge-shadcn-table__selection-head': isSelectionColumn(header.column),
+              }"
               :style="getPinnedStyle(header.column)"
-              @contextmenu="openColumnMenu(header.column, $event, 'point')"
+              @contextmenu="isSelectionColumn(header.column) ? undefined : openColumnMenu(header.column, $event, 'point')"
             >
+              <input
+                v-if="isSelectionColumn(header.column) && selectionMode === 'multiple'"
+                class="endge-shadcn-checkbox endge-shadcn-table__selection-input"
+                type="checkbox"
+                :checked="allVisibleRowsSelected"
+                :indeterminate="someVisibleRowsSelected"
+                aria-label="Выбрать отображаемые строки"
+                @click.stop
+                @change="handleVisibleSelectionChange"
+              >
               <button
+                v-else-if="!isSelectionColumn(header.column)"
                 type="button"
                 class="endge-shadcn-table__sort"
                 :class="{ 'endge-shadcn-table__sort--enabled': header.column.getIsSorted() }"
@@ -1034,14 +1170,28 @@ function menuItem(id: string, label: string, icon: string) {
             @keydown="onRowKeydown(virtualRow, $event)"
           >
             <td
-              v-for="cell in virtualRow.row.getVisibleCells()"
+              v-for="cell in getStableVisibleCells(virtualRow.row)"
               :key="cell.id"
-              v-bind="getCellAttrs(virtualRow.styledRow, getColumnDescriptor(cell.column))"
+              v-bind="isSelectionColumn(cell.column) ? {} : getCellAttrs(virtualRow.styledRow, getColumnDescriptor(cell.column))"
               class="endge-shadcn-table__cell"
-              :class="{ 'endge-shadcn-table__cell--pinned': cell.column.getIsPinned() }"
+              :class="{
+                'endge-shadcn-table__cell--pinned': cell.column.getIsPinned(),
+                'endge-shadcn-table__selection-cell': isSelectionColumn(cell.column),
+              }"
               :style="getPinnedStyle(cell.column)"
             >
-              <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
+              <input
+                v-if="isSelectionColumn(cell.column)"
+                class="endge-shadcn-checkbox endge-shadcn-table__selection-input"
+                :class="{ 'endge-shadcn-table__selection-input--single': selectionMode === 'single' }"
+                :type="selectionMode === 'single' ? 'radio' : 'checkbox'"
+                :name="selectionMode === 'single' ? `endge-table-selection-${tableId || boundaryId}` : undefined"
+                :checked="selectedRowIds.has(virtualRow.row.id)"
+                aria-label="Выбрать строку"
+                @click.stop
+                @change="handleSelectionControlChange(virtualRow.row, $event)"
+              >
+              <FlexRender v-else :render="cell.column.columnDef.cell" :props="cell.getContext()" />
             </td>
           </tr>
           <tr v-if="tableRows.length === 0">

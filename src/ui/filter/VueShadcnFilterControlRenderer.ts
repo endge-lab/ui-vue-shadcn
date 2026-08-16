@@ -7,6 +7,7 @@ import {
   ENDGE_SFC_RENDER_ADAPTER_PROTOCOL,
   ENDGE_SFC_RENDER_ADAPTER_PROTOCOL_VERSION,
   Endge,
+  resolveFilterSelectPresentation,
 } from '@endge/core'
 import { defineComponent, h, type PropType } from 'vue'
 
@@ -82,6 +83,7 @@ function makeControlProps(
   }
 
   if (field.control.type === 'Select') {
+    const presentation = resolveFilterSelectPresentation(field, options.length)
     return {
       value: field.value,
       options,
@@ -89,6 +91,7 @@ function makeControlProps(
       placeholder: field.key,
       readonly,
       disabled: readonly,
+      ...presentation,
     }
   }
 
