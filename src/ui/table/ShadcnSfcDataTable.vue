@@ -46,7 +46,7 @@ import {
   ChevronsUpDown,
   Filter,
 } from '@lucide/vue'
-import { Endge, TABLE_RUNTIME_ACTION_IDS } from '@endge/core'
+import { TABLE_RUNTIME_ACTION_IDS } from '@endge/core'
 import {
   decorateSFCTableRowWindow,
   getSFCTableCellStyleSurfaces,
@@ -617,7 +617,7 @@ function openColumnMenu(
   const menu = resolveColumnMenu(descriptor)
   if (!menu) return
   const context = createColumnActionContext(column, descriptor)
-  if (!menu.items.some(item => item.kind === 'item' && Endge.runtime.actions.canExecute(item.action, context, item.input)))
+  if (!menu.items.some(item => item.kind === 'item'))
     return
   event.preventDefault()
   event.stopPropagation()
@@ -851,7 +851,7 @@ function requestRowContextMenu(entry: VirtualTableRow, event: MouseEvent): void 
     columnKey,
     value,
   }
-  if (!menu || !menu.items.some(item => item.kind === 'item' && Endge.runtime.actions.canExecute(item.action, context, item.input))) {
+  if (!menu || !menu.items.some(item => item.kind === 'item')) {
     closeShadcnMenu(props.boundaryId)
     return
   }

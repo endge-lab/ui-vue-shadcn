@@ -7,7 +7,7 @@ import ShadcnIcon from '@/ui/primitives/ShadcnIcon.vue'
 import {
   closeShadcnMenu,
   executeShadcnMenuItem,
-  getExecutableShadcnMenuItems,
+  getShadcnMenuItems,
   resolveShadcnMenuItemLabel,
   shadcnMenuState,
 } from '@/ui/overlay/shadcn-menu-manager'
@@ -20,7 +20,7 @@ let unsubscribeI18n: (() => void) | null = null
 
 const menuItems = computed(() => {
   i18nVersion.value
-  return getExecutableShadcnMenuItems()
+  return getShadcnMenuItems()
 })
 
 watch(

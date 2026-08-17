@@ -67,16 +67,16 @@ export function closeShadcnMenu(ownerId?: string): void {
   shadcnMenuState.context = null
 }
 
-export function getExecutableShadcnMenuItems(): ContextMenuNodeDescriptor[] {
+export function getShadcnMenuItems(): ContextMenuNodeDescriptor[] {
   const menu = shadcnMenuState.menu
   const context = shadcnMenuState.context
   if (!menu || !context)
     return []
 
-  return compactSeparators(menu.items.filter((item) => {
-    return item.kind === 'separator' || Endge.runtime.actions.canExecute(item.action, context, item.input)
-  }))
+  return compactSeparators(menu.items)
 }
+
+export const getExecutableShadcnMenuItems = getShadcnMenuItems
 
 export async function executeShadcnMenuItem(item: ContextMenuItemDescriptor): Promise<void> {
   const context = shadcnMenuState.context
