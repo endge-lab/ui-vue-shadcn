@@ -6,6 +6,7 @@ import { SFCRender_Base } from '@/ui/render/sfc/SFCRender_Base'
 import { renderSFCNodes } from '@/ui/render/sfc/SFCRender_Node'
 import { createSFCVueRenderContext } from '@/ui/render/sfc/SFCRender_Context'
 import { commitSFCEditableChild, editableConsumerKey } from '@/ui/render/sfc/SFCRender_Editable'
+import { createSFCSemanticInteractionBindings } from '@/ui/render/sfc/SFCRender_Interaction'
 
 /** Рендерит вложенный SFC artifact через тот же renderer-neutral IR pipeline. */
 export const SFCRender_Component: SFCVueRenderFunction = SFCRender_Base((input) => {
@@ -28,7 +29,7 @@ export const SFCRender_Component: SFCVueRenderFunction = SFCRender_Base((input) 
     ref: literalString(input.node.props.ref),
     componentIdentity: identity,
     componentTag: input.node.componentTag ?? 'Component',
-  }, input.node.events ?? [], input.node.editable
+  }, [...(input.node.events ?? []), ...createSFCSemanticInteractionBindings(input.node, input.context)], input.node.editable
     ? (event, payload) => {
         if (event !== 'edited') return { event, payload }
         const committed = commitSFCEditableChild(input.node, input.context, payload)

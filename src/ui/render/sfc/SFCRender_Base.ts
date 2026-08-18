@@ -22,6 +22,7 @@ import {
   isSFCEditableActive,
   renderSFCEditablePrimitive,
 } from '@/ui/render/sfc/SFCRender_Editable'
+import { attachSFCInteractionAttrs, normalizeSFCInteractionEvent } from '@/ui/render/sfc/SFCRender_Interaction'
 
 /** Выполняет общий SFC render pipeline вокруг primitive renderer-а. */
 export function SFCRender_Base(renderFn: SFCVueRenderFunction): SFCVueRenderFunction {
@@ -144,6 +145,7 @@ function renderOnce(
     ...(inspectionId ? createSFCInspectionAttrs(input.context, inspectionId) : {}),
     ...input.attrs,
   }
+  attachSFCInteractionAttrs(attrs, input.node, props, input.context)
   attachSFCEditableAttrs(attrs, input.node, props, input.context)
   const childContext = extendSFCVueStyleContext(input.context, styleNode)
   if (input.node.tag === 'Editable') {
@@ -213,7 +215,7 @@ function createSFCEventAttrs(
       void boundary.routeChild(
         runtimeSource,
         definition.name,
-        normalizeIntrinsicEvent(event),
+        normalizeSFCInteractionEvent(event),
         activeBindings,
         [],
         0,
@@ -229,41 +231,6 @@ function vueEventPropName(
   options: { capture: boolean, passive: boolean, once: boolean },
 ): string {
   return `on${name.charAt(0).toUpperCase()}${name.slice(1)}${options.once ? 'Once' : ''}${options.capture ? 'Capture' : ''}${options.passive ? 'Passive' : ''}`
-}
-
-function normalizeIntrinsicEvent(event: Event): Record<string, unknown> {
-  const source = event as Event & Record<string, unknown>
-  const target = event.target as { value?: unknown, checked?: unknown } | null
-  const modifiers = {
-    alt: source.altKey === true,
-    ctrl: source.ctrlKey === true,
-    meta: source.metaKey === true,
-    shift: source.shiftKey === true,
-  }
-  const payload: Record<string, unknown> = { type: event.type, modifiers }
-  if ('clientX' in source) {
-    payload.x = Number(source.clientX ?? 0)
-    payload.y = Number(source.clientY ?? 0)
-    payload.button = Number(source.button ?? 0)
-    payload.buttons = Number(source.buttons ?? 0)
-    payload.pointerType = typeof source.pointerType === 'string' ? source.pointerType : 'mouse'
-  }
-  if ('key' in source) {
-    payload.key = String(source.key ?? '')
-    payload.code = String(source.code ?? '')
-    payload.repeat = source.repeat === true
-  }
-  if ('deltaX' in source) {
-    payload.deltaX = Number(source.deltaX ?? 0)
-    payload.deltaY = Number(source.deltaY ?? 0)
-  }
-  if (target && ('value' in target || 'checked' in target)) {
-    payload.value = target instanceof HTMLSelectElement && target.multiple
-      ? Array.from(target.selectedOptions, option => option.value)
-      : target.value
-    if (typeof target.checked === 'boolean') payload.checked = target.checked
-  }
-  return payload
 }
 
 function renderForDirective(

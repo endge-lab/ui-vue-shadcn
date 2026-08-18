@@ -1,6 +1,4 @@
 import type {
-  ComponentSFCEditTriggerEvent,
-  ComponentSFCEditTriggerPlatform,
   ComponentSFCEventRuntimeSource,
   ComponentSFCEditedEventPayload,
   RComponentSFC_IR_ElementNode,
@@ -8,7 +6,6 @@ import type {
 import {
   matchesComponentSFCEditTrigger,
   normalizeComponentSFCEditTriggers,
-  resolveComponentSFCEditTriggerPlatform,
 } from '@endge/core'
 import { isoToDateTimeLocalInput } from '@endge/utils'
 
@@ -19,6 +16,13 @@ import type {
 } from '@/domain/types/sfc-render.type'
 import { requireSFCAdapterRenderer } from '@/ui/render/sfc/SFCRender_Adapter'
 import { evaluateSFCValue } from '@/ui/render/sfc/SFCRender_Evaluator'
+import {
+  applySuffixModifiers,
+  chainSFCEventAttr,
+  createSFCInteractionTriggerEvent,
+  ensureSFCInteractionKeyState,
+  resolveSFCInteractionPlatform,
+} from '@/ui/render/sfc/SFCRender_Interaction'
 
 /** Stable host-owned key shared by display, edit and virtualized Table renders. */
 export function editableConsumerKey(node: RComponentSFC_IR_ElementNode, context: SFCVueRenderContext): string {
@@ -41,25 +45,27 @@ export function attachSFCEditableAttrs(
   const key = editableConsumerKey(node, context)
   const active = context.host.getEditSession(key)
   if (active) {
-    chainAttr(attrs, 'onKeydown', (event: KeyboardEvent) => {
+    chainSFCEventAttr(attrs, 'onKeydown', (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return
       event.stopPropagation()
       context.host?.cancelEditSession(key)
     })
     if (node.tag === 'Editable') {
-      chainAttr(attrs, 'onInput', (event: Event) => context.host?.updateEditDraft(key, readTargetValue(event, node.tag)))
-      chainAttr(attrs, 'onChange', (event: Event) => void commitEditable(node, context, readTargetValue(event, node.tag)))
+      chainSFCEventAttr(attrs, 'onInput', (event: Event) => context.host?.updateEditDraft(key, readTargetValue(event, node.tag)))
+      chainSFCEventAttr(attrs, 'onChange', (event: Event) => void commitEditable(node, context, readTargetValue(event, node.tag)))
     }
     return
   }
 
   const triggerValue = evaluateSFCValue(node.editable.triggers, context)
   const triggers = normalizeComponentSFCEditTriggers(triggerValue)
-  if (triggers.some(trigger => trigger.held)) ensureEditTriggerKeyState()
-  for (const trigger of triggers) {
-    const attr = vueEventPropName(trigger.event)
-    chainAttr(attrs, attr, (event: Event) => {
-      if (!matchesComponentSFCEditTrigger(trigger, editTriggerEvent(event), editTriggerPlatform())) return
+    .map(trigger => applySuffixModifiers(trigger, node.editable?.modifiers))
+  if (triggers.some(trigger => trigger.held)) ensureSFCInteractionKeyState()
+  for (const [triggerIndex, trigger] of triggers.entries()) {
+    const attr = vueEventPropName(trigger.event, trigger.capture === true, trigger.passive === true)
+    chainSFCEventAttr(attrs, attr, (event: Event) => {
+      if (!matchesComponentSFCEditTrigger(trigger, createSFCInteractionTriggerEvent(event), resolveSFCInteractionPlatform())) return
+      if (trigger.once && context.eventBoundary && !context.eventBoundary.claimLocalOnce(`${key}:edit:${triggerIndex}`)) return
       if (trigger.prevent && event.cancelable) event.preventDefault()
       if (trigger.stop) event.stopPropagation()
       const original = evaluateSFCValue(node.editable?.value, context)
@@ -158,92 +164,6 @@ async function commitEditable(
   )
 }
 
-function editTriggerEvent(event: Event): ComponentSFCEditTriggerEvent {
-  const source = event as Event & {
-    altKey?: unknown
-    button?: unknown
-    code?: unknown
-    ctrlKey?: unknown
-    getModifierState?: (keyArg: string) => boolean
-    isComposing?: unknown
-    key?: unknown
-    metaKey?: unknown
-    repeat?: unknown
-    shiftKey?: unknown
-  }
-  return {
-    ...(typeof source.key === 'string' ? { key: source.key } : {}),
-    ...(typeof source.code === 'string' ? { code: source.code } : {}),
-    ...(typeof source.repeat === 'boolean' ? { repeat: source.repeat } : {}),
-    ...(typeof source.isComposing === 'boolean' ? { composing: source.isComposing } : {}),
-    ...(typeof source.button === 'number' ? { button: source.button } : {}),
-    targetIsCurrentTarget: event.target === event.currentTarget,
-    held: editTriggerHeldKeys(),
-    modifiers: {
-      ctrl: source.ctrlKey === true,
-      shift: source.shiftKey === true,
-      alt: source.altKey === true,
-      meta: source.metaKey === true,
-      altGraph: source.getModifierState?.('AltGraph') === true,
-    },
-  }
-}
-
-interface EditTriggerHeldKeyEntry {
-  key: string
-  code?: string
-}
-
-interface EditTriggerKeyState {
-  entries: Map<string, EditTriggerHeldKeyEntry>
-}
-
-const editTriggerKeyStates = new WeakMap<Document, EditTriggerKeyState>()
-const editTriggerModifierKeys = new Set([
-  'Alt', 'AltGraph', 'CapsLock', 'Control', 'Fn', 'FnLock', 'Hyper', 'Meta', 'NumLock',
-  'OS', 'ScrollLock', 'Shift', 'Super', 'Symbol', 'SymbolLock',
-])
-
-function ensureEditTriggerKeyState(): EditTriggerKeyState | null {
-  if (typeof document === 'undefined') return null
-  const current = editTriggerKeyStates.get(document)
-  if (current) return current
-
-  const state: EditTriggerKeyState = { entries: new Map() }
-  const reset = () => state.entries.clear()
-  document.addEventListener('keydown', (event) => {
-    if (editTriggerModifierKeys.has(event.key)) return
-    const key = event.key.toLowerCase()
-    const identity = event.code || `key:${key}`
-    state.entries.set(identity, { key, ...(event.code ? { code: event.code } : {}) })
-  }, true)
-  document.addEventListener('keyup', (event) => {
-    if (event.code) state.entries.delete(event.code)
-    else state.entries.delete(`key:${event.key.toLowerCase()}`)
-  }, true)
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') reset()
-  })
-  document.defaultView?.addEventListener('blur', reset)
-  document.defaultView?.addEventListener('pagehide', reset)
-  editTriggerKeyStates.set(document, state)
-  return state
-}
-
-function editTriggerHeldKeys(): NonNullable<ComponentSFCEditTriggerEvent['held']> {
-  const entries = [...(ensureEditTriggerKeyState()?.entries.values() ?? [])]
-  return {
-    key: [...new Set(entries.map(entry => entry.key))],
-    code: [...new Set(entries.flatMap(entry => entry.code ? [entry.code] : []))],
-  }
-}
-
-function editTriggerPlatform(): ComponentSFCEditTriggerPlatform {
-  if (typeof navigator === 'undefined') return 'unknown'
-  const source = navigator as Navigator & { userAgentData?: { platform?: string } }
-  return resolveComponentSFCEditTriggerPlatform(source.userAgentData?.platform ?? source.platform ?? source.userAgent)
-}
-
 function readTargetValue(event: Event, tag: string): unknown {
   const target = event.target as HTMLInputElement | HTMLSelectElement | null
   if (!target) return undefined
@@ -274,16 +194,8 @@ function asFocusable(value: unknown): { focus: () => void } | null {
   return typeof focus === 'function' ? { focus: () => focus.call(value) } : null
 }
 
-function vueEventPropName(name: string): string {
-  return `on${name.charAt(0).toUpperCase()}${name.slice(1)}`
-}
-
-function chainAttr(attrs: Record<string, unknown>, name: string, next: (event: any) => void): void {
-  const previous = attrs[name]
-  attrs[name] = (event: Event) => {
-    if (typeof previous === 'function') previous(event)
-    next(event)
-  }
+function vueEventPropName(name: string, capture: boolean, passive: boolean): string {
+  return `on${name.charAt(0).toUpperCase()}${name.slice(1)}${capture ? 'Capture' : ''}${passive ? 'Passive' : ''}`
 }
 
 function isEditedPayload(value: unknown): value is ComponentSFCEditedEventPayload {

@@ -75,6 +75,9 @@ describe('SFC intrinsic Events in shadcn renderer', () => {
       'click',
       expect.objectContaining({ type: 'click', x: 4, y: 8, button: 0 }),
       node.events,
+      [],
+      0,
+      {},
     )
   })
 })
