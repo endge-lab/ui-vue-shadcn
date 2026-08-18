@@ -17,7 +17,7 @@ import {
 import { evaluateSFCProps, evaluateSFCValue, readSFCObjectPath } from '@/ui/render/sfc/SFCRender_Evaluator'
 import { extendSFCVueRenderContext } from '@/ui/render/sfc/SFCRender_Context'
 import { renderSFCNodes } from '@/ui/render/sfc/SFCRender_Node'
-import { SFCRender_Base } from '@/ui/render/sfc/SFCRender_Base'
+import { createSFCNodeEventAttrs, SFCRender_Base } from '@/ui/render/sfc/SFCRender_Base'
 import { normalizeSFCTableCellAlignment } from '@/ui/render/sfc/SFCRender_TableAlignment'
 
 import type { EndgeShadcnTableColumn, EndgeShadcnTablePaging } from '@/ui/table/table.types'
@@ -107,8 +107,13 @@ export const VueShadcnRender_Table: SFCVueRenderFunction = SFCRender_Base((input
         }, tableContext.iteration, `${tableContext.consumerScope}/row:${rowId}/column:${column.key}`)
         const children = renderSFCNodes(input.h, column.cellNodes, cellContext)
         const contentAttrs = getSFCTableCellStyleSurfaces(row, column.index)?.cellContent.attrs
+        const cellProps = column.cellNode ? evaluateSFCProps(column.cellNode.props, cellContext) : {}
+        const eventAttrs = column.cellNode
+          ? createSFCNodeEventAttrs(column.cellNode, cellProps, cellContext)
+          : {}
 
         return input.h('div', {
+          ...eventAttrs,
           part: contentAttrs?.part ?? 'cell-content',
           'data-endge-part': contentAttrs?.['data-endge-part'] ?? 'cell-content',
           class: ['endge-sfc-table-cell-content', 'endge-shadcn-table__cell-content', contentAttrs?.class],
@@ -153,6 +158,7 @@ function collectTableColumns(
       sort: sort
         ? { sortable: sort.sortable, comparator: sort.comparator, paths: [...sort.paths] }
         : null,
+      cellNode: resolveCellNode(node),
       cellNodes: resolveCellNodes(node),
       styleSurfaces: styleSurfaces[index]!,
     }
@@ -160,8 +166,12 @@ function collectTableColumns(
 }
 
 function resolveCellNodes(columnNode: RComponentSFC_IR_ElementNode): RComponentSFC_IR_Node[] {
-  const cell = columnNode.children.filter(isElementNode).find(node => node.tag === 'Cell')
+  const cell = resolveCellNode(columnNode)
   return (cell?.children ?? columnNode.children).filter(node => !isTableMenuNode(node))
+}
+
+function resolveCellNode(columnNode: RComponentSFC_IR_ElementNode): RComponentSFC_IR_ElementNode | null {
+  return columnNode.children.filter(isElementNode).find(node => node.tag === 'Cell') ?? null
 }
 
 function normalizeColumnKey(

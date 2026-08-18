@@ -308,6 +308,7 @@ function createColumns(): EndgeShadcnTableColumn[] {
     maxWidth: 400,
     pinnable: false,
     sort: null,
+    cellNode: null,
     cellNodes: [],
     styleSurfaces: {
       headerCell: createSurface('header-cell', index + 1, 2),

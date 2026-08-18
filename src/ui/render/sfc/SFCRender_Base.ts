@@ -141,11 +141,10 @@ function renderOnce(
     : null
   const attrs = {
     ...createSFCBaseAttrs(input.node, props, styleNode, input.context.runtimeScopeIds),
-    ...createSFCEventAttrs(input.node, props, input.context),
+    ...createSFCNodeEventAttrs(input.node, props, input.context),
     ...(inspectionId ? createSFCInspectionAttrs(input.context, inspectionId) : {}),
     ...input.attrs,
   }
-  attachSFCInteractionAttrs(attrs, input.node, props, input.context)
   attachSFCEditableAttrs(attrs, input.node, props, input.context)
   const childContext = extendSFCVueStyleContext(input.context, styleNode)
   if (input.node.tag === 'Editable') {
@@ -172,6 +171,17 @@ function renderOnce(
     props,
     attrs,
   })
+}
+
+/** Connects intrinsic `@event` and conditional `:on` to a renderer-owned surface. */
+export function createSFCNodeEventAttrs(
+  node: RComponentSFC_IR_ElementNode,
+  props: Record<string, unknown>,
+  context: SFCVueRenderContext,
+): Record<string, unknown> {
+  const attrs = createSFCEventAttrs(node, props, context)
+  attachSFCInteractionAttrs(attrs, node, props, context)
+  return attrs
 }
 
 function createSFCEventAttrs(

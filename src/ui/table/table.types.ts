@@ -7,6 +7,7 @@ import type {
   ComponentSFCTableSortMode,
   ComponentSFCTableSortStateItem,
   ComponentSFCEventBoundary,
+  RComponentSFC_IR_ElementNode,
   RComponentSFC_IR_EventBinding,
   RComponentSFC_IR_Node,
   TableSelectionMode,
@@ -34,6 +35,7 @@ export interface EndgeShadcnTableColumn {
   maxWidth: number
   pinnable: boolean
   sort: EndgeShadcnTableColumnSort | null
+  cellNode: RComponentSFC_IR_ElementNode | null
   cellNodes: RComponentSFC_IR_Node[]
   styleSurfaces: SFCTableColumnStyleSurfaces
 }

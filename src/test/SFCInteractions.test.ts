@@ -144,6 +144,40 @@ describe('SFC :on interactions in Shadcn Vue renderer', () => {
       }),
     ])
   })
+
+  it('attaches Cell interactions to the table cell surface with row and column locals', async () => {
+    const result = compileComponentSFC(`<template><Table :rows="rows" row-key="id"><Column key="status"><Cell :on="{ event: 'click', modifiers: { shift: true }, held: { code: ['KeyW'] }, reaction: action({ identity: 'cell.inspect' }) }"><Text>{{ value }}</Text></Cell></Column></Table></template>`)
+    const node = result.ir?.template?.roots[0]
+    if (!node || node.kind !== 'element') throw new Error(JSON.stringify(result.diagnostics))
+    const boundary = {
+      observesChild: vi.fn(() => false),
+      claimLocalOnce: vi.fn(() => true),
+      routeChild: vi.fn(async () => undefined),
+    }
+    const context = createSFCVueRenderContext({ rows: [{ id: 7, status: 'ready' }] })
+    context.eventBoundary = boundary as any
+    const rendered = renderSFCNode(h, node, context)
+    if (!isVNode(rendered)) throw new Error('Table did not render a VNode')
+    const table = (rendered.children as any[])[0]
+    const column = table.props.columns[0]
+    const cell = table.props.renderCell(column, { id: 7, status: 'ready' }, 0, '7')
+    if (!isVNode(cell)) throw new Error('Cell did not render a VNode')
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'w', code: 'KeyW', bubbles: true }))
+    cell.props?.onClick(new MouseEvent('click', { bubbles: true, shiftKey: true, button: 0 }))
+    await Promise.resolve()
+
+    expect(boundary.routeChild).toHaveBeenCalledWith(
+      expect.objectContaining({ nodeId: column.cellNode.id, componentTag: 'Cell' }),
+      'click',
+      expect.any(Object),
+      expect.any(Array),
+      [],
+      0,
+      expect.objectContaining({ row: { id: 7, status: 'ready' }, rowKey: 7, columnKey: 'status', value: 'ready' }),
+    )
+    document.dispatchEvent(new KeyboardEvent('keyup', { key: 'w', code: 'KeyW', bubbles: true }))
+  })
 })
 
 function compileText(template: string): RComponentSFC_IR_ElementNode {
