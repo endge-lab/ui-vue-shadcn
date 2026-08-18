@@ -1,8 +1,14 @@
 import type {
-  ComponentSFCEditTrigger,
+  ComponentSFCEditTriggerEvent,
+  ComponentSFCEditTriggerPlatform,
   ComponentSFCEventRuntimeSource,
   ComponentSFCEditedEventPayload,
   RComponentSFC_IR_ElementNode,
+} from '@endge/core'
+import {
+  matchesComponentSFCEditTrigger,
+  normalizeComponentSFCEditTriggers,
+  resolveComponentSFCEditTriggerPlatform,
 } from '@endge/core'
 import { isoToDateTimeLocalInput } from '@endge/utils'
 
@@ -48,10 +54,12 @@ export function attachSFCEditableAttrs(
   }
 
   const triggerValue = evaluateSFCValue(node.editable.triggers, context)
-  for (const trigger of normalizeEditTriggers(triggerValue)) {
+  const triggers = normalizeComponentSFCEditTriggers(triggerValue)
+  if (triggers.some(trigger => trigger.held)) ensureEditTriggerKeyState()
+  for (const trigger of triggers) {
     const attr = vueEventPropName(trigger.event)
     chainAttr(attrs, attr, (event: Event) => {
-      if (!matchesTrigger(trigger, event)) return
+      if (!matchesComponentSFCEditTrigger(trigger, editTriggerEvent(event), editTriggerPlatform())) return
       if (trigger.prevent && event.cancelable) event.preventDefault()
       if (trigger.stop) event.stopPropagation()
       const original = evaluateSFCValue(node.editable?.value, context)
@@ -150,33 +158,90 @@ async function commitEditable(
   )
 }
 
-function normalizeEditTriggers(value: unknown): ComponentSFCEditTrigger[] {
-  const values = Array.isArray(value) ? value : [value]
-  return values.flatMap((item): ComponentSFCEditTrigger[] => {
-    if (typeof item === 'string' && item.trim()) return [{ event: item.trim() }]
-    if (!item || typeof item !== 'object' || Array.isArray(item)) return []
-    const source = item as Record<string, unknown>
-    const event = String(source.event ?? '').trim()
-    if (!event) return []
-    const keys = Array.isArray(source.key)
-      ? source.key.map(String)
-      : source.key == null ? undefined : [String(source.key)]
-    return [{
-      event,
-      ...(keys?.length ? { key: keys } : {}),
-      ...(Number.isInteger(source.button) ? { button: Number(source.button) } : {}),
-      stop: source.stop === true,
-      prevent: source.prevent === true,
-      self: source.self === true,
-    }]
-  })
+function editTriggerEvent(event: Event): ComponentSFCEditTriggerEvent {
+  const source = event as Event & {
+    altKey?: unknown
+    button?: unknown
+    code?: unknown
+    ctrlKey?: unknown
+    getModifierState?: (keyArg: string) => boolean
+    isComposing?: unknown
+    key?: unknown
+    metaKey?: unknown
+    repeat?: unknown
+    shiftKey?: unknown
+  }
+  return {
+    ...(typeof source.key === 'string' ? { key: source.key } : {}),
+    ...(typeof source.code === 'string' ? { code: source.code } : {}),
+    ...(typeof source.repeat === 'boolean' ? { repeat: source.repeat } : {}),
+    ...(typeof source.isComposing === 'boolean' ? { composing: source.isComposing } : {}),
+    ...(typeof source.button === 'number' ? { button: source.button } : {}),
+    targetIsCurrentTarget: event.target === event.currentTarget,
+    held: editTriggerHeldKeys(),
+    modifiers: {
+      ctrl: source.ctrlKey === true,
+      shift: source.shiftKey === true,
+      alt: source.altKey === true,
+      meta: source.metaKey === true,
+      altGraph: source.getModifierState?.('AltGraph') === true,
+    },
+  }
 }
 
-function matchesTrigger(trigger: ComponentSFCEditTrigger, event: Event): boolean {
-  if (trigger.self && event.target !== event.currentTarget) return false
-  if (trigger.key?.length && !trigger.key.includes((event as KeyboardEvent).key)) return false
-  if (trigger.button != null && Number((event as MouseEvent).button) !== trigger.button) return false
-  return true
+interface EditTriggerHeldKeyEntry {
+  key: string
+  code?: string
+}
+
+interface EditTriggerKeyState {
+  entries: Map<string, EditTriggerHeldKeyEntry>
+}
+
+const editTriggerKeyStates = new WeakMap<Document, EditTriggerKeyState>()
+const editTriggerModifierKeys = new Set([
+  'Alt', 'AltGraph', 'CapsLock', 'Control', 'Fn', 'FnLock', 'Hyper', 'Meta', 'NumLock',
+  'OS', 'ScrollLock', 'Shift', 'Super', 'Symbol', 'SymbolLock',
+])
+
+function ensureEditTriggerKeyState(): EditTriggerKeyState | null {
+  if (typeof document === 'undefined') return null
+  const current = editTriggerKeyStates.get(document)
+  if (current) return current
+
+  const state: EditTriggerKeyState = { entries: new Map() }
+  const reset = () => state.entries.clear()
+  document.addEventListener('keydown', (event) => {
+    if (editTriggerModifierKeys.has(event.key)) return
+    const key = event.key.toLowerCase()
+    const identity = event.code || `key:${key}`
+    state.entries.set(identity, { key, ...(event.code ? { code: event.code } : {}) })
+  }, true)
+  document.addEventListener('keyup', (event) => {
+    if (event.code) state.entries.delete(event.code)
+    else state.entries.delete(`key:${event.key.toLowerCase()}`)
+  }, true)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') reset()
+  })
+  document.defaultView?.addEventListener('blur', reset)
+  document.defaultView?.addEventListener('pagehide', reset)
+  editTriggerKeyStates.set(document, state)
+  return state
+}
+
+function editTriggerHeldKeys(): NonNullable<ComponentSFCEditTriggerEvent['held']> {
+  const entries = [...(ensureEditTriggerKeyState()?.entries.values() ?? [])]
+  return {
+    key: [...new Set(entries.map(entry => entry.key))],
+    code: [...new Set(entries.flatMap(entry => entry.code ? [entry.code] : []))],
+  }
+}
+
+function editTriggerPlatform(): ComponentSFCEditTriggerPlatform {
+  if (typeof navigator === 'undefined') return 'unknown'
+  const source = navigator as Navigator & { userAgentData?: { platform?: string } }
+  return resolveComponentSFCEditTriggerPlatform(source.userAgentData?.platform ?? source.platform ?? source.userAgent)
 }
 
 function readTargetValue(event: Event, tag: string): unknown {
