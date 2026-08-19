@@ -2,6 +2,8 @@ import type {
   ComponentSFCEventRuntimeSource,
   ComponentSFCEditedEventPayload,
   RComponentSFC_IR_ElementNode,
+  RComponentSFC_IR_EventModifier,
+  RComponentSFC_IR_Value,
 } from '@endge/core'
 import {
   matchesComponentSFCEditTrigger,
@@ -24,6 +26,22 @@ import {
   resolveSFCInteractionPlatform,
 } from '@/ui/render/sfc/SFCRender_Interaction'
 
+interface EditableOutcomeBindings {
+  cancelTriggers?: RComponentSFC_IR_Value
+  commitTriggers?: RComponentSFC_IR_Value
+  cancelModifiers?: RComponentSFC_IR_EventModifier[]
+  commitModifiers?: RComponentSFC_IR_EventModifier[]
+}
+
+const DEFAULT_CANCEL_TRIGGERS: RComponentSFC_IR_Value = {
+  kind: 'literal',
+  value: [{ event: 'keydown', key: ['Escape'], prevent: true, stop: true }, { event: 'focusout' }],
+}
+const DEFAULT_COMMIT_TRIGGERS: RComponentSFC_IR_Value = {
+  kind: 'literal',
+  value: [{ event: 'keydown', key: ['Enter'], prevent: true }],
+}
+
 /** Stable host-owned key shared by display, edit and virtualized Table renders. */
 export function editableConsumerKey(node: RComponentSFC_IR_ElementNode, context: SFCVueRenderContext): string {
   return `${context.consumerScope}/editable:${node.id}`
@@ -45,14 +63,10 @@ export function attachSFCEditableAttrs(
   const key = editableConsumerKey(node, context)
   const active = context.host.getEditSession(key)
   if (active) {
-    chainSFCEventAttr(attrs, 'onKeydown', (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return
-      event.stopPropagation()
-      context.host?.cancelEditSession(key)
-    })
+    attachEditableOutcomeAttrs(attrs, node, context, key, 'cancel')
+    attachEditableOutcomeAttrs(attrs, node, context, key, 'commit')
     if (node.tag === 'Editable') {
       chainSFCEventAttr(attrs, 'onInput', (event: Event) => context.host?.updateEditDraft(key, readTargetValue(event, node.tag)))
-      chainSFCEventAttr(attrs, 'onChange', (event: Event) => void commitEditable(node, context, readTargetValue(event, node.tag)))
     }
     return
   }
@@ -114,20 +128,47 @@ export function renderSFCEditablePrimitive(
       autofocus: true,
       ref: ((element: unknown) => focusSFCEditableControl(element)) as any,
       onInput: (event: Event) => host.updateEditDraft(key, readTargetValue(event, input.node.tag)),
-      onChange: (event: Event) => void commitEditable(input.node, input.context, readTargetValue(event, input.node.tag)),
-      onKeydown: (event: KeyboardEvent) => {
-        if (event.key === 'Escape') {
-          event.preventDefault()
-          event.stopPropagation()
-          host.cancelEditSession(key)
-        }
-        else if (event.key === 'Enter') {
-          event.preventDefault()
-          void commitEditable(input.node, input.context, readTargetValue(event, input.node.tag))
-        }
-      },
     },
   })
+}
+
+function attachEditableOutcomeAttrs(
+  attrs: Record<string, unknown>,
+  node: RComponentSFC_IR_ElementNode,
+  context: SFCVueRenderContext,
+  key: string,
+  outcome: 'cancel' | 'commit',
+): void {
+  const editable = node.editable as typeof node.editable & EditableOutcomeBindings
+  const binding = outcome === 'cancel'
+    ? editable?.cancelTriggers ?? DEFAULT_CANCEL_TRIGGERS
+    : editable?.commitTriggers ?? DEFAULT_COMMIT_TRIGGERS
+  const suffixes = outcome === 'cancel' ? editable?.cancelModifiers : editable?.commitModifiers
+  const triggers = normalizeComponentSFCEditTriggers(evaluateSFCValue(binding, context))
+    .map(trigger => applySuffixModifiers(trigger, suffixes))
+  if (triggers.some(trigger => trigger.held)) ensureSFCInteractionKeyState()
+  for (const [triggerIndex, trigger] of triggers.entries()) {
+    const eventName = trigger.event === 'blur' ? 'focusout' : trigger.event
+    const attr = vueEventPropName(eventName, trigger.capture === true, trigger.passive === true)
+    chainSFCEventAttr(attrs, attr, (event: Event) => {
+      if (!matchesComponentSFCEditTrigger(trigger, createSFCInteractionTriggerEvent(event), resolveSFCInteractionPlatform())) return
+      if (eventName === 'focusout' && focusRemainsInside(event)) return
+      if (trigger.once && context.eventBoundary && !context.eventBoundary.claimLocalOnce(`${key}:${outcome}:${triggerIndex}`)) return
+      if (trigger.prevent && event.cancelable) event.preventDefault()
+      if (trigger.stop) event.stopPropagation()
+      if (outcome === 'cancel') {
+        context.host?.cancelEditSession(key)
+        return
+      }
+      void commitEditable(node, context, readTargetValue(event, node.tag))
+    })
+  }
+}
+
+function focusRemainsInside(event: Event): boolean {
+  const current = event.currentTarget as Node | null
+  const related = (event as FocusEvent).relatedTarget as Node | null
+  return Boolean(current && related && current.contains(related))
 }
 
 /** Commits an editable child event and returns the normalized payload for parent routing. */
@@ -147,7 +188,9 @@ async function commitEditable(
   value: unknown,
 ): Promise<void> {
   const key = editableConsumerKey(node, context)
-  const payload = context.host?.commitEditSession(key, value)
+  const payload = value === undefined
+    ? context.host?.commitEditSession(key)
+    : context.host?.commitEditSession(key, value)
   if (!payload || !context.eventBoundary) return
   const source: ComponentSFCEventRuntimeSource = {
     nodeId: node.id,

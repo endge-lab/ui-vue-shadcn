@@ -43,6 +43,15 @@ const TEST_WORKSPACE: EndgeWorkspaceDefinition = {
     defaultAuthProfileIdentity: null,
     sfcAdapterIds: ['vue-native', 'vue-shadcn'],
     defaultSfcAdapterId: 'vue-shadcn',
+    sfcEditing: {
+      cancelOn: [
+        { event: 'keydown', key: ['Escape'], prevent: true, stop: true },
+        { event: 'focusout' },
+      ],
+      commitOn: [
+        { event: 'keydown', key: ['Enter'], prevent: true },
+      ],
+    },
     diagnostics: createDiagnosticsConfiguration(),
   },
 }
