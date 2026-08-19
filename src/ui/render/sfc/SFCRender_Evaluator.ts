@@ -64,6 +64,8 @@ export function readSFCPath(path: string, context: SFCVueRenderContext): unknown
 
   const root = head.key === 'props'
     ? context.props
+    : head.key === '$context'
+      ? context.context
     : Object.prototype.hasOwnProperty.call(context.locals, head.key)
       ? context.locals[head.key]
       : context.props[head.key]
@@ -215,6 +217,7 @@ function evaluateIdentifier(
   if (name === 'NaN') return Number.NaN
   if (name === 'Infinity') return Number.POSITIVE_INFINITY
   if (name === 'props') return context.props
+  if (name === '$context') return context.context
 
   if (Object.prototype.hasOwnProperty.call(context.locals, name)) {
     return context.locals[name]

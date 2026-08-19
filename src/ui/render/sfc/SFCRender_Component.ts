@@ -1,5 +1,6 @@
 import type { ComponentSFCProgramPayload } from '@endge/core'
 import { Endge } from '@endge/core'
+import { cloneVNode, isVNode } from 'vue'
 
 import type { SFCVueRenderContext, SFCVueRenderFunction } from '@/domain/types/sfc-render.type'
 import { SFCRender_Base } from '@/ui/render/sfc/SFCRender_Base'
@@ -48,6 +49,7 @@ export const SFCRender_Component: SFCVueRenderFunction = SFCRender_Base((input) 
     input.context.inspection,
     artifact.metadata,
     activeEdit ? 'edit' : String(input.props.variant ?? 'default'),
+    input.context.tooltipManager ?? null,
   )
   childContext.styleParent = input.context.styleParent
   childContext.inspectionParentId = input.context.inspectionParentId
@@ -66,13 +68,21 @@ export const SFCRender_Component: SFCVueRenderFunction = SFCRender_Base((input) 
       style: { display: 'contents' },
     }, children)
   }
-  if (children.length === 1) return children[0]!
+  if (children.length === 1) {
+    const child = children[0]!
+    return 'data-endge-tooltip-trigger' in input.attrs && isVNode(child)
+      ? cloneVNode(child, input.attrs, true)
+      : child
+  }
 
   // RevoGrid cell templates provide a DOM hyperscript function that accepts
   // string tags, but not Vue's Symbol-based Fragment. `display: contents`
   // keeps a multi-root authored component layout-neutral in both renderers.
   return input.h('span', {
-    style: { display: 'contents' },
+    ...('data-endge-tooltip-trigger' in input.attrs ? input.attrs : {}),
+    style: 'data-endge-tooltip-trigger' in input.attrs
+      ? { display: 'inline-flex', minWidth: 0 }
+      : { display: 'contents' },
   }, children)
 })
 

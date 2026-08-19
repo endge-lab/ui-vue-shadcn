@@ -4,7 +4,7 @@ import type {
   RComponentSFC_IR_ForDirective,
   RComponentSFC_IR_Value,
 } from '@endge/core'
-import { getComponentSFCIntrinsicEventDefinitions } from '@endge/core'
+import { createEndgeTooltipDomId, getComponentSFCIntrinsicEventDefinitions } from '@endge/core'
 import type { EndgeStyleMatchNode } from '@endge/core'
 import type {
   SFCVueRenderConditionState,
@@ -23,6 +23,7 @@ import {
   renderSFCEditablePrimitive,
 } from '@/ui/render/sfc/SFCRender_Editable'
 import { attachSFCInteractionAttrs, normalizeSFCInteractionEvent } from '@/ui/render/sfc/SFCRender_Interaction'
+import { attachShadcnTooltipAttrs } from '@/ui/overlay/tooltip/shadcn-tooltip-manager'
 
 /** Выполняет общий SFC render pipeline вокруг primitive renderer-а. */
 export function SFCRender_Base(renderFn: SFCVueRenderFunction): SFCVueRenderFunction {
@@ -102,8 +103,6 @@ export function createSFCBaseAttrs(
   const style = createSFCStyle(node, props)
   if (Object.keys(style).length > 0) attrs.style = style
 
-  if (props.tooltip != null) attrs.title = String(props.tooltip)
-
   if (styleNode) {
     attrs['data-endge-node'] = node.id
     attrs['data-endge-tag'] = node.tag
@@ -145,6 +144,7 @@ function renderOnce(
     ...(inspectionId ? createSFCInspectionAttrs(input.context, inspectionId) : {}),
     ...input.attrs,
   }
+  attachSFCShorthandTooltip(attrs, input.node, props, input.context)
   attachSFCEditableAttrs(attrs, input.node, props, input.context)
   const childContext = extendSFCVueStyleContext(input.context, styleNode)
   if (input.node.tag === 'Editable') {
@@ -171,6 +171,38 @@ function renderOnce(
     props,
     attrs,
   })
+}
+
+function attachSFCShorthandTooltip(
+  attrs: Record<string, unknown>,
+  node: RComponentSFC_IR_ElementNode,
+  props: Record<string, unknown>,
+  context: SFCVueRenderContext,
+): void {
+  if (props.tooltip == null) return
+  const boundaryId = (context.host?.id ?? context.componentStack.join('>')) || 'sfc'
+  const ownerId = `${boundaryId}:${context.consumerScope}:${node.id}`
+  attachShadcnTooltipAttrs(attrs, context.tooltipManager ?? null, anchor => ({
+    ownerId,
+    domId: createEndgeTooltipDomId(ownerId),
+    anchor,
+    kind: 'text',
+    policy: {
+      side: (props['tooltip-side'] ?? props.tooltipSide) as any,
+      align: (props['tooltip-align'] ?? props.tooltipAlign) as any,
+      openDelay: (props['tooltip-open-delay'] ?? props.tooltipOpenDelay) as any,
+      closeDelay: (props['tooltip-close-delay'] ?? props.tooltipCloseDelay) as any,
+    },
+    authoredId: optionalText(props['tooltip-id'] ?? props.tooltipId),
+    className: props['tooltip-class'] ?? props.tooltipClass,
+    part: optionalText(props['tooltip-part'] ?? props.tooltipPart),
+    renderContent: () => String(props.tooltip ?? ''),
+  }))
+}
+
+function optionalText(value: unknown): string | undefined {
+  const normalized = String(value ?? '').trim()
+  return normalized || undefined
 }
 
 /** Connects intrinsic `@event` and conditional `:on` to a renderer-owned surface. */

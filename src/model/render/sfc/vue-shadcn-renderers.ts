@@ -26,7 +26,7 @@ export const VueShadcnRender_DateTime: SFCVueRenderAdapterFunction = (input) => 
     ...input.attrs,
     class: ['endge-sfc-datetime', 'endge-shadcn-datetime', input.props.class],
     datetime: input.props.value == null ? undefined : String(input.props.value),
-  }, formatDateTime(input.props.value, input.props.format))
+  }, formatDateTime(input.props.value, input.props.format, input.props.timezone))
 }
 
 export const VueShadcnRender_Number: SFCVueRenderAdapterFunction = (input) => {
@@ -232,7 +232,7 @@ function normalizeSelectedValues(value: unknown, multiple: boolean): string[] {
   return values.filter(item => item != null).map(item => String(item))
 }
 
-function formatDateTime(value: unknown, format: unknown): string {
+function formatDateTime(value: unknown, format: unknown, timezone: unknown): string {
   if (value == null) return ''
 
   const text = String(value).trim()
@@ -244,19 +244,38 @@ function formatDateTime(value: unknown, format: unknown): string {
 
   const date = new Date(text)
   if (Number.isNaN(date.getTime())) return String(value)
+  const timeZone = normalizeTimezone(timezone)
   if (format === 'HH:mm') {
-    return new Intl.DateTimeFormat(undefined, {
+    return formatInTimezone(date, {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
-    }).format(date)
+    }, timeZone)
   }
-  if (format === 'date') return new Intl.DateTimeFormat().format(date)
+  if (format === 'date') return formatInTimezone(date, {}, timeZone)
 
-  return new Intl.DateTimeFormat(undefined, {
+  return formatInTimezone(date, {
     dateStyle: 'medium',
     timeStyle: 'short',
-  }).format(date)
+  }, timeZone)
+}
+
+function normalizeTimezone(value: unknown): string | undefined {
+  const timezone = String(value ?? '').trim()
+  return !timezone || timezone === 'local' ? undefined : timezone
+}
+
+function formatInTimezone(
+  date: Date,
+  options: Intl.DateTimeFormatOptions,
+  timeZone: string | undefined,
+): string {
+  try {
+    return new Intl.DateTimeFormat(undefined, { ...options, timeZone }).format(date)
+  }
+  catch {
+    return new Intl.DateTimeFormat(undefined, options).format(date)
+  }
 }
 
 function formatNumber(value: unknown, props: Record<string, unknown>): string {

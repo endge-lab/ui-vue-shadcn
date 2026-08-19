@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { Endge } from '@endge/core'
-import { computed, defineComponent, h, Fragment, onScopeDispose, ref } from 'vue'
+import { computed, defineComponent, h, Fragment, inject, onScopeDispose, ref } from 'vue'
 import type { SFCVueRenderAdapterProps } from '@/domain/types/sfc-render.type'
 import { createSFCVueRenderContext } from '@/ui/render/sfc/SFCRender_Context'
 import { renderSFCNodes } from '@/ui/render/sfc/SFCRender_Node'
 import { registerSFCInspectionRoot } from '@/model/render/sfc/SFCVueRenderInspection'
+import { ShadcnTooltipManagerKey } from '@/ui/overlay/tooltip/shadcn-tooltip-manager'
 
 const props = defineProps<SFCVueRenderAdapterProps>()
 const adapterVersion = ref(0)
+const tooltipManager = inject(ShadcnTooltipManagerKey, null)
 
 const unsubscribeUIRegistry = Endge.uiRegistry.subscribe(() => {
   adapterVersion.value += 1
@@ -24,6 +26,9 @@ const context = computed(() => createSFCVueRenderContext(
   undefined,
   undefined,
   props.inspection ?? null,
+  undefined,
+  'default',
+  tooltipManager,
 ))
 
 const RenderRoot = defineComponent({

@@ -27,6 +27,7 @@ import {
   VueShadcnRender_Textarea,
 } from '@/model/render/sfc/vue-shadcn-renderers'
 import { VueShadcnRender_Table } from '@/model/render/sfc/vue-shadcn-table-renderer'
+import { VueShadcnRender_Tooltip } from '@/model/render/sfc/vue-shadcn-tooltip-renderer'
 
 export const VUE_SHADCN_SFC_ADAPTER_ID = 'vue-shadcn'
 
@@ -51,6 +52,7 @@ export const VueShadcnSFCAdapter: SFCVueRenderAdapter = {
     Textarea: VueShadcnRender_Textarea,
     Checkbox: VueShadcnRender_Checkbox,
     Select: VueShadcnRender_Select,
+    Tooltip: VueShadcnRender_Tooltip,
     Table: VueShadcnRender_Table,
   },
   roots: {

@@ -111,6 +111,7 @@ function renderSFCElement(
     context,
     children: [],
     renderChildren: (childContext) => renderSFCNodes(h, node.children, childContext),
+    renderNodes: (nodes, childContext) => renderSFCNodes(h, nodes, childContext),
     props: {},
     attrs: {},
   })
@@ -119,7 +120,7 @@ function renderSFCElement(
 function getSFCElementRenderer(
   node: RComponentSFC_IR_ElementNode,
 ) {
-  if (node.tag === 'Table') return SFCRender_CompoundAdapter
+  if (node.tag === 'Table' || node.tag === 'Tooltip') return SFCRender_CompoundAdapter
   if (isAdapterRenderKey(node.tag)) return SFCRender_Adapter
 
   switch (node.tag) {
@@ -129,6 +130,8 @@ function getSFCElementRenderer(
       return SFCRender_Editable
     case 'Variant':
       return SFCRender_Variant
+    case 'TooltipTrigger':
+    case 'TooltipContent':
     case 'Column':
     case 'Cell':
     case 'ColumnMenu':

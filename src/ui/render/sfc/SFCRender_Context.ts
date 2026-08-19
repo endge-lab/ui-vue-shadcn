@@ -1,6 +1,7 @@
 import type { ComponentSFCEventBoundary, ComponentSFCRuntimeHost, EndgeStyleMatchNode, EndgeStyleSheetArtifact, ProgramMetadata, RComponentSFC_IR, SFCRenderInspectionSessionLike } from '@endge/core'
 import { Endge, ComponentSFCEventBoundary as EndgeComponentSFCEventBoundary } from '@endge/core'
 import type { SFCVueRenderContext, SFCVueRenderIteration } from '@/domain/types/sfc-render.type'
+import type { ShadcnTooltipManager } from '@/ui/overlay/tooltip/shadcn-tooltip-manager'
 import { evaluateSFCValue } from '@/ui/render/sfc/SFCRender_Evaluator'
 
 /** Создает root context для одного render pass SFC renderer adapter. */
@@ -16,6 +17,7 @@ export function createSFCVueRenderContext(
   inspection: SFCRenderInspectionSessionLike | null = null,
   metadata?: ProgramMetadata | null,
   variant = 'default',
+  tooltipManager: ShadcnTooltipManager | null = null,
 ): SFCVueRenderContext {
   const lifecycleScope = host ? Endge.runtime.getRuntimeScopeByHost(host.id) : null
   const runtimeScopeIds: string[] = []
@@ -27,6 +29,7 @@ export function createSFCVueRenderContext(
   if (ir?.style && !styleArtifacts.includes(ir.style)) styleArtifacts.push(ir.style)
   const context: SFCVueRenderContext = {
     props: props ?? {},
+    context: Object.freeze(Endge.context.serialize()),
     locals: {},
     iteration: null,
     renderVersion,
@@ -47,6 +50,7 @@ export function createSFCVueRenderContext(
     inspection,
     inspectionParentId: null,
     metadata: metadata ?? host?.getArtifact()?.metadata ?? null,
+    tooltipManager,
   }
   context.locals = evaluatePortLocals(ir, context)
   return context
@@ -61,6 +65,7 @@ export function extendSFCVueRenderContext(
 ): SFCVueRenderContext {
   return {
     props: context.props,
+    context: context.context,
     locals: {
       ...context.locals,
       ...locals,
@@ -82,6 +87,7 @@ export function extendSFCVueRenderContext(
     inspection: context.inspection,
     inspectionParentId: context.inspectionParentId,
     metadata: context.metadata,
+    tooltipManager: context.tooltipManager,
   }
 }
 

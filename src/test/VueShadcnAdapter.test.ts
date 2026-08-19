@@ -40,6 +40,11 @@ const TEST_WORKSPACE: EndgeWorkspaceDefinition = {
       { identity: 'dark', displayName: 'Dark' },
     ],
     defaultTheme: 'light',
+    timezones: [
+      { identity: 'local', displayName: 'Local time' },
+      { identity: 'UTC', displayName: 'UTC' },
+    ],
+    defaultTimezone: 'local',
     defaultAuthProfileIdentity: null,
     sfcAdapterIds: ['vue-native', 'vue-shadcn'],
     defaultSfcAdapterId: 'vue-shadcn',
@@ -52,6 +57,7 @@ const TEST_WORKSPACE: EndgeWorkspaceDefinition = {
         { event: 'keydown', key: ['Enter'], prevent: true },
       ],
     },
+    tooltips: { side: 'right', align: 'start', openDelay: 250, closeDelay: 100 },
     diagnostics: createDiagnosticsConfiguration(),
   },
 }

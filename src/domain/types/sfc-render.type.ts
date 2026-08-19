@@ -16,13 +16,16 @@ import type {
   EndgeStyleMatchNode,
   EndgeStyleSheetArtifact,
   ProgramMetadata,
+  EndgeContextSnapshot,
 } from '@endge/core'
 import { ENDGE_SFC_RENDER_ADAPTER_REQUIRED_KEYS } from '@endge/core'
 import type { h as VueH, VNode } from 'vue'
+import type { ShadcnTooltipManager } from '@/ui/overlay/tooltip/shadcn-tooltip-manager'
 
 /** Полный контракт Vue adapter-а: простые primitives и compound Table renderer. */
 export const SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS = [
   ...ENDGE_SFC_RENDER_ADAPTER_REQUIRED_KEYS,
+  'Tooltip',
   'Table',
 ] as const
 
@@ -45,6 +48,8 @@ export type SFCVueRenderBinding
 /** Контекст текущего SFC render pass. */
 export interface SFCVueRenderContext {
   props: Record<string, unknown>
+  /** Read-only snapshot глобального Endge context для текущего render pass. */
+  context: Readonly<EndgeContextSnapshot>
   locals: Record<string, unknown>
   iteration: SFCVueRenderIteration | null
   renderVersion: number
@@ -76,6 +81,7 @@ export interface SFCVueRenderContext {
   inspectionParentId?: string | null
   /** Compiled metadata текущего Component SFC artifact. */
   metadata: ProgramMetadata | null
+  tooltipManager?: ShadcnTooltipManager | null
 }
 
 /** Structural runtime-state controller contract used by Vue render adapters. */
@@ -155,6 +161,7 @@ export interface SFCVueRenderElementInput {
   context: SFCVueRenderContext
   children: SFCVueRenderListResult
   renderChildren: (context: SFCVueRenderContext) => SFCVueRenderListResult
+  renderNodes: (nodes: RComponentSFC_IR_Node[], context: SFCVueRenderContext) => SFCVueRenderListResult
   props: Record<string, unknown>
   attrs: Record<string, unknown>
 }
