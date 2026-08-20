@@ -115,10 +115,10 @@ function clamp(value: number, min: number, max: number): number {
   width: max-content;
   max-width: min(var(--endge-tooltip-max-width, 320px), calc(100vw - 12px));
   padding: var(--endge-tooltip-padding, 6px 9px);
-  border: var(--endge-tooltip-border, 1px solid hsl(var(--border, 214 32% 91%) / 0.3));
+  border: var(--endge-tooltip-border, 1px solid color-mix(in srgb, var(--border, #e4e4e7) 30%, transparent));
   border-radius: var(--endge-tooltip-radius, 6px);
-  background: var(--endge-tooltip-background, hsl(var(--foreground, 222 47% 11%)));
-  color: var(--endge-tooltip-color, hsl(var(--background, 0 0% 100%)));
+  background: var(--endge-tooltip-background, var(--popover, var(--background, #fff)));
+  color: var(--endge-tooltip-color, var(--popover-foreground, var(--foreground, #18181b)));
   box-shadow: var(--endge-tooltip-shadow, 0 8px 24px rgb(0 0 0 / 0.2));
   font-size: var(--endge-tooltip-font-size, 12px);
   line-height: var(--endge-tooltip-line-height, 1.4);
