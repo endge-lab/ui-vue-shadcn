@@ -29,7 +29,7 @@ export function createSFCVueRenderContext(
   if (ir?.style && !styleArtifacts.includes(ir.style)) styleArtifacts.push(ir.style)
   const context: SFCVueRenderContext = {
     props: props ?? {},
-    context: Object.freeze(Endge.context.serialize()),
+    context: Object.freeze(Endge.context.runtimeSnapshot()),
     locals: {},
     iteration: null,
     renderVersion,

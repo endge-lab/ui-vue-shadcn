@@ -1,4 +1,11 @@
 import type { EndgeTooltipConfiguration } from '@endge/core'
+import {
+  ENDGE_KEYBOARD_CONTEXT_RAPH_PATH,
+  Endge,
+  matchesComponentSFCInteractionKeyboardCondition,
+  normalizeComponentSFCInteractionKeyboardCondition,
+} from '@endge/core'
+import { Raph } from '@endge/raph'
 import type { InjectionKey, VNodeChild } from 'vue'
 import { shallowReactive } from 'vue'
 
@@ -40,6 +47,7 @@ export class ShadcnTooltipManager {
   private closeTimer: ReturnType<typeof setTimeout> | null = null
   private generation = 0
   private disposed = false
+  private readonly disposeKeyboardWatch: () => void
 
   public constructor(defaults: EndgeTooltipConfiguration) {
     this.defaults = { ...defaults }
@@ -47,6 +55,10 @@ export class ShadcnTooltipManager {
       phase: 'idle', ownerId: null, domId: null, anchor: null, kind: 'text',
       policy: { ...defaults }, className: null, authoredId: null, part: null, content: null,
     })
+    this.disposeKeyboardWatch = Raph.watch([
+      ENDGE_KEYBOARD_CONTEXT_RAPH_PATH,
+      `${ENDGE_KEYBOARD_CONTEXT_RAPH_PATH}.*`,
+    ], () => this.reconcileActivation())
   }
 
   public activate(request: ShadcnTooltipRequest, reason: ShadcnTooltipReason): void {
@@ -58,14 +70,7 @@ export class ShadcnTooltipManager {
     }
     this.request = request
     this.reasons.add(reason)
-    if (this.state.phase === 'visible' && this.state.ownerId === request.ownerId) return
-    this.clearOpen()
-    this.state.phase = 'pending'
-    this.state.ownerId = request.ownerId
-    const policy = resolvePolicy(this.defaults, request.policy)
-    const generation = ++this.generation
-    if (policy.openDelay === 0) this.show(generation, policy)
-    else this.openTimer = setTimeout(() => this.show(generation, policy), policy.openDelay)
+    this.reconcileActivation()
   }
 
   public deactivate(ownerId: string, reason: ShadcnTooltipReason): void {
@@ -90,6 +95,7 @@ export class ShadcnTooltipManager {
   public dispose(): void {
     if (this.disposed) return
     this.disposed = true
+    this.disposeKeyboardWatch()
     this.reasons.clear()
     this.hide()
   }
@@ -97,7 +103,7 @@ export class ShadcnTooltipManager {
   private show(generation: number, policy: EndgeTooltipConfiguration): void {
     this.openTimer = null
     const request = this.request
-    if (this.disposed || generation !== this.generation || !request || !this.reasons.size || !request.anchor.isConnected) {
+    if (this.disposed || generation !== this.generation || !request || !this.reasons.size || !request.anchor.isConnected || !this.matchesKeyboard(policy)) {
       this.hide()
       return
     }
@@ -111,15 +117,43 @@ export class ShadcnTooltipManager {
   }
 
   private hide(): void {
+    this.suspend()
+    this.request = null
+  }
+
+  private suspend(): void {
     this.clearOpen()
     this.clearClose()
     this.generation += 1
     if (this.state.anchor && this.state.domId) updateDescribedBy(this.state.anchor, this.state.domId, false)
-    this.request = null
     Object.assign(this.state, {
       phase: 'idle', ownerId: null, domId: null, anchor: null,
       className: null, authoredId: null, part: null, content: null,
     })
+  }
+
+  private reconcileActivation(): void {
+    const request = this.request
+    if (this.disposed || !request || !this.reasons.size || !request.anchor.isConnected)
+      return
+    const policy = resolvePolicy(this.defaults, request.policy)
+    if (!this.matchesKeyboard(policy)) {
+      this.suspend()
+      return
+    }
+    if ((this.state.phase === 'visible' || this.state.phase === 'pending') && this.state.ownerId === request.ownerId)
+      return
+    this.clearOpen()
+    this.state.phase = 'pending'
+    this.state.ownerId = request.ownerId
+    const generation = ++this.generation
+    if (policy.openDelay === 0) this.show(generation, policy)
+    else this.openTimer = setTimeout(() => this.show(generation, policy), policy.openDelay)
+  }
+
+  private matchesKeyboard(policy: EndgeTooltipConfiguration): boolean {
+    const keyboard = Endge.context.getKeyboardState()
+    return matchesComponentSFCInteractionKeyboardCondition(policy.keyboard, keyboard, keyboard.platform)
   }
 
   private clearOpen(): void {
@@ -175,6 +209,9 @@ function resolvePolicy(defaults: EndgeTooltipConfiguration, local?: Partial<Endg
     const fallback = key === 'openDelay' ? defaults.openDelay : defaults.closeDelay
     next[key] = Number.isFinite(value) && value >= 0 ? Math.min(60_000, Math.round(value)) : fallback
   }
+  const keyboard = normalizeComponentSFCInteractionKeyboardCondition(next.keyboard)
+  if (keyboard) next.keyboard = keyboard
+  else delete next.keyboard
   return next
 }
 

@@ -13,6 +13,7 @@ import {
   normalizeComponentSFCInteractionTriggers,
   resolveComponentSFCInteractionTriggerPlatform,
 } from '@endge/core'
+import { getKeyboardStateSnapshot, type KeyboardStateSnapshot } from '@endge/utils'
 
 import type { SFCVueRenderContext } from '@/domain/types/sfc-render.type'
 import { evaluateSFCValue } from '@/ui/render/sfc/SFCRender_Evaluator'
@@ -209,38 +210,9 @@ export function normalizeSFCInteractionEvent(
   return payload
 }
 
-interface InteractionHeldKeyEntry { key: string, code?: string }
-interface InteractionKeyState { entries: Map<string, InteractionHeldKeyEntry> }
-
-const interactionKeyStates = new WeakMap<Document, InteractionKeyState>()
-const modifierKeys = new Set([
-  'Alt', 'AltGraph', 'CapsLock', 'Control', 'Fn', 'FnLock', 'Hyper', 'Meta', 'NumLock',
-  'OS', 'ScrollLock', 'Shift', 'Super', 'Symbol', 'SymbolLock',
-])
-
-export function ensureSFCInteractionKeyState(): InteractionKeyState | null {
+export function ensureSFCInteractionKeyState(): KeyboardStateSnapshot | null {
   if (typeof document === 'undefined') return null
-  const current = interactionKeyStates.get(document)
-  if (current) return current
-  const state: InteractionKeyState = { entries: new Map() }
-  const reset = () => state.entries.clear()
-  document.addEventListener('keydown', (event) => {
-    if (modifierKeys.has(event.key)) return
-    const key = event.key.toLowerCase()
-    const identity = event.code || `key:${key}`
-    state.entries.set(identity, { key, ...(event.code ? { code: event.code } : {}) })
-  }, true)
-  document.addEventListener('keyup', (event) => {
-    if (event.code) state.entries.delete(event.code)
-    else state.entries.delete(`key:${event.key.toLowerCase()}`)
-  }, true)
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') reset()
-  })
-  document.defaultView?.addEventListener('blur', reset)
-  document.defaultView?.addEventListener('pagehide', reset)
-  interactionKeyStates.set(document, state)
-  return state
+  return getKeyboardStateSnapshot(document)
 }
 
 export function resolveSFCInteractionPlatform(): ComponentSFCInteractionTriggerPlatform {
@@ -250,11 +222,8 @@ export function resolveSFCInteractionPlatform(): ComponentSFCInteractionTriggerP
 }
 
 function sfcInteractionHeldKeys(): NonNullable<ComponentSFCInteractionTriggerEvent['held']> {
-  const entries = [...(ensureSFCInteractionKeyState()?.entries.values() ?? [])]
-  return {
-    key: [...new Set(entries.map(entry => entry.key))],
-    code: [...new Set(entries.flatMap(entry => entry.code ? [entry.code] : []))],
-  }
+  const state = ensureSFCInteractionKeyState()
+  return state ? { key: [...state.held.key], code: [...state.held.code] } : { key: [], code: [] }
 }
 
 function listenerKey(rule: RComponentSFC_IR_InteractionRule): string {

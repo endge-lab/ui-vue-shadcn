@@ -16,7 +16,7 @@ import type {
   EndgeStyleMatchNode,
   EndgeStyleSheetArtifact,
   ProgramMetadata,
-  EndgeContextSnapshot,
+  EndgeRuntimeContextSnapshot,
 } from '@endge/core'
 import { ENDGE_SFC_RENDER_ADAPTER_REQUIRED_KEYS } from '@endge/core'
 import type { h as VueH, VNode } from 'vue'
@@ -49,7 +49,7 @@ export type SFCVueRenderBinding
 export interface SFCVueRenderContext {
   props: Record<string, unknown>
   /** Read-only snapshot глобального Endge context для текущего render pass. */
-  context: Readonly<EndgeContextSnapshot>
+  context: Readonly<EndgeRuntimeContextSnapshot>
   locals: Record<string, unknown>
   iteration: SFCVueRenderIteration | null
   renderVersion: number
