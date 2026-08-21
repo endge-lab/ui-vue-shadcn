@@ -13,6 +13,7 @@ export function resolveSFCTableMenu(
       items.push({ ...node })
       continue
     }
+    if (node.visible && !evaluateSFCValue(node.visible, context)) continue
     const labelValue = evaluateSFCValue(node.label, context)
     const label = labelValue == null ? '' : String(labelValue).trim()
     if (!label) continue
@@ -25,7 +26,18 @@ export function resolveSFCTableMenu(
         : node.action,
       ...(node.input ? { input: evaluateSFCValue(node.input, context) } : {}),
       ...(node.icon ? { icon: node.icon } : {}),
+      ...(node.disabled ? { disabled: Boolean(evaluateSFCValue(node.disabled, context)) } : {}),
     })
   }
-  return { kind: 'context-menu', items }
+  return { kind: 'context-menu', items: compactMenuSeparators(items) }
+}
+
+function compactMenuSeparators(items: ContextMenuNodeDescriptor[]): ContextMenuNodeDescriptor[] {
+  const result: ContextMenuNodeDescriptor[] = []
+  for (const item of items) {
+    if (item.kind === 'separator' && (!result.length || result.at(-1)?.kind === 'separator')) continue
+    result.push(item)
+  }
+  if (result.at(-1)?.kind === 'separator') result.pop()
+  return result
 }

@@ -33,7 +33,7 @@ watch(
     addGlobalListeners()
     await nextTick()
     placeMenu()
-    menuRef.value?.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus({ preventScroll: true })
+    menuRef.value?.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')?.focus({ preventScroll: true })
   },
   { flush: 'post' },
 )
@@ -71,7 +71,7 @@ function onDocumentKeydown(event: KeyboardEvent): void {
     return
   }
   if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return
-  const buttons = [...(menuRef.value?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') ?? [])]
+  const buttons = [...(menuRef.value?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled)') ?? [])]
   if (buttons.length === 0) return
   event.preventDefault()
   const current = buttons.indexOf(document.activeElement as HTMLButtonElement)
@@ -100,7 +100,7 @@ function placeMenu(): void {
 }
 
 async function runItem(item: ContextMenuItemDescriptor): Promise<void> {
-  if (executing.value) return
+  if (executing.value || item.disabled) return
   executing.value = true
   try {
     await executeShadcnMenuItem(item)
@@ -138,7 +138,7 @@ async function runItem(item: ContextMenuItemDescriptor): Promise<void> {
           role="menuitem"
           data-slot="dropdown-menu-item"
           class="endge-shadcn-menu-root__item"
-          :disabled="executing"
+          :disabled="executing || item.disabled"
           @click="runItem(item)"
         >
           <ShadcnIcon

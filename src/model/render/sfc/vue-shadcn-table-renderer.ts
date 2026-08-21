@@ -43,7 +43,13 @@ export const VueShadcnRender_Table: SFCVueRenderFunction = SFCRender_Base((input
   )
   const tableContext = extendSFCVueRenderContext(
     input.context,
-    {},
+    {
+      $table: {
+        id: tableId || input.node.id,
+        runtimeId: input.context.runtimeState?.runtimeId ?? input.node.id,
+        state: {},
+      },
+    },
     input.context.iteration,
     `${input.context.consumerScope}/table:${input.node.id}`,
   )
@@ -95,7 +101,18 @@ export const VueShadcnRender_Table: SFCVueRenderFunction = SFCRender_Base((input
         rowIndex: number,
         rowId: string,
       ) => {
+        const value = readSFCObjectPath(column.key, row)
+        const rowContext = { id: rowId, index: rowIndex, data: row }
+        const columnContext = {
+          key: column.key,
+          index: column.index,
+          title: column.title,
+          metadata: column.metadata ?? {},
+        }
         const cellContext = extendSFCVueRenderContext(tableContext, {
+          $row: rowContext,
+          $column: columnContext,
+          $cell: { value },
           row,
           rowIndex,
           // TanStack requires its internal row id to be a string, but the SFC
@@ -103,7 +120,8 @@ export const VueShadcnRender_Table: SFCVueRenderFunction = SFCRender_Base((input
           // selectors commonly compare numeric ids and must receive a number.
           rowKey: resolveLexicalRowKey(row[rowKey], rowId),
           columnKey: column.key,
-          value: readSFCObjectPath(column.key, row),
+          columnMeta: column.metadata ?? {},
+          value,
         }, tableContext.iteration, `${tableContext.consumerScope}/row:${rowId}/column:${column.key}`)
         const children = renderSFCNodes(input.h, column.cellNodes, cellContext)
         const contentAttrs = getSFCTableCellStyleSurfaces(row, column.index)?.cellContent.attrs
@@ -155,6 +173,8 @@ function collectTableColumns(
       minWidth: normalizeNumber(props.minWidth ?? props.minSize, 64),
       maxWidth: normalizeNumber(props.maxWidth ?? props.maxSize, 1200),
       pinnable: pin?.pinnable ?? true,
+      metadata: context.metadata?.nodes.find(candidate => candidate.nodeId === node.id)?.values ?? {},
+      ...(node.cellMenu ? { cellMenu: node.cellMenu } : {}),
       sort: sort
         ? { sortable: sort.sortable, comparator: sort.comparator, paths: [...sort.paths] }
         : null,
@@ -264,7 +284,7 @@ function isElementNode(node: RComponentSFC_IR_Node): node is RComponentSFC_IR_El
 
 function isTableMenuNode(node: RComponentSFC_IR_Node): boolean {
   return node.kind === 'element'
-    && (node.tag === 'ColumnMenu' || node.tag === 'RowMenu' || node.tag === 'MenuItem' || node.tag === 'MenuSeparator')
+    && (node.tag === 'ColumnMenu' || node.tag === 'CellMenu' || node.tag === 'RowMenu' || node.tag === 'MenuItem' || node.tag === 'MenuSeparator')
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {

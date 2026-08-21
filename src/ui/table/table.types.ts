@@ -34,6 +34,8 @@ export interface EndgeShadcnTableColumn {
   minWidth: number
   maxWidth: number
   pinnable: boolean
+  metadata?: Readonly<Record<string, unknown>>
+  cellMenu?: ComponentSFCTableRowMenuDescriptor
   sort: EndgeShadcnTableColumnSort | null
   cellNode: RComponentSFC_IR_ElementNode | null
   cellNodes: RComponentSFC_IR_Node[]

@@ -830,20 +830,50 @@ function requestRowContextMenu(entry: VirtualTableRow, event: MouseEvent): void 
     columnKey: columnKey || null,
     anchor: { x: event.clientX, y: event.clientY },
   })
-  if (props.rowMenu.mode !== 'inline' || !props.rowMenu.menu || !props.menuContext) return
+  const column = props.columns.find(candidate => candidate.key === columnKey)
+  const menuDescriptor = column?.cellMenu ?? props.rowMenu
+  if (menuDescriptor.mode !== 'inline' || !menuDescriptor.menu || !props.menuContext || !column) return
+  const tableContext = {
+    id: effectiveTableId(),
+    runtimeId: props.runtimeState?.runtimeId ?? props.boundaryId,
+    state: { selectedRowIds: [...selectedRowIds.value] },
+  }
+  const rowContext = { id: entry.row.id, index: entry.rowIndex, data: row }
+  const columnContext = {
+    key: column.key,
+    index: column.index,
+    title: column.title,
+    metadata: column.metadata ?? {},
+  }
+  const cell = { value }
   const baseMenuContext = props.menuContext
   const menuContext = extendSFCVueRenderContext(
     baseMenuContext,
-    { row, rowId: entry.row.id, rowIndex: entry.rowIndex, columnKey, value },
+    {
+      $table: tableContext,
+      $row: rowContext,
+      $column: columnContext,
+      $cell: cell,
+      row,
+      rowId: entry.row.id,
+      rowIndex: entry.rowIndex,
+      columnKey,
+      columnMeta: column.metadata ?? {},
+      value,
+    },
     baseMenuContext.iteration,
     `${baseMenuContext.consumerScope}/row-menu:${entry.row.id}:${columnKey}`,
   )
-  const menu = resolveSFCTableMenu(props.rowMenu.menu, menuContext)
+  const menu = resolveSFCTableMenu(menuDescriptor.menu, menuContext)
   const context: TableRowActionContext = {
     surface: 'table-row',
     runtimeId: props.runtimeState?.runtimeId ?? props.boundaryId,
     tableRuntimeId: props.runtimeState?.runtimeId ?? props.boundaryId,
     tableId: effectiveTableId(),
+    table: tableContext,
+    rowContext,
+    column: columnContext,
+    cell,
     target: tableActionTarget,
     row,
     rowId: entry.row.id,
