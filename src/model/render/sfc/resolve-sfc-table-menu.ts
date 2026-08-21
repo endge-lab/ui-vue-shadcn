@@ -20,7 +20,9 @@ export function resolveSFCTableMenu(
       kind: 'item',
       id: node.id,
       label,
-      action: node.action,
+      action: node.requiredPort
+        ? context.portBindings?.find(binding => binding.kind === 'action' && binding.port === node.requiredPort)?.identity ?? node.action
+        : node.action,
       ...(node.input ? { input: evaluateSFCValue(node.input, context) } : {}),
       ...(node.icon ? { icon: node.icon } : {}),
     })

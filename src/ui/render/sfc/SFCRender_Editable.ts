@@ -9,7 +9,11 @@ import {
   matchesComponentSFCEditTrigger,
   normalizeComponentSFCEditTriggers,
 } from '@endge/core'
-import { isoToDateTimeLocalInput } from '@endge/utils'
+import {
+  isoDateTimeToTimeInput,
+  isoToDateTimeLocalInput,
+  mergeTimeIntoDateTime,
+} from '@endge/utils'
 
 import type {
   SFCVueRenderContext,
@@ -100,13 +104,17 @@ export function renderSFCEditablePrimitive(
   const session = host.getEditSession(key)
   if (!session) return undefined
 
+  const timeOnly = input.node.tag === 'DateTime'
+    && (input.props.editMode ?? input.props['edit-mode']) === 'time'
   const type = input.node.tag === 'Number'
     ? 'Number'
     : input.node.tag === 'DateTime'
-      ? 'DateTime'
+      ? timeOnly ? 'Time' : 'DateTime'
       : 'String'
   const value = input.node.tag === 'DateTime'
-    ? isoToDateTimeLocalInput(session.draftValue)
+    ? timeOnly
+      ? isoDateTimeToTimeInput(session.draftValue, input.props.timezone)
+      : isoToDateTimeLocalInput(session.draftValue)
     : session.draftValue == null ? '' : session.draftValue
   const attrs = { ...input.attrs }
   delete attrs.onClick
@@ -188,9 +196,10 @@ async function commitEditable(
   value: unknown,
 ): Promise<void> {
   const key = editableConsumerKey(node, context)
-  const payload = value === undefined
+  const nextValue = normalizePrimitiveEditedValue(node, context, key, value)
+  const payload = nextValue === undefined
     ? context.host?.commitEditSession(key)
-    : context.host?.commitEditSession(key, value)
+    : context.host?.commitEditSession(key, nextValue)
   if (!payload || !context.eventBoundary) return
   const source: ComponentSFCEventRuntimeSource = {
     nodeId: node.id,
@@ -205,6 +214,23 @@ async function commitEditable(
     0,
     { ...context.props, ...context.locals },
   )
+}
+
+function normalizePrimitiveEditedValue(
+  node: RComponentSFC_IR_ElementNode,
+  context: SFCVueRenderContext,
+  key: string,
+  value: unknown,
+): unknown {
+  const editMode = evaluateSFCValue(node.props.editMode ?? node.props['edit-mode'], context)
+  if (node.tag !== 'DateTime' || editMode !== 'time')
+    return value
+
+  const original = context.host?.getEditSession(key)?.originalValue
+  const originalDate = new Date(String(original ?? '').trim())
+  const base = Number.isNaN(originalDate.getTime()) ? new Date().toISOString() : original
+  const timezone = evaluateSFCValue(node.props.timezone, context)
+  return mergeTimeIntoDateTime(base, value, timezone) ?? value
 }
 
 function readTargetValue(event: Event, tag: string): unknown {

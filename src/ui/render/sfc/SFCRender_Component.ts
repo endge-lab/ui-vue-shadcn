@@ -11,7 +11,14 @@ import { createSFCSemanticInteractionBindings } from '@/ui/render/sfc/SFCRender_
 
 /** Рендерит вложенный SFC artifact через тот же renderer-neutral IR pipeline. */
 export const SFCRender_Component: SFCVueRenderFunction = SFCRender_Base((input) => {
-  const identity = String(input.props.is ?? input.props.identity ?? '').trim()
+  const identity = String(
+    (input.node.port
+      ? input.context.portBindings?.find(binding => binding.port === input.node.port?.port && binding.kind === 'component')?.identity
+      : null)
+      ?? input.props.is
+      ?? input.props.identity
+      ?? '',
+  ).trim()
   if (!identity)
     return renderComponentError(input, 'component identity is empty')
 
@@ -25,6 +32,7 @@ export const SFCRender_Component: SFCVueRenderFunction = SFCRender_Base((input) 
 
   const editKey = editableConsumerKey(input.node, input.context)
   const activeEdit = input.node.editable ? input.context.host?.getEditSession(editKey) : null
+  const childPortBindings = input.node.portBindings ?? []
   const childBoundary = input.context.eventBoundary?.createChild(identity, artifact.payload.ir.script.ports, {
     nodeId: input.node.id,
     ref: literalString(input.node.props.ref),
@@ -36,7 +44,7 @@ export const SFCRender_Component: SFCVueRenderFunction = SFCRender_Base((input) 
         const committed = commitSFCEditableChild(input.node, input.context, payload)
         return committed ? { event, payload: committed } : null
       }
-    : undefined) ?? null
+    : undefined, childPortBindings) ?? null
   const childContext: SFCVueRenderContext = createSFCVueRenderContext(
     createChildProps(input.props),
     input.context.renderVersion,
@@ -50,6 +58,7 @@ export const SFCRender_Component: SFCVueRenderFunction = SFCRender_Base((input) 
     artifact.metadata,
     activeEdit ? 'edit' : String(input.props.variant ?? 'default'),
     input.context.tooltipManager ?? null,
+    childPortBindings,
   )
   childContext.styleParent = input.context.styleParent
   childContext.inspectionParentId = input.context.inspectionParentId

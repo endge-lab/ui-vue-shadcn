@@ -279,7 +279,7 @@ function formatInTimezone(
 }
 
 function formatNumber(value: unknown, props: Record<string, unknown>): string {
-  if (value == null) return ''
+  if (value == null) return props.empty == null ? '' : String(props.empty)
 
   const numberValue = Number(value)
   if (!Number.isFinite(numberValue)) return String(value)

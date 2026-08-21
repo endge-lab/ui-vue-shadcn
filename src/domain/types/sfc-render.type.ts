@@ -17,6 +17,7 @@ import type {
   EndgeStyleSheetArtifact,
   ProgramMetadata,
   EndgeRuntimeContextSnapshot,
+  ComponentSFCRequiredPortBinding,
 } from '@endge/core'
 import { ENDGE_SFC_RENDER_ADAPTER_REQUIRED_KEYS } from '@endge/core'
 import type { h as VueH, VNode } from 'vue'
@@ -59,6 +60,8 @@ export interface SFCVueRenderContext {
   componentStack: readonly string[]
   /** Stable renderer scope used to isolate host-owned computation resources. */
   consumerScope: string
+  /** Effective required-port providers for the current mounted SFC instance. */
+  portBindings?: readonly ComponentSFCRequiredPortBinding[]
   /** Активный renderer-neutral вариант текущего component boundary. */
   variant: string
   /** Effective global, ancestor and local style artifacts for this boundary. */
