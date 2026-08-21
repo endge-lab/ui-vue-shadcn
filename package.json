@@ -1,7 +1,7 @@
 {
   "name": "@endge/ui-vue-shadcn",
   "private": false,
-  "version": "0.1.8",
+  "version": "0.1.9",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/vue-shadcn.js",
@@ -33,15 +33,15 @@
     "sortablejs": "^1.15.7"
   },
   "peerDependencies": {
-    "@endge/core": "^2.0.2",
-    "@endge/raph": "^3.0.9",
-    "@endge/utils": "^0.24.11",
+    "@endge/core": "^2.0.3",
+    "@endge/raph": "^3.0.10",
+    "@endge/utils": "^0.24.12",
     "vue": "^3.5.0"
   },
   "devDependencies": {
-    "@endge/core": "^2.0.2",
-    "@endge/raph": "^3.0.9",
-    "@endge/utils": "^0.24.11",
+    "@endge/core": "^2.0.3",
+    "@endge/raph": "^3.0.10",
+    "@endge/utils": "^0.24.12",
     "@vitejs/plugin-vue": "^6.0.1",
     "@types/sortablejs": "^1.15.9",
     "jsdom": "^26.1.0",
