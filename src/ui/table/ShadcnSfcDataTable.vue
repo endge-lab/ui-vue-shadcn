@@ -793,6 +793,15 @@ function getCellStates(rowId: string, columnKey: string): string[] {
   return [...new Set(states)]
 }
 
+function getRowStates(rowId: string): string[] {
+  if (!selectedRowIds.value.has(rowId)) return []
+  return [
+    'selected',
+    'row-selected',
+    ...(props.selectionMode === 'multiple' ? ['multi-selected'] : []),
+  ]
+}
+
 function getRowClass(row: Record<string, unknown>): string | string[] | undefined {
   const value = row[SFC_TABLE_ROW_CLASS_FIELD]
   if (typeof value === 'string') return value
@@ -1327,6 +1336,9 @@ function menuItem(id: string, label: string, icon: string) {
             v-for="virtualRow in virtualRows"
             :key="String(virtualRow.virtualItem.key)"
             :data-index="virtualRow.rowIndex"
+            part="row"
+            data-endge-part="row"
+            :data-endge-state="getRowStates(virtualRow.row.id).join(' ') || undefined"
             class="endge-shadcn-table__row"
             :class="[getRowClass(virtualRow.styledRow), {
               'endge-shadcn-table__row--selected': selectedRowIds.has(virtualRow.row.id),
