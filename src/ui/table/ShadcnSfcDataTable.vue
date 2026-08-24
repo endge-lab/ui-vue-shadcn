@@ -25,6 +25,7 @@ import type {
   TableRuntimeActionTarget,
   TableEventMap,
   TableEventName,
+  TableSelectedCell,
   TableSortDirection,
 } from '@endge/core'
 import type { CSSProperties } from 'vue'
@@ -94,6 +95,7 @@ const props = withDefaults(defineProps<EndgeShadcnTableProps>(), {
   lazy: false,
   selectionMode: 'none',
   selectionTrigger: 'auto',
+  cellSelectionMode: 'none',
   rowMenu: () => ({ mode: 'none', menu: null, diagnostics: [] }),
 })
 const SELECTION_COLUMN_ID = '__endge_selection__'
@@ -125,10 +127,12 @@ const columnSizing = ref<ColumnSizingState>(readTableRecordState('sizing', {}))
 const pagination = ref<PaginationState>(readInitialPagination())
 const selectedRowIds = shallowRef<Set<string>>(new Set())
 const selectionAnchorId = ref<string | null>(null)
+const selectedCell = shallowRef<TableSelectedCell | null>(null)
+const rowSelectionEnabled = computed(() => props.selectionMode !== 'none')
 const resolvedSelectionTrigger = computed(() => props.selectionTrigger === 'auto' ? 'row' : props.selectionTrigger)
-const showSelectionControl = computed(() => props.selectionMode !== 'none'
+const showSelectionControl = computed(() => rowSelectionEnabled.value
   && (resolvedSelectionTrigger.value === 'control' || resolvedSelectionTrigger.value === 'both'))
-const selectOnRow = computed(() => props.selectionMode !== 'none'
+const selectOnRow = computed(() => rowSelectionEnabled.value
   && (resolvedSelectionTrigger.value === 'row' || resolvedSelectionTrigger.value === 'both'))
 const resolvedColumnOrder = computed<ColumnOrderState>(() => showSelectionControl.value
   ? [SELECTION_COLUMN_ID, ...columnOrder.value.filter(key => key !== SELECTION_COLUMN_ID)]
@@ -357,11 +361,15 @@ watch(
     await nextTick()
     clampPagination()
     reconcileSelection()
+    reconcileCellSelection()
   },
 )
 watch(
   () => tableColumns.value.map(column => column.key).join('|'),
-  () => reconcileColumnState(),
+  () => {
+    reconcileColumnState()
+    reconcileCellSelection()
+  },
 )
 watch(
   () => defaultHiddenKeys.value.join('|'),
@@ -370,8 +378,8 @@ watch(
   },
 )
 watch(
-  () => [props.selectionMode, props.selectionTrigger] as const,
-  ([selectionMode]) => {
+  () => [props.selectionMode, props.selectionTrigger, props.cellSelectionMode] as const,
+  ([selectionMode, , cellSelectionMode]) => {
     if (selectionMode === 'none') {
       selectedRowIds.value = new Set()
       selectionAnchorId.value = null
@@ -379,6 +387,7 @@ watch(
     else if (selectionMode === 'single' && selectedRowIds.value.size > 1) {
       selectedRowIds.value = new Set([...selectedRowIds.value].slice(0, 1))
     }
+    if (cellSelectionMode === 'none') commitCellSelection(null)
   },
 )
 
@@ -707,7 +716,7 @@ function isSelectionColumn(column: Column<Record<string, unknown>>): boolean {
 }
 
 function toggleVisibleRows(checked: boolean): void {
-  if (props.selectionMode !== 'multiple') return
+  if (!rowSelectionEnabled.value || props.selectionMode !== 'multiple') return
   const next = new Set(selectedRowIds.value)
   for (const rowId of visibleRowIds.value) {
     if (checked) next.add(rowId)
@@ -717,7 +726,7 @@ function toggleVisibleRows(checked: boolean): void {
 }
 
 function toggleRowFromControl(row: Row<Record<string, unknown>>, checked: boolean): void {
-  if (props.selectionMode === 'none') return
+  if (!rowSelectionEnabled.value) return
   const next = new Set(selectedRowIds.value)
   if (props.selectionMode === 'single') {
     if (!checked) return
@@ -761,12 +770,27 @@ function getVirtualRowStyle(virtualItem: VirtualItem): CSSProperties {
   }
 }
 
-function getCellAttrs(row: Record<string, unknown>, column: EndgeShadcnTableColumn): Record<string, unknown> {
-  return getSFCTableCellStyleSurfaces(row, column.index)?.cell.attrs ?? {
+function getCellAttrs(
+  row: Record<string, unknown>,
+  column: EndgeShadcnTableColumn,
+  states: string[],
+): Record<string, unknown> {
+  return getSFCTableCellStyleSurfaces(row, column.index, states)?.cell.attrs ?? {
     part: 'cell',
     'data-endge-part': 'cell',
+    ...(states.length ? { 'data-endge-state': states.join(' ') } : {}),
     class: [],
   }
+}
+
+function getCellStates(rowId: string, columnKey: string): string[] {
+  const states: string[] = []
+  if (selectedRowIds.value.has(rowId)) {
+    states.push('selected', 'row-selected')
+    if (props.selectionMode === 'multiple') states.push('multi-selected')
+  }
+  if (isCellSelected(rowId, columnKey)) states.push('selected', 'cell-selected')
+  return [...new Set(states)]
 }
 
 function getRowClass(row: Record<string, unknown>): string | string[] | undefined {
@@ -923,6 +947,34 @@ function onRowClick(entry: VirtualTableRow, event: MouseEvent): void {
   commitSelection(next)
 }
 
+function selectRowFromCell(entry: VirtualTableRow, event: MouseEvent | KeyboardEvent): void {
+  if (!selectOnRow.value) return
+  const next = new Set(selectedRowIds.value)
+  if (props.selectionMode === 'single') {
+    next.clear()
+    next.add(entry.row.id)
+  }
+  else if (event.shiftKey && selectionAnchorId.value) {
+    const rows = tableRows.value
+    const from = rows.findIndex(row => row.id === selectionAnchorId.value)
+    const to = rows.findIndex(row => row.id === entry.row.id)
+    if (from >= 0 && to >= 0) {
+      if (!event.metaKey && !event.ctrlKey) next.clear()
+      for (let index = Math.min(from, to); index <= Math.max(from, to); index += 1)
+        next.add(rows[index]!.id)
+    }
+  }
+  else if (event.metaKey || event.ctrlKey) {
+    next.add(entry.row.id)
+  }
+  else {
+    next.clear()
+    next.add(entry.row.id)
+  }
+  selectionAnchorId.value = entry.row.id
+  commitSelection(next)
+}
+
 function onRowKeydown(entry: VirtualTableRow, event: KeyboardEvent): void {
   if (event.key === 'Enter') {
     event.preventDefault()
@@ -935,7 +987,7 @@ function onRowKeydown(entry: VirtualTableRow, event: KeyboardEvent): void {
 }
 
 function commitSelection(next: Set<string>): void {
-  if (props.selectionMode === 'none') return
+  if (!rowSelectionEnabled.value) return
   const previous = selectedRowIds.value
   const addedRowIds = [...next].filter(id => !previous.has(id))
   const removedRowIds = [...previous].filter(id => !next.has(id))
@@ -945,7 +997,7 @@ function commitSelection(next: Set<string>): void {
   const selectedRowIdsOrdered = [...next].filter(id => rowsById.has(id))
   emitTableEvent('selectionChanged', {
     tableId: effectiveTableId(),
-    mode: props.selectionMode,
+    mode: props.selectionMode === 'multiple' ? 'multiple' : 'single',
     selectedRowIds: selectedRowIdsOrdered,
     selectedRows: selectedRowIdsOrdered.map(id => rowsById.get(id)!),
     addedRowIds,
@@ -954,9 +1006,87 @@ function commitSelection(next: Set<string>): void {
 }
 
 function reconcileSelection(): void {
-  if (props.selectionMode === 'none' || selectedRowIds.value.size === 0) return
+  if (!rowSelectionEnabled.value || selectedRowIds.value.size === 0) return
   const available = new Set(table.getCoreRowModel().rows.map(row => row.id))
   commitSelection(new Set([...selectedRowIds.value].filter(id => available.has(id))))
+}
+
+function isCellSelected(rowId: string, columnKey: string): boolean {
+  return selectedCell.value?.rowId === rowId && selectedCell.value.columnKey === columnKey
+}
+
+function selectCell(entry: VirtualTableRow, cell: Cell<Record<string, unknown>, unknown>): void {
+  if (props.cellSelectionMode !== 'single' || isSelectionColumn(cell.column)) return
+  commitCellSelection({
+    rowId: entry.row.id,
+    rowIndex: entry.rowIndex,
+    row: entry.row.original,
+    columnKey: cell.column.id,
+    value: readSFCObjectPath(cell.column.id, entry.row.original),
+  })
+}
+
+function onCellClick(
+  entry: VirtualTableRow,
+  cell: Cell<Record<string, unknown>, unknown>,
+  event: MouseEvent,
+): void {
+  if (props.cellSelectionMode !== 'single' || isSelectionColumn(cell.column)) return
+  const target = event.target instanceof Element ? event.target : null
+  if (target?.closest('button, a, input, select, textarea, [contenteditable="true"], [role="button"], [role="menuitem"]')) return
+  event.stopPropagation()
+  selectCell(entry, cell)
+  selectRowFromCell(entry, event)
+  if (event.currentTarget instanceof HTMLElement) event.currentTarget.focus()
+}
+
+function onCellKeydown(
+  entry: VirtualTableRow,
+  cell: Cell<Record<string, unknown>, unknown>,
+  event: KeyboardEvent,
+): void {
+  if (props.cellSelectionMode !== 'single' || (event.key !== ' ' && event.key !== 'Enter')) return
+  event.preventDefault()
+  event.stopPropagation()
+  selectCell(entry, cell)
+  selectRowFromCell(entry, event)
+}
+
+function onTableKeydown(event: KeyboardEvent): void {
+  if (!shouldClearSelectionOnEscape(event)) return
+  if (selectedRowIds.value.size === 0 && selectedCell.value === null) return
+  event.preventDefault()
+  event.stopPropagation()
+  selectionAnchorId.value = null
+  commitSelection(new Set())
+  commitCellSelection(null)
+}
+
+function commitCellSelection(next: TableSelectedCell | null): void {
+  const previous = selectedCell.value
+  if (previous?.rowId === next?.rowId && previous?.columnKey === next?.columnKey) return
+  selectedCell.value = next
+  emitTableEvent('cellSelectionChanged', {
+    tableId: effectiveTableId(),
+    selectedCell: next,
+    previousCell: previous,
+  })
+}
+
+function reconcileCellSelection(): void {
+  const current = selectedCell.value
+  if (!current || props.cellSelectionMode === 'none') return
+  const row = table.getCoreRowModel().rows.find(candidate => candidate.id === current.rowId)
+  if (!row || !tableColumns.value.some(column => column.key === current.columnKey)) {
+    commitCellSelection(null)
+    return
+  }
+  selectedCell.value = {
+    ...current,
+    rowIndex: row.index,
+    row: row.original,
+    value: readSFCObjectPath(current.columnKey, row.original),
+  }
 }
 
 function getSortIndex(columnId: string): number | null {
@@ -1053,6 +1183,13 @@ function normalizeNonNegativeInteger(value: unknown, fallback: number): number {
   return Number.isFinite(normalized) && normalized >= 0 ? normalized : fallback
 }
 
+function shouldClearSelectionOnEscape(event: KeyboardEvent): boolean {
+  if (event.key !== 'Escape' || event.defaultPrevented || event.isComposing) return false
+  return !event.composedPath().some(node => node instanceof Element && node.matches(
+    'button, a, input, select, textarea, [contenteditable="true"], [role="button"], [role="combobox"], [role="dialog"], [role="listbox"], [role="menu"], [role="menuitem"], [role="textbox"]',
+  ))
+}
+
 function menuItem(id: string, label: string, icon: string) {
   return { kind: 'item' as const, id, label, action: id, icon }
 }
@@ -1064,6 +1201,7 @@ function menuItem(id: string, label: string, icon: string) {
     :data-paging="paging"
     :data-lazy="lazy ? 'true' : undefined"
     :style="{ '--endge-table-row-size': `${rowSize}px` }"
+    @keydown="onTableKeydown"
   >
     <div class="endge-shadcn-table__toolbar">
       <div v-if="showRuntimeControls" class="endge-shadcn-table__runtime-controls">
@@ -1190,10 +1328,13 @@ function menuItem(id: string, label: string, icon: string) {
             :key="String(virtualRow.virtualItem.key)"
             :data-index="virtualRow.rowIndex"
             class="endge-shadcn-table__row"
-            :class="[getRowClass(virtualRow.styledRow), { 'endge-shadcn-table__row--selected': selectedRowIds.has(virtualRow.row.id) }]"
+            :class="[getRowClass(virtualRow.styledRow), {
+              'endge-shadcn-table__row--selected': selectedRowIds.has(virtualRow.row.id),
+              'endge-shadcn-table__row--multi-selected': selectionMode === 'multiple' && selectedRowIds.has(virtualRow.row.id),
+            }]"
             :style="getVirtualRowStyle(virtualRow.virtualItem)"
-            :tabindex="selectionMode === 'none' ? -1 : 0"
-            :aria-selected="selectionMode === 'none' ? undefined : selectedRowIds.has(virtualRow.row.id)"
+            :tabindex="rowSelectionEnabled ? 0 : -1"
+            :aria-selected="rowSelectionEnabled ? selectedRowIds.has(virtualRow.row.id) : undefined"
             @click="onRowClick(virtualRow, $event)"
             @dblclick="activateRow(virtualRow, $event)"
             @contextmenu="requestRowContextMenu(virtualRow, $event)"
@@ -1202,13 +1343,18 @@ function menuItem(id: string, label: string, icon: string) {
             <td
               v-for="cell in getStableVisibleCells(virtualRow.row)"
               :key="cell.id"
-              v-bind="isSelectionColumn(cell.column) ? {} : getCellAttrs(virtualRow.styledRow, getColumnDescriptor(cell.column))"
+              v-bind="isSelectionColumn(cell.column) ? {} : getCellAttrs(virtualRow.styledRow, getColumnDescriptor(cell.column), getCellStates(virtualRow.row.id, cell.column.id))"
               class="endge-shadcn-table__cell"
               :class="{
                 'endge-shadcn-table__cell--pinned': cell.column.getIsPinned(),
                 'endge-shadcn-table__selection-cell': isSelectionColumn(cell.column),
+                'endge-shadcn-table__cell--selected': isCellSelected(virtualRow.row.id, cell.column.id),
               }"
               :style="getPinnedStyle(cell.column)"
+              :tabindex="cellSelectionMode === 'single' && !isSelectionColumn(cell.column) ? 0 : undefined"
+              :aria-selected="cellSelectionMode === 'single' && !isSelectionColumn(cell.column) ? isCellSelected(virtualRow.row.id, cell.column.id) : undefined"
+              @click="onCellClick(virtualRow, cell, $event)"
+              @keydown="onCellKeydown(virtualRow, cell, $event)"
             >
               <input
                 v-if="isSelectionColumn(cell.column)"

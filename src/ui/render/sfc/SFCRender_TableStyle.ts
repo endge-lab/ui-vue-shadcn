@@ -18,6 +18,7 @@ export interface SFCTablePublicPartAttrs extends Record<string, unknown> {
   part: SFCTablePublicPart
   'data-endge-part': SFCTablePublicPart
   class: string[]
+  'data-endge-state'?: string
 }
 
 export interface SFCTablePublicSurface {
@@ -190,13 +191,15 @@ export function decorateSFCTableRowWindow(
 export function getSFCTableCellStyleSurfaces(
   row: Record<string, unknown>,
   columnIndex: number,
+  states: Iterable<string> = [],
 ): SFCTableCellStyleSurfaces | null {
   const metadata = (row as unknown as Record<PropertyKey, unknown>)[SFC_TABLE_ROW_STYLE_META] as SFCTableRowStyleMeta | undefined
   if (!metadata || columnIndex < 0 || columnIndex >= metadata.columnCount)
     return null
 
   const cache = getCellSurfaceCache(metadata.contract)
-  const cacheKey = `${metadata.row.node.index}:${metadata.row.node.siblingCount}:${metadata.columnCount}:${columnIndex}`
+  const normalizedStates = [...new Set(states)].sort()
+  const cacheKey = `${metadata.row.node.index}:${metadata.row.node.siblingCount}:${metadata.columnCount}:${columnIndex}:${normalizedStates.join(',')}`
   const cached = cache.get(cacheKey)
   if (cached) {
     // Refresh insertion order so active viewport cells stay in the bounded LRU.
@@ -218,6 +221,7 @@ export function getSFCTableCellStyleSurfaces(
       metadata.columnCount,
       previousCell,
       metadata.row.node,
+      normalizedStates,
     )
     previousCell = cell.node
   }
@@ -234,6 +238,7 @@ export function getSFCTableCellStyleSurfaces(
       1,
       undefined,
       cell.node,
+      normalizedStates,
     ),
   }
   cache.set(cacheKey, result)
@@ -249,6 +254,7 @@ export function toRevoGridSurfaceProps(attrs: SFCTablePublicPartAttrs): Record<s
   return {
     part: attrs.part,
     'data-endge-part': attrs['data-endge-part'],
+    'data-endge-state': attrs['data-endge-state'],
     class: Object.fromEntries(attrs.class.map(className => [className, true])),
   }
 }
@@ -286,14 +292,16 @@ function createSurface(
   siblingCount: number,
   previousSibling?: EndgeStyleMatchNode,
   parent?: EndgeStyleMatchNode,
+  dynamicStates: Iterable<string> = [],
 ): SFCTablePublicSurface {
   const host = context.styleParent
+  const states = new Set([...(host?.states ?? []), ...dynamicStates])
   const node: EndgeStyleMatchNode = {
     tag: host?.tag ?? 'Table',
     id: host?.id,
     classes: host?.classes ?? new Set<string>(),
     attributes: host?.attributes ?? {},
-    states: host?.states ?? new Set<string>(),
+    states,
     parts: new Set([part]),
     component: host?.component,
     identity: host?.identity,
@@ -309,6 +317,7 @@ function createSurface(
       part,
       'data-endge-part': part,
       class: getEndgeDOMStyleClasses(context.styleArtifacts, node),
+      ...(states.size ? { 'data-endge-state': [...states].join(' ') } : {}),
     },
   }
 }
@@ -320,6 +329,8 @@ function applySurfaceAttrs(element: HTMLElement, attrs: SFCTablePublicPartAttrs)
   element.setAttribute(APPLIED_STYLE_CLASSES_ATTRIBUTE, attrs.class.join(' '))
   element.setAttribute('part', attrs.part)
   element.setAttribute('data-endge-part', attrs['data-endge-part'])
+  if (attrs['data-endge-state']) element.setAttribute('data-endge-state', attrs['data-endge-state'])
+  else element.removeAttribute('data-endge-state')
 }
 
 function getCellSurfaceCache(
@@ -332,4 +343,3 @@ function getCellSurfaceCache(
   }
   return cache
 }
-

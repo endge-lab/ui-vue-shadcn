@@ -76,6 +76,7 @@ export const VueShadcnRender_Table: SFCVueRenderFunction = SFCRender_Base((input
       eventBindings: input.node.events ?? [],
       selectionMode: normalizeSelectionMode(input.props['selection-mode'] ?? input.props.selectionMode),
       selectionTrigger: normalizeSelectionTrigger(input.props['selection-trigger'] ?? input.props.selectionTrigger),
+      cellSelectionMode: normalizeCellSelectionMode(input.props['cell-selection-mode'] ?? input.props.cellSelectionMode),
       runtimeState: input.context.runtimeState,
       columns,
       source: rows,
@@ -229,6 +230,10 @@ function normalizeOptionalText(value: unknown): string | null {
 
 function normalizeSelectionMode(value: unknown): 'none' | 'single' | 'multiple' {
   return value === 'single' || value === 'multiple' ? value : 'none'
+}
+
+function normalizeCellSelectionMode(value: unknown): 'none' | 'single' {
+  return value === 'single' ? 'single' : 'none'
 }
 
 function normalizeSelectionTrigger(value: unknown): TableSelectionTrigger {

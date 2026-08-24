@@ -10,6 +10,7 @@ import type {
   RComponentSFC_IR_ElementNode,
   RComponentSFC_IR_EventBinding,
   RComponentSFC_IR_Node,
+  TableCellSelectionMode,
   TableSelectionMode,
   TableSelectionTrigger,
 } from '@endge/core'
@@ -53,6 +54,7 @@ export interface EndgeShadcnTableProps {
   eventBindings?: RComponentSFC_IR_EventBinding[]
   selectionMode?: TableSelectionMode
   selectionTrigger?: TableSelectionTrigger
+  cellSelectionMode?: TableCellSelectionMode
   runtimeState: SFCVueRuntimeStateController | null
   columns: EndgeShadcnTableColumn[]
   source: Record<string, unknown>[]
