@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
-import dts from 'vite-plugin-dts'
+import dts from 'unplugin-dts/vite'
 
 export default defineConfig({
   build: {
@@ -37,7 +37,7 @@ export default defineConfig({
   plugins: [
     vue(),
     dts({
-      rollupTypes: false,
+      bundleTypes: false,
       tsconfigPath: path.resolve(__dirname, 'tsconfig.json'),
       include: ['src'],
       exclude: ['vite.config.ts', 'vitest.config.ts'],
