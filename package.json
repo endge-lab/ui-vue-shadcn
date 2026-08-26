@@ -1,7 +1,7 @@
 {
   "name": "@endge/ui-vue-shadcn",
   "private": false,
-  "version": "0.2.4",
+  "version": "0.2.5",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/vue-shadcn.js",
@@ -23,7 +23,9 @@
     "build": "vite build",
     "test": "vitest run",
     "bench:interactions": "vitest bench src/test/SFCInteractions.bench.ts",
-    "typecheck": "vue-tsc --noEmit"
+    "typecheck": "vue-tsc --noEmit",
+    "lint-check": "eslint . --cache",
+    "lint-fix": "eslint . --fix --cache"
   },
   "dependencies": {
     "@babel/parser": "^7.29.7",
@@ -39,12 +41,14 @@
     "vue": "^3.5.0"
   },
   "devDependencies": {
+    "@antfu/eslint-config": "9.3.0",
     "@endge/core": "^4.0.0",
     "@endge/raph": "^3.0.11",
     "@endge/utils": "^0.25.0",
     "@types/sortablejs": "^1.15.9",
     "@vitejs/plugin-vue": "^6.0.1",
     "@vue/language-core": "^3.3.11",
+    "eslint": "10.9.1",
     "jsdom": "^26.1.0",
     "rimraf": "^6.0.1",
     "typescript": "~6.0.3",
