@@ -19,7 +19,7 @@ const executing = ref(false)
 let unsubscribeI18n: (() => void) | null = null
 
 const menuItems = computed(() => {
-  i18nVersion.value
+  void i18nVersion.value
   return getShadcnMenuItems()
 })
 

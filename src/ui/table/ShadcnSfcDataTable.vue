@@ -314,8 +314,8 @@ const virtualRowContexts = computed(() => new Map(
 const virtualBodyHeight = computed(() => tableRows.value.length === 0 ? 96 : rowVirtualizer.value.getTotalSize())
 const visibleColumnCount = computed(() => Math.max(1, table.getVisibleLeafColumns().length))
 const tableWidth = computed(() => {
-  columnSizing.value
-  columnVisibility.value
+  void columnSizing.value
+  void columnVisibility.value
   return `${table.getTotalSize()}px`
 })
 

@@ -40,17 +40,17 @@ export interface ShadcnTooltipState {
 /** Shadcn-specific single-overlay manager; it never registers dormant cell instances. */
 export class ShadcnTooltipManager {
   public readonly state: ShadcnTooltipState
-  private readonly defaults: EndgeTooltipConfiguration
-  private request: ShadcnTooltipRequest | null = null
-  private reasons = new Set<ShadcnTooltipReason>()
-  private openTimer: ReturnType<typeof setTimeout> | null = null
-  private closeTimer: ReturnType<typeof setTimeout> | null = null
-  private generation = 0
-  private disposed = false
-  private readonly disposeKeyboardWatch: () => void
+  private readonly _defaults: EndgeTooltipConfiguration
+  private _request: ShadcnTooltipRequest | null = null
+  private _reasons = new Set<ShadcnTooltipReason>()
+  private _openTimer: ReturnType<typeof setTimeout> | null = null
+  private _closeTimer: ReturnType<typeof setTimeout> | null = null
+  private _generation = 0
+  private _disposed = false
+  private readonly _disposeKeyboardWatch: () => void
 
   public constructor(defaults: EndgeTooltipConfiguration) {
-    this.defaults = { ...defaults }
+    this._defaults = { ...defaults }
     this.state = shallowReactive({
       phase: 'idle',
       ownerId: null,
@@ -63,72 +63,72 @@ export class ShadcnTooltipManager {
       part: null,
       content: null,
     })
-    this.disposeKeyboardWatch = Raph.watch([
+    this._disposeKeyboardWatch = Raph.watch([
       ENDGE_KEYBOARD_CONTEXT_RAPH_PATH,
       `${ENDGE_KEYBOARD_CONTEXT_RAPH_PATH}.*`,
-    ], () => this.reconcileActivation())
+    ], () => this._reconcileActivation())
   }
 
   public activate(request: ShadcnTooltipRequest, reason: ShadcnTooltipReason): void {
-    if (this.disposed || !request.anchor.isConnected) {
+    if (this._disposed || !request.anchor.isConnected) {
       return
     }
-    this.clearClose()
-    if (this.request?.ownerId !== request.ownerId) {
-      this.hide()
-      this.reasons.clear()
+    this._clearClose()
+    if (this._request?.ownerId !== request.ownerId) {
+      this._hide()
+      this._reasons.clear()
     }
-    this.request = request
-    this.reasons.add(reason)
-    this.reconcileActivation()
+    this._request = request
+    this._reasons.add(reason)
+    this._reconcileActivation()
   }
 
   public deactivate(ownerId: string, reason: ShadcnTooltipReason): void {
-    if (this.request?.ownerId !== ownerId) {
+    if (this._request?.ownerId !== ownerId) {
       return
     }
-    this.reasons.delete(reason)
-    if (this.reasons.size) {
+    this._reasons.delete(reason)
+    if (this._reasons.size) {
       return
     }
-    this.clearOpen()
-    const delay = resolvePolicy(this.defaults, this.request.policy).closeDelay
-    const generation = ++this.generation
+    this._clearOpen()
+    const delay = resolvePolicy(this._defaults, this._request.policy).closeDelay
+    const generation = ++this._generation
     if (delay === 0) {
-      this.hide()
+      this._hide()
     }
     else {
-      this.closeTimer = setTimeout(() => {
-        if (generation === this.generation && this.reasons.size === 0) {
-          this.hide()
+      this._closeTimer = setTimeout(() => {
+        if (generation === this._generation && this._reasons.size === 0) {
+          this._hide()
         }
       }, delay)
     }
   }
 
   public close(ownerId?: string): void {
-    if (ownerId && this.request?.ownerId !== ownerId) {
+    if (ownerId && this._request?.ownerId !== ownerId) {
       return
     }
-    this.reasons.clear()
-    this.hide()
+    this._reasons.clear()
+    this._hide()
   }
 
   public dispose(): void {
-    if (this.disposed) {
+    if (this._disposed) {
       return
     }
-    this.disposed = true
-    this.disposeKeyboardWatch()
-    this.reasons.clear()
-    this.hide()
+    this._disposed = true
+    this._disposeKeyboardWatch()
+    this._reasons.clear()
+    this._hide()
   }
 
-  private show(generation: number, policy: EndgeTooltipConfiguration): void {
-    this.openTimer = null
-    const request = this.request
-    if (this.disposed || generation !== this.generation || !request || !this.reasons.size || !request.anchor.isConnected || !this.matchesKeyboard(policy)) {
-      this.hide()
+  private _show(generation: number, policy: EndgeTooltipConfiguration): void {
+    this._openTimer = null
+    const request = this._request
+    if (this._disposed || generation !== this._generation || !request || !this._reasons.size || !request.anchor.isConnected || !this._matchesKeyboard(policy)) {
+      this._hide()
       return
     }
     Object.assign(this.state, {
@@ -146,15 +146,15 @@ export class ShadcnTooltipManager {
     updateDescribedBy(request.anchor, request.domId, true)
   }
 
-  private hide(): void {
-    this.suspend()
-    this.request = null
+  private _hide(): void {
+    this._suspend()
+    this._request = null
   }
 
-  private suspend(): void {
-    this.clearOpen()
-    this.clearClose()
-    this.generation += 1
+  private _suspend(): void {
+    this._clearOpen()
+    this._clearClose()
+    this._generation += 1
     if (this.state.anchor && this.state.domId) {
       updateDescribedBy(this.state.anchor, this.state.domId, false)
     }
@@ -170,46 +170,46 @@ export class ShadcnTooltipManager {
     })
   }
 
-  private reconcileActivation(): void {
-    const request = this.request
-    if (this.disposed || !request || !this.reasons.size || !request.anchor.isConnected) {
+  private _reconcileActivation(): void {
+    const request = this._request
+    if (this._disposed || !request || !this._reasons.size || !request.anchor.isConnected) {
       return
     }
-    const policy = resolvePolicy(this.defaults, request.policy)
-    if (!this.matchesKeyboard(policy)) {
-      this.suspend()
+    const policy = resolvePolicy(this._defaults, request.policy)
+    if (!this._matchesKeyboard(policy)) {
+      this._suspend()
       return
     }
     if ((this.state.phase === 'visible' || this.state.phase === 'pending') && this.state.ownerId === request.ownerId) {
       return
     }
-    this.clearOpen()
+    this._clearOpen()
     this.state.phase = 'pending'
     this.state.ownerId = request.ownerId
-    const generation = ++this.generation
+    const generation = ++this._generation
     if (policy.openDelay === 0) {
-      this.show(generation, policy)
+      this._show(generation, policy)
     }
-    else { this.openTimer = setTimeout(() => this.show(generation, policy), policy.openDelay) }
+    else { this._openTimer = setTimeout(() => this._show(generation, policy), policy.openDelay) }
   }
 
-  private matchesKeyboard(policy: EndgeTooltipConfiguration): boolean {
+  private _matchesKeyboard(policy: EndgeTooltipConfiguration): boolean {
     const keyboard = Endge.context.getKeyboardState()
     return matchesComponentSFCInteractionKeyboardCondition(policy.keyboard, keyboard, keyboard.platform)
   }
 
-  private clearOpen(): void {
-    if (this.openTimer != null) {
-      clearTimeout(this.openTimer)
+  private _clearOpen(): void {
+    if (this._openTimer != null) {
+      clearTimeout(this._openTimer)
     }
-    this.openTimer = null
+    this._openTimer = null
   }
 
-  private clearClose(): void {
-    if (this.closeTimer != null) {
-      clearTimeout(this.closeTimer)
+  private _clearClose(): void {
+    if (this._closeTimer != null) {
+      clearTimeout(this._closeTimer)
     }
-    this.closeTimer = null
+    this._closeTimer = null
   }
 }
 

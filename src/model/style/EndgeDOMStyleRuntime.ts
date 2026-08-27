@@ -4,9 +4,9 @@ import { materializeEndgeCSSForDOM } from '@/model/style/endge-dom-style'
 
 /** Owns one atomically replaced stylesheet for the Vue DOM renderer. */
 export class EndgeDOMStyleRuntime {
-  private sheet: CSSStyleSheet | null = null
-  private fallback: HTMLStyleElement | null = null
-  private lastKey = ''
+  private _sheet: CSSStyleSheet | null = null
+  private _fallback: HTMLStyleElement | null = null
+  private _lastKey = ''
 
   public update(
     artifacts: readonly (EndgeStyleSheetArtifact | EndgeStylePlacement)[],
@@ -17,10 +17,10 @@ export class EndgeDOMStyleRuntime {
       return
     }
     const key = `${target.renderer}:${[...(target.capabilities ?? [])].sort().join(',')}:${artifacts.map(item => 'artifact' in item ? `${item.artifact.sourceHash}@${item.boundaryId}:${item.orderKey}` : item.sourceHash).join(':')}:hidden=${[...hiddenScopeIds].sort().join(',')}`
-    if (key === this.lastKey) {
+    if (key === this._lastKey) {
       return
     }
-    this.lastKey = key
+    this._lastKey = key
     const materialized = materializeEndgeCSSForDOM(artifacts, target)
     const hiddenCss = hiddenScopeIds
       .map(id => `[data-endge-runtime-scope~=${JSON.stringify(id)}]{display:none!important;}`)
@@ -29,34 +29,34 @@ export class EndgeDOMStyleRuntime {
 
     const root = document as Document & { adoptedStyleSheets?: CSSStyleSheet[] }
     if (typeof CSSStyleSheet !== 'undefined' && 'replaceSync' in CSSStyleSheet.prototype && Array.isArray(root.adoptedStyleSheets)) {
-      this.fallback?.remove()
-      this.fallback = null
-      this.sheet ??= new CSSStyleSheet()
-      this.sheet.replaceSync(css)
-      if (!root.adoptedStyleSheets.includes(this.sheet)) {
-        root.adoptedStyleSheets = [...root.adoptedStyleSheets, this.sheet]
+      this._fallback?.remove()
+      this._fallback = null
+      this._sheet ??= new CSSStyleSheet()
+      this._sheet.replaceSync(css)
+      if (!root.adoptedStyleSheets.includes(this._sheet)) {
+        root.adoptedStyleSheets = [...root.adoptedStyleSheets, this._sheet]
       }
       return
     }
 
-    this.fallback ??= this.createFallback()
-    this.fallback.textContent = css
+    this._fallback ??= this._createFallback()
+    this._fallback.textContent = css
   }
 
   public reset(): void {
-    if (typeof document !== 'undefined' && this.sheet) {
+    if (typeof document !== 'undefined' && this._sheet) {
       const root = document as Document & { adoptedStyleSheets?: CSSStyleSheet[] }
       if (Array.isArray(root.adoptedStyleSheets)) {
-        root.adoptedStyleSheets = root.adoptedStyleSheets.filter(sheet => sheet !== this.sheet)
+        root.adoptedStyleSheets = root.adoptedStyleSheets.filter(sheet => sheet !== this._sheet)
       }
     }
-    this.fallback?.remove()
-    this.fallback = null
-    this.sheet = null
-    this.lastKey = ''
+    this._fallback?.remove()
+    this._fallback = null
+    this._sheet = null
+    this._lastKey = ''
   }
 
-  private createFallback(): HTMLStyleElement {
+  private _createFallback(): HTMLStyleElement {
     const element = document.createElement('style')
     element.dataset.endgeStyles = ''
     document.head.append(element)

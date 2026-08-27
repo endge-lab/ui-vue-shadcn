@@ -35,7 +35,7 @@ const RenderRoot = defineComponent({
   name: 'SFCRenderRoot',
   setup() {
     return () => {
-      adapterVersion.value
+      void adapterVersion.value
       if (!props.ir) {
         return null
       }
