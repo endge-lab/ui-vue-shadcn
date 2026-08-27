@@ -1,16 +1,16 @@
 import type { ComponentSFCProgramPayload, ProgramArtifact } from '@endge/core'
 import {
-  ComponentSFCRuntimeHost,
   compileComponentSFC,
+  ComponentSFCRuntimeHost,
+  Endge,
   ENDGE_SFC_RENDER_ADAPTER_PROTOCOL,
   ENDGE_SFC_RENDER_ADAPTER_PROTOCOL_VERSION,
-  Endge,
   RComponentSFC,
 } from '@endge/core'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick } from 'vue'
 
-import { SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS } from '@/domain/types/sfc-render.type'
+import { SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS } from '@/model/render/sfc/sfc-shadcn-render.type'
 import {
   VUE_SHADCN_SFC_ADAPTER_ID,
   VueShadcnSFCAdapter,
@@ -38,7 +38,7 @@ defineProps<{ rows: Array<{ id: number, status: string }> }>()
   </Table>
 </template>`
 
-describe('Shadcn SFC Editable integration', () => {
+describe('shadcn SFC Editable integration', () => {
   beforeEach(() => {
     vi.stubGlobal('ResizeObserver', class {
       observe() {}
@@ -92,8 +92,9 @@ describe('Shadcn SFC Editable integration', () => {
 
 async function mountRuntimeTable() {
   const compiled = compileComponentSFC(SOURCE)
-  if (!compiled.ir)
+  if (!compiled.ir) {
     throw new Error(`Editable table source failed to compile: ${JSON.stringify(compiled.diagnostics)}`)
+  }
 
   const model = RComponentSFC.fromPlain({
     id: 91,

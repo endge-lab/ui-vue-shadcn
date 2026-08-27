@@ -3,17 +3,18 @@ import type {
   SourceFieldOption,
 } from '@endge/core'
 
-import {
-  ENDGE_SFC_RENDER_ADAPTER_PROTOCOL,
-  ENDGE_SFC_RENDER_ADAPTER_PROTOCOL_VERSION,
-  Endge,
-  resolveFilterSelectPresentation,
-} from '@endge/core'
-import { defineComponent, h, type PropType } from 'vue'
-
+import type { PropType } from 'vue'
 import type {
   SFCVueRenderAdapterFunction,
-} from '@/domain/types/sfc-render.type'
+} from '@/model/render/sfc/sfc-shadcn-render.type'
+
+import {
+  Endge,
+  ENDGE_SFC_RENDER_ADAPTER_PROTOCOL,
+  ENDGE_SFC_RENDER_ADAPTER_PROTOCOL_VERSION,
+  resolveFilterSelectPresentation,
+} from '@endge/core'
+import { defineComponent, h } from 'vue'
 
 /** Renders a semantic filter control through the active vue-shadcn adapter. */
 export const VueShadcnFilterControlRenderer = defineComponent({
@@ -42,8 +43,9 @@ export const VueShadcnFilterControlRenderer = defineComponent({
         requiredRendererKeys: [props.field.control.type],
       })
       const render = adapter.renderers[props.field.control.type]
-      if (!render)
+      if (!render) {
         throw new Error(`[VueShadcnFilterControlRenderer] renderer "${props.field.control.type}" is missing.`)
+      }
 
       const readonly = props.readonly === true
       const controlProps = makeControlProps(props.field, props.options, readonly, props.label)
@@ -58,8 +60,9 @@ export const VueShadcnFilterControlRenderer = defineComponent({
         attrs: {
           'data-endge-filter-field': props.field.key,
           [eventName]: (event: Event) => {
-            if (!readonly)
+            if (!readonly) {
               emit('update:value', readControlValue(event, props.field, props.options))
+            }
           },
         },
       })
@@ -116,11 +119,13 @@ function readControlValue(
   options: SourceFieldOption[],
 ): unknown {
   const target = event.target
-  if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement))
+  if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement)) {
     return field.value
+  }
 
-  if (field.control.type === 'Checkbox' && target instanceof HTMLInputElement)
+  if (field.control.type === 'Checkbox' && target instanceof HTMLInputElement) {
     return target.checked
+  }
 
   if (field.control.type === 'Select' && target instanceof HTMLSelectElement) {
     if (field.array) {
@@ -138,8 +143,9 @@ function readControlValue(
       : parts
   }
   if (field.type === 'Number') {
-    if (value.trim() === '')
+    if (value.trim() === '') {
       return undefined
+    }
     const numberValue = Number(value)
     return Number.isFinite(numberValue) ? numberValue : field.value
   }

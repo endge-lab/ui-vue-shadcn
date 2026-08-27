@@ -7,9 +7,9 @@ import type {
 import { Endge } from '@endge/core'
 import { reactive } from 'vue'
 
-export type ShadcnMenuAnchor =
-  | { kind: 'point', x: number, y: number }
-  | { kind: 'element', left: number, top: number, right: number, bottom: number }
+export type ShadcnMenuAnchor
+  = | { kind: 'point', x: number, y: number }
+    | { kind: 'element', left: number, top: number, right: number, bottom: number }
 
 export interface ShadcnMenuOpenInput<TContext extends RuntimeActionContext = RuntimeActionContext> {
   ownerId: string
@@ -58,8 +58,9 @@ export function openShadcnMenu(input: ShadcnMenuOpenInput): void {
 }
 
 export function closeShadcnMenu(ownerId?: string): void {
-  if (ownerId && shadcnMenuState.ownerId !== ownerId)
+  if (ownerId && shadcnMenuState.ownerId !== ownerId) {
     return
+  }
 
   shadcnMenuState.open = false
   shadcnMenuState.ownerId = null
@@ -70,8 +71,9 @@ export function closeShadcnMenu(ownerId?: string): void {
 export function getShadcnMenuItems(): ContextMenuNodeDescriptor[] {
   const menu = shadcnMenuState.menu
   const context = shadcnMenuState.context
-  if (!menu || !context)
+  if (!menu || !context) {
     return []
+  }
 
   return compactSeparators(menu.items)
 }
@@ -80,8 +82,9 @@ export const getExecutableShadcnMenuItems = getShadcnMenuItems
 
 export async function executeShadcnMenuItem(item: ContextMenuItemDescriptor): Promise<void> {
   const context = shadcnMenuState.context
-  if (!context)
+  if (!context) {
     return
+  }
 
   try {
     await Endge.runtime.actions.execute(item.action, context, item.input)
@@ -93,10 +96,12 @@ export async function executeShadcnMenuItem(item: ContextMenuItemDescriptor): Pr
 
 export function resolveShadcnMenuItemLabel(item: ContextMenuItemDescriptor): string {
   try {
-    if (Endge.i18n.te(item.label))
+    if (Endge.i18n.te(item.label)) {
       return Endge.i18n.t(item.label, { defaultValue: item.label })
-    if (item.action !== item.label && Endge.i18n.te(item.action))
+    }
+    if (item.action !== item.label && Endge.i18n.te(item.action)) {
       return Endge.i18n.t(item.action, { defaultValue: item.label })
+    }
   }
   catch {
     // A shell can mount before workspace locale hydration; the descriptor label is its safe fallback.
@@ -111,8 +116,12 @@ function compactSeparators(items: ContextMenuNodeDescriptor[]): ContextMenuNodeD
       result.push(item)
       continue
     }
-    if (result.length > 0 && result.at(-1)?.kind !== 'separator') result.push(item)
+    if (result.length > 0 && result.at(-1)?.kind !== 'separator') {
+      result.push(item)
+    }
   }
-  if (result.at(-1)?.kind === 'separator') result.pop()
+  if (result.at(-1)?.kind === 'separator') {
+    result.pop()
+  }
   return result
 }

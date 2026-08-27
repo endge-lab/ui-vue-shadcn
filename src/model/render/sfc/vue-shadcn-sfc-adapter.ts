@@ -1,15 +1,10 @@
+import type { SFCVueRenderAdapter } from '@/model/render/sfc/sfc-shadcn-render.type'
 import {
   ENDGE_SFC_RENDER_ADAPTER_PROTOCOL,
   ENDGE_SFC_RENDER_ADAPTER_PROTOCOL_VERSION,
 } from '@endge/core'
+
 import { markRaw } from 'vue'
-
-import type { SFCVueRenderAdapter } from '@/domain/types/sfc-render.type'
-import VueShadcnFilterRenderer from '@/ui/filter/VueShadcnFilterRenderer.vue'
-import VueShadcnShell from '@/ui/layout/VueShadcnShell.vue'
-import SFC_Renderer from '@/ui/render/sfc/SFC_Renderer.vue'
-import SFC_RuntimeRenderer from '@/ui/render/sfc/SFC_RuntimeRenderer.vue'
-
 import {
   VueShadcnRender_Badge,
   VueShadcnRender_Box,
@@ -28,6 +23,11 @@ import {
 } from '@/model/render/sfc/vue-shadcn-renderers'
 import { VueShadcnRender_Table } from '@/model/render/sfc/vue-shadcn-table-renderer'
 import { VueShadcnRender_Tooltip } from '@/model/render/sfc/vue-shadcn-tooltip-renderer'
+import VueShadcnFilterRenderer from '@/ui/filter/VueShadcnFilterRenderer.vue'
+
+import VueShadcnShell from '@/ui/layout/VueShadcnShell.vue'
+import SFC_Renderer from '@/ui/render/sfc/SFC_Renderer.vue'
+import SFC_RuntimeRenderer from '@/ui/render/sfc/SFC_RuntimeRenderer.vue'
 
 export const VUE_SHADCN_SFC_ADAPTER_ID = 'vue-shadcn'
 
@@ -56,8 +56,8 @@ export const VueShadcnSFCAdapter: SFCVueRenderAdapter = {
     Table: VueShadcnRender_Table,
   },
   roots: {
-    shell: markRaw(VueShadcnShell),
-    sfc: markRaw(SFC_Renderer),
+    'shell': markRaw(VueShadcnShell),
+    'sfc': markRaw(SFC_Renderer),
     'sfc-runtime': markRaw(SFC_RuntimeRenderer),
     'filter-view': markRaw(VueShadcnFilterRenderer),
   },

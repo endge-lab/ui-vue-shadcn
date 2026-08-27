@@ -38,7 +38,7 @@ async function loadVocab(): Promise<void> {
   vocabError.value = null
   try {
     const rows = await Endge.vocabs.loadVocab(vocab.identity, { throwOnError: true })
-    vocabOptions.value = rows.map(row => {
+    vocabOptions.value = rows.map((row) => {
       const rawValue = readPath(row, vocab.valuePath)
       const value = typeof rawValue === 'string' || typeof rawValue === 'number' || typeof rawValue === 'boolean'
         ? rawValue

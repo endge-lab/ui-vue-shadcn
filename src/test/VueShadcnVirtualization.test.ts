@@ -1,20 +1,20 @@
 import type { EndgeStyleMatchNode } from '@endge/core'
 import type {
   SFCVueRenderContext,
-} from '@/domain/types/sfc-render.type'
+} from '@/model/render/sfc/sfc-shadcn-render.type'
 import type {
   SFCTableColumnStyleSurfaces,
   SFCTablePublicPart,
   SFCTablePublicSurface,
   SFCTableStyleContract,
 } from '@/ui/render/sfc/SFCRender_TableStyle'
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createApp, h, nextTick } from 'vue'
-
 import type { EndgeShadcnTableColumn, EndgeShadcnTableProps } from '@/ui/table/table.types'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import { createApp, h, nextTick } from 'vue'
 import ShadcnSfcDataTable from '@/ui/table/ShadcnSfcDataTable.vue'
 
-describe('VueShadcnSfcDataTable virtualization', () => {
+describe('vueShadcnSfcDataTable virtualization', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
     vi.restoreAllMocks()
@@ -365,7 +365,7 @@ function createSurface(
     attrs: {
       part,
       'data-endge-part': part,
-      class: [],
+      'class': [],
     },
   }
 }

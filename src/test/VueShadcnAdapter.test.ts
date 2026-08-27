@@ -1,21 +1,22 @@
 import type {
-  EndgeWorkspaceDefinition,
   EndgeDiagnosticsConfiguration,
+  EndgeWorkspaceDefinition,
   FilterViewRuntimeHost,
   RComponentSFC_IR_ElementNode,
   RComponentSFC_IR_Tag,
   RComponentSFC_IR_Value,
 } from '@endge/core'
+import type { Component, VNode } from 'vue'
 import {
+  Endge,
   ENDGE_SFC_RENDER_ADAPTER_PROTOCOL,
   ENDGE_SFC_RENDER_ADAPTER_PROTOCOL_VERSION,
-  Endge,
 } from '@endge/core'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { createApp, h, isVNode, nextTick, type Component, type VNode } from 'vue'
+import { createApp, h, isVNode, nextTick } from 'vue'
 
-import { SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS } from '@/domain/types/sfc-render.type'
 import { EndgeVueShadcnModule } from '@/domain/core/endge-vue-shadcn'
+import { SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS } from '@/model/render/sfc/sfc-shadcn-render.type'
 import {
   VUE_SHADCN_SFC_ADAPTER_ID,
   VueShadcnSFCAdapter,
@@ -62,7 +63,7 @@ const TEST_WORKSPACE: EndgeWorkspaceDefinition = {
   },
 }
 
-describe('VueShadcnSFCAdapter', () => {
+describe('vueShadcnSFCAdapter', () => {
   beforeEach(() => {
     Endge.uiRegistry.adapters.reset()
     Endge.workspace.apply(TEST_WORKSPACE)
@@ -100,8 +101,9 @@ describe('VueShadcnSFCAdapter', () => {
       children: [],
     }
     const result = renderSFCNode(h, node, createSFCVueRenderContext({}))
-    if (!isVNode(result))
+    if (!isVNode(result)) {
       throw new Error('Flex did not render a VNode')
+    }
 
     expect(result.props?.style).toMatchObject({
       background: 'var(--endge-tone-neutral-background, #e5e7eb)',
@@ -247,14 +249,16 @@ function renderControl(
     children: [],
   }
   const result = renderSFCNode(h, node, createSFCVueRenderContext({}))
-  if (!isVNode(result)) throw new Error(`${tag} did not render a VNode`)
+  if (!isVNode(result)) {
+    throw new Error(`${tag} did not render a VNode`)
+  }
   return result
 }
 
 async function mountControl(
   tag: Extract<RComponentSFC_IR_Tag, 'Input' | 'Textarea' | 'Checkbox' | 'Select'>,
   props: Record<string, unknown>,
-): Promise<{ root: HTMLDivElement; unmount: () => void }> {
+): Promise<{ root: HTMLDivElement, unmount: () => void }> {
   const vnode = renderControl(tag, props)
   const root = document.createElement('div')
   const app = createApp({ render: () => vnode })

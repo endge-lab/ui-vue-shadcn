@@ -1,13 +1,13 @@
 import type { ComponentSFCProgramPayload } from '@endge/core'
+import type { SFCVueRenderContext, SFCVueRenderFunction } from '@/model/render/sfc/sfc-shadcn-render.type'
 import { Endge } from '@endge/core'
-import { cloneVNode, isVNode } from 'vue'
 
-import type { SFCVueRenderContext, SFCVueRenderFunction } from '@/domain/types/sfc-render.type'
+import { cloneVNode, isVNode } from 'vue'
 import { SFCRender_Base } from '@/ui/render/sfc/SFCRender_Base'
-import { renderSFCNodes } from '@/ui/render/sfc/SFCRender_Node'
 import { createSFCVueRenderContext } from '@/ui/render/sfc/SFCRender_Context'
 import { commitSFCEditableChild, editableConsumerKey } from '@/ui/render/sfc/SFCRender_Editable'
 import { createSFCSemanticInteractionBindings } from '@/ui/render/sfc/SFCRender_Interaction'
+import { renderSFCNodes } from '@/ui/render/sfc/SFCRender_Node'
 
 /** Рендерит вложенный SFC artifact через тот же renderer-neutral IR pipeline. */
 export const SFCRender_Component: SFCVueRenderFunction = SFCRender_Base((input) => {
@@ -15,20 +15,23 @@ export const SFCRender_Component: SFCVueRenderFunction = SFCRender_Base((input) 
     (input.node.port
       ? input.context.portBindings?.find(binding => binding.port === input.node.port?.port && binding.kind === 'component')?.identity
       : null)
-      ?? input.props.is
-      ?? input.props.identity
-      ?? '',
+    ?? input.props.is
+    ?? input.props.identity
+    ?? '',
   ).trim()
-  if (!identity)
+  if (!identity) {
     return renderComponentError(input, 'component identity is empty')
+  }
 
-  if (input.context.componentStack.includes(identity))
+  if (input.context.componentStack.includes(identity)) {
     return renderComponentError(input, `component cycle: ${[...input.context.componentStack, identity].join(' -> ')}`)
+  }
 
   const artifacts = input.context.host?.getArtifactReader() ?? Endge.program
   const artifact = artifacts.getArtifact<ComponentSFCProgramPayload>('component-sfc', identity)
-  if (!artifact?.payload.ir || !artifact.capabilities.includes('renderable'))
+  if (!artifact?.payload.ir || !artifact.capabilities.includes('renderable')) {
     return renderComponentError(input, `component:${identity}`)
+  }
 
   const editKey = editableConsumerKey(input.node, input.context)
   const activeEdit = input.node.editable ? input.context.host?.getEditSession(editKey) : null
@@ -40,7 +43,9 @@ export const SFCRender_Component: SFCVueRenderFunction = SFCRender_Base((input) 
     componentTag: input.node.componentTag ?? 'Component',
   }, [...(input.node.events ?? []), ...createSFCSemanticInteractionBindings(input.node, input.context)], input.node.editable
     ? (event, payload) => {
-        if (event !== 'edited') return { event, payload }
+        if (event !== 'edited') {
+          return { event, payload }
+        }
         const committed = commitSFCEditableChild(input.node, input.context, payload)
         return committed ? { event, payload: committed } : null
       }
@@ -69,7 +74,9 @@ export const SFCRender_Component: SFCVueRenderFunction = SFCRender_Base((input) 
     childContext,
   )
 
-  if (children.length === 0) return null
+  if (children.length === 0) {
+    return null
+  }
   if (input.node.editable) {
     return input.h('span', {
       ...input.attrs,
@@ -113,7 +120,7 @@ function renderComponentError(
 ) {
   return input.h('span', {
     ...input.attrs,
-    class: ['endge-sfc-component-placeholder', input.props.class],
+    'class': ['endge-sfc-component-placeholder', input.props.class],
     'data-component': String(input.props.is ?? input.props.identity ?? ''),
   }, message)
 }

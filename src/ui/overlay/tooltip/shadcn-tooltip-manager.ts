@@ -1,12 +1,12 @@
 import type { EndgeTooltipConfiguration } from '@endge/core'
+import type { InjectionKey, VNodeChild } from 'vue'
 import {
-  ENDGE_KEYBOARD_CONTEXT_RAPH_PATH,
   Endge,
+  ENDGE_KEYBOARD_CONTEXT_RAPH_PATH,
   matchesComponentSFCInteractionKeyboardCondition,
   normalizeComponentSFCInteractionKeyboardCondition,
 } from '@endge/core'
 import { Raph } from '@endge/raph'
-import type { InjectionKey, VNodeChild } from 'vue'
 import { shallowReactive } from 'vue'
 
 export type ShadcnTooltipReason = 'pointer' | 'focus'
@@ -52,8 +52,16 @@ export class ShadcnTooltipManager {
   public constructor(defaults: EndgeTooltipConfiguration) {
     this.defaults = { ...defaults }
     this.state = shallowReactive({
-      phase: 'idle', ownerId: null, domId: null, anchor: null, kind: 'text',
-      policy: { ...defaults }, className: null, authoredId: null, part: null, content: null,
+      phase: 'idle',
+      ownerId: null,
+      domId: null,
+      anchor: null,
+      kind: 'text',
+      policy: { ...defaults },
+      className: null,
+      authoredId: null,
+      part: null,
+      content: null,
     })
     this.disposeKeyboardWatch = Raph.watch([
       ENDGE_KEYBOARD_CONTEXT_RAPH_PATH,
@@ -62,7 +70,9 @@ export class ShadcnTooltipManager {
   }
 
   public activate(request: ShadcnTooltipRequest, reason: ShadcnTooltipReason): void {
-    if (this.disposed || !request.anchor.isConnected) return
+    if (this.disposed || !request.anchor.isConnected) {
+      return
+    }
     this.clearClose()
     if (this.request?.ownerId !== request.ownerId) {
       this.hide()
@@ -74,26 +84,40 @@ export class ShadcnTooltipManager {
   }
 
   public deactivate(ownerId: string, reason: ShadcnTooltipReason): void {
-    if (this.request?.ownerId !== ownerId) return
+    if (this.request?.ownerId !== ownerId) {
+      return
+    }
     this.reasons.delete(reason)
-    if (this.reasons.size) return
+    if (this.reasons.size) {
+      return
+    }
     this.clearOpen()
     const delay = resolvePolicy(this.defaults, this.request.policy).closeDelay
     const generation = ++this.generation
-    if (delay === 0) this.hide()
-    else this.closeTimer = setTimeout(() => {
-      if (generation === this.generation && this.reasons.size === 0) this.hide()
-    }, delay)
+    if (delay === 0) {
+      this.hide()
+    }
+    else {
+      this.closeTimer = setTimeout(() => {
+        if (generation === this.generation && this.reasons.size === 0) {
+          this.hide()
+        }
+      }, delay)
+    }
   }
 
   public close(ownerId?: string): void {
-    if (ownerId && this.request?.ownerId !== ownerId) return
+    if (ownerId && this.request?.ownerId !== ownerId) {
+      return
+    }
     this.reasons.clear()
     this.hide()
   }
 
   public dispose(): void {
-    if (this.disposed) return
+    if (this.disposed) {
+      return
+    }
     this.disposed = true
     this.disposeKeyboardWatch()
     this.reasons.clear()
@@ -108,9 +132,15 @@ export class ShadcnTooltipManager {
       return
     }
     Object.assign(this.state, {
-      phase: 'visible', ownerId: request.ownerId, domId: request.domId, anchor: request.anchor,
-      kind: request.kind, policy, className: request.className ?? null,
-      authoredId: request.authoredId ?? null, part: request.part ?? null,
+      phase: 'visible',
+      ownerId: request.ownerId,
+      domId: request.domId,
+      anchor: request.anchor,
+      kind: request.kind,
+      policy,
+      className: request.className ?? null,
+      authoredId: request.authoredId ?? null,
+      part: request.part ?? null,
       content: request.renderContent(),
     })
     updateDescribedBy(request.anchor, request.domId, true)
@@ -125,30 +155,42 @@ export class ShadcnTooltipManager {
     this.clearOpen()
     this.clearClose()
     this.generation += 1
-    if (this.state.anchor && this.state.domId) updateDescribedBy(this.state.anchor, this.state.domId, false)
+    if (this.state.anchor && this.state.domId) {
+      updateDescribedBy(this.state.anchor, this.state.domId, false)
+    }
     Object.assign(this.state, {
-      phase: 'idle', ownerId: null, domId: null, anchor: null,
-      className: null, authoredId: null, part: null, content: null,
+      phase: 'idle',
+      ownerId: null,
+      domId: null,
+      anchor: null,
+      className: null,
+      authoredId: null,
+      part: null,
+      content: null,
     })
   }
 
   private reconcileActivation(): void {
     const request = this.request
-    if (this.disposed || !request || !this.reasons.size || !request.anchor.isConnected)
+    if (this.disposed || !request || !this.reasons.size || !request.anchor.isConnected) {
       return
+    }
     const policy = resolvePolicy(this.defaults, request.policy)
     if (!this.matchesKeyboard(policy)) {
       this.suspend()
       return
     }
-    if ((this.state.phase === 'visible' || this.state.phase === 'pending') && this.state.ownerId === request.ownerId)
+    if ((this.state.phase === 'visible' || this.state.phase === 'pending') && this.state.ownerId === request.ownerId) {
       return
+    }
     this.clearOpen()
     this.state.phase = 'pending'
     this.state.ownerId = request.ownerId
     const generation = ++this.generation
-    if (policy.openDelay === 0) this.show(generation, policy)
-    else this.openTimer = setTimeout(() => this.show(generation, policy), policy.openDelay)
+    if (policy.openDelay === 0) {
+      this.show(generation, policy)
+    }
+    else { this.openTimer = setTimeout(() => this.show(generation, policy), policy.openDelay) }
   }
 
   private matchesKeyboard(policy: EndgeTooltipConfiguration): boolean {
@@ -157,12 +199,16 @@ export class ShadcnTooltipManager {
   }
 
   private clearOpen(): void {
-    if (this.openTimer != null) clearTimeout(this.openTimer)
+    if (this.openTimer != null) {
+      clearTimeout(this.openTimer)
+    }
     this.openTimer = null
   }
 
   private clearClose(): void {
-    if (this.closeTimer != null) clearTimeout(this.closeTimer)
+    if (this.closeTimer != null) {
+      clearTimeout(this.closeTimer)
+    }
     this.closeTimer = null
   }
 }
@@ -174,7 +220,9 @@ export function attachShadcnTooltipAttrs(
   manager: ShadcnTooltipManager | null,
   createRequest: (anchor: HTMLElement) => ShadcnTooltipRequest,
 ): void {
-  if (!manager) return
+  if (!manager) {
+    return
+  }
   let ownerId = ''
   append(attrs, 'onMouseenter', (event: MouseEvent) => {
     const request = createRequest(event.currentTarget as HTMLElement)
@@ -189,7 +237,9 @@ export function attachShadcnTooltipAttrs(
   })
   append(attrs, 'onFocusout', () => ownerId && manager.deactivate(ownerId, 'focus'))
   append(attrs, 'onKeydown', (event: KeyboardEvent) => {
-    if (event.key === 'Escape' && ownerId) manager.close(ownerId)
+    if (event.key === 'Escape' && ownerId) {
+      manager.close(ownerId)
+    }
   })
   append(attrs, 'onVnodeUnmounted', () => ownerId && manager.close(ownerId))
   attrs['data-endge-tooltip-trigger'] = ''
@@ -201,7 +251,11 @@ function append(attrs: Record<string, unknown>, name: string, handler: (event: a
 
 function resolvePolicy(defaults: EndgeTooltipConfiguration, local?: Partial<EndgeTooltipConfiguration>): EndgeTooltipConfiguration {
   const next: any = { ...defaults }
-  for (const [key, value] of Object.entries(local ?? {})) if (value != null) next[key] = value
+  for (const [key, value] of Object.entries(local ?? {})) {
+    if (value != null) {
+      next[key] = value
+    }
+  }
   next.side = ['top', 'right', 'bottom', 'left'].includes(String(next.side)) ? next.side : defaults.side
   next.align = ['start', 'center', 'end'].includes(String(next.align)) ? next.align : defaults.align
   for (const key of ['openDelay', 'closeDelay']) {
@@ -210,15 +264,21 @@ function resolvePolicy(defaults: EndgeTooltipConfiguration, local?: Partial<Endg
     next[key] = Number.isFinite(value) && value >= 0 ? Math.min(60_000, Math.round(value)) : fallback
   }
   const keyboard = normalizeComponentSFCInteractionKeyboardCondition(next.keyboard)
-  if (keyboard) next.keyboard = keyboard
-  else delete next.keyboard
+  if (keyboard) {
+    next.keyboard = keyboard
+  }
+  else { delete next.keyboard }
   return next
 }
 
 function updateDescribedBy(anchor: HTMLElement, id: string, add: boolean): void {
   const ids = new Set((anchor.getAttribute('aria-describedby') ?? '').split(/\s+/).filter(Boolean))
-  if (add) ids.add(id)
-  else ids.delete(id)
-  if (ids.size) anchor.setAttribute('aria-describedby', [...ids].join(' '))
-  else anchor.removeAttribute('aria-describedby')
+  if (add) {
+    ids.add(id)
+  }
+  else { ids.delete(id) }
+  if (ids.size) {
+    anchor.setAttribute('aria-describedby', [...ids].join(' '))
+  }
+  else { anchor.removeAttribute('aria-describedby') }
 }

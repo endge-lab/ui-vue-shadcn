@@ -13,9 +13,13 @@ export class EndgeDOMStyleRuntime {
     target: EndgeStyleTargetProfile,
     hiddenScopeIds: readonly string[] = [],
   ): void {
-    if (typeof document === 'undefined') return
-    const key = `${target.renderer}:${[...(target.capabilities ?? [])].sort().join(',')}:${artifacts.map((item) => 'artifact' in item ? `${item.artifact.sourceHash}@${item.boundaryId}:${item.orderKey}` : item.sourceHash).join(':')}:hidden=${[...hiddenScopeIds].sort().join(',')}`
-    if (key === this.lastKey) return
+    if (typeof document === 'undefined') {
+      return
+    }
+    const key = `${target.renderer}:${[...(target.capabilities ?? [])].sort().join(',')}:${artifacts.map(item => 'artifact' in item ? `${item.artifact.sourceHash}@${item.boundaryId}:${item.orderKey}` : item.sourceHash).join(':')}:hidden=${[...hiddenScopeIds].sort().join(',')}`
+    if (key === this.lastKey) {
+      return
+    }
     this.lastKey = key
     const materialized = materializeEndgeCSSForDOM(artifacts, target)
     const hiddenCss = hiddenScopeIds
@@ -29,8 +33,9 @@ export class EndgeDOMStyleRuntime {
       this.fallback = null
       this.sheet ??= new CSSStyleSheet()
       this.sheet.replaceSync(css)
-      if (!root.adoptedStyleSheets.includes(this.sheet))
+      if (!root.adoptedStyleSheets.includes(this.sheet)) {
         root.adoptedStyleSheets = [...root.adoptedStyleSheets, this.sheet]
+      }
       return
     }
 
@@ -41,8 +46,9 @@ export class EndgeDOMStyleRuntime {
   public reset(): void {
     if (typeof document !== 'undefined' && this.sheet) {
       const root = document as Document & { adoptedStyleSheets?: CSSStyleSheet[] }
-      if (Array.isArray(root.adoptedStyleSheets))
+      if (Array.isArray(root.adoptedStyleSheets)) {
         root.adoptedStyleSheets = root.adoptedStyleSheets.filter(sheet => sheet !== this.sheet)
+      }
     }
     this.fallback?.remove()
     this.fallback = null
@@ -57,4 +63,3 @@ export class EndgeDOMStyleRuntime {
     return element
   }
 }
-

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { EndgeTooltipAlign, EndgeTooltipSide } from '@endge/core'
-import { computed, defineComponent, nextTick, onBeforeUnmount, ref, watch } from 'vue'
-
 import type { ShadcnTooltipManager } from './shadcn-tooltip-manager'
+
+import { computed, defineComponent, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
 const props = defineProps<{ manager: ShadcnTooltipManager }>()
 const state = props.manager.state
@@ -12,21 +12,30 @@ const actualSide = ref<EndgeTooltipSide>('right')
 let observer: ResizeObserver | null = null
 
 const classes = computed(() => [
-  'endge-tooltip', 'endge-tooltip--vue-shadcn', `endge-tooltip--${state.kind}`, state.className,
+  'endge-tooltip',
+  'endge-tooltip--vue-shadcn',
+  `endge-tooltip--${state.kind}`,
+  state.className,
 ])
 const ContentRenderer = defineComponent({ setup: () => () => state.content as any })
 
 watch(() => state.phase, async (phase) => {
   cleanup()
-  if (phase !== 'visible') return
+  if (phase !== 'visible') {
+    return
+  }
   await nextTick()
   position()
   window.addEventListener('resize', position, { passive: true })
   window.addEventListener('scroll', position, { passive: true, capture: true })
   if (typeof ResizeObserver !== 'undefined') {
     observer = new ResizeObserver(position)
-    if (state.anchor) observer.observe(state.anchor)
-    if (root.value) observer.observe(root.value)
+    if (state.anchor) {
+      observer.observe(state.anchor)
+    }
+    if (root.value) {
+      observer.observe(root.value)
+    }
   }
 }, { flush: 'post' })
 
@@ -43,7 +52,9 @@ function position(): void {
   const anchor = state.anchor
   const content = root.value
   if (!anchor?.isConnected || !content) {
-    if (state.phase === 'visible') props.manager.close(state.ownerId ?? undefined)
+    if (state.phase === 'visible') {
+      props.manager.close(state.ownerId ?? undefined)
+    }
     return
   }
   const anchorRect = anchor.getBoundingClientRect()
@@ -69,9 +80,15 @@ function candidate(side: EndgeTooltipSide, align: EndgeTooltipAlign, anchor: DOM
   const size = horizontal ? anchor.width : anchor.height
   const contentSize = horizontal ? content.width : content.height
   const cross = align === 'start' ? start : align === 'end' ? start + size - contentSize : start + (size - contentSize) / 2
-  if (side === 'top') return { side, left: cross, top: anchor.top - content.height - 7 }
-  if (side === 'bottom') return { side, left: cross, top: anchor.bottom + 7 }
-  if (side === 'left') return { side, left: anchor.left - content.width - 7, top: cross }
+  if (side === 'top') {
+    return { side, left: cross, top: anchor.top - content.height - 7 }
+  }
+  if (side === 'bottom') {
+    return { side, left: cross, top: anchor.bottom + 7 }
+  }
+  if (side === 'left') {
+    return { side, left: anchor.left - content.width - 7, top: cross }
+  }
   return { side, left: anchor.right + 7, top: cross }
 }
 

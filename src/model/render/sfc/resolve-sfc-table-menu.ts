@@ -1,22 +1,28 @@
 import type { ComponentSFCTableMenuDescriptor, ContextMenuDescriptor, ContextMenuNodeDescriptor } from '@endge/core'
-import type { SFCVueRenderContext } from '@/domain/types/sfc-render.type'
+import type { SFCVueRenderContext } from '@/model/render/sfc/sfc-shadcn-render.type'
 import { evaluateSFCValue } from '@/ui/render/sfc/SFCRender_Evaluator'
 
 export function resolveSFCTableMenu(
   descriptor: ComponentSFCTableMenuDescriptor | null,
   context: SFCVueRenderContext,
 ): ContextMenuDescriptor | null {
-  if (!descriptor) return null
+  if (!descriptor) {
+    return null
+  }
   const items: ContextMenuNodeDescriptor[] = []
   for (const node of descriptor.items) {
     if (node.kind === 'separator') {
       items.push({ ...node })
       continue
     }
-    if (node.visible && !evaluateSFCValue(node.visible, context)) continue
+    if (node.visible && !evaluateSFCValue(node.visible, context)) {
+      continue
+    }
     const labelValue = evaluateSFCValue(node.label, context)
     const label = labelValue == null ? '' : String(labelValue).trim()
-    if (!label) continue
+    if (!label) {
+      continue
+    }
     items.push({
       kind: 'item',
       id: node.id,
@@ -35,9 +41,13 @@ export function resolveSFCTableMenu(
 function compactMenuSeparators(items: ContextMenuNodeDescriptor[]): ContextMenuNodeDescriptor[] {
   const result: ContextMenuNodeDescriptor[] = []
   for (const item of items) {
-    if (item.kind === 'separator' && (!result.length || result.at(-1)?.kind === 'separator')) continue
+    if (item.kind === 'separator' && (!result.length || result.at(-1)?.kind === 'separator')) {
+      continue
+    }
     result.push(item)
   }
-  if (result.at(-1)?.kind === 'separator') result.pop()
+  if (result.at(-1)?.kind === 'separator') {
+    result.pop()
+  }
   return result
 }

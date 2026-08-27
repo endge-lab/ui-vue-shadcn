@@ -37,4 +37,3 @@ function normalizeVerticalAlignment(value: unknown): SFCTableCellVerticalAlign {
 function normalizeAlignmentValue(value: unknown): string {
   return typeof value === 'string' ? value.trim().toLowerCase() : ''
 }
-

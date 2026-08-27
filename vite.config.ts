@@ -1,8 +1,8 @@
 import path from 'node:path'
 
 import vue from '@vitejs/plugin-vue'
-import { defineConfig } from 'vite'
 import dts from 'unplugin-dts/vite'
+import { defineConfig } from 'vite'
 
 export default defineConfig({
   build: {
@@ -26,8 +26,9 @@ export default defineConfig({
       ],
       output: {
         assetFileNames: (assetInfo) => {
-          if (assetInfo.name?.endsWith('.css'))
+          if (assetInfo.name?.endsWith('.css')) {
             return 'vue-shadcn.css'
+          }
 
           return 'assets/[name]-[hash][extname]'
         },

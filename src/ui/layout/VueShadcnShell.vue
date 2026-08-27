@@ -5,8 +5,8 @@ import { subscribeKeyboardState } from '@endge/utils'
 import { onBeforeUnmount, provide } from 'vue'
 
 import ShadcnMenuRoot from '@/ui/overlay/ShadcnMenuRoot.vue'
-import ShadcnTooltipRoot from '@/ui/overlay/tooltip/ShadcnTooltipRoot.vue'
 import { ShadcnTooltipManager, ShadcnTooltipManagerKey } from '@/ui/overlay/tooltip/shadcn-tooltip-manager'
+import ShadcnTooltipRoot from '@/ui/overlay/tooltip/ShadcnTooltipRoot.vue'
 
 defineOptions({ name: 'EndgeVueShadcnShell' })
 

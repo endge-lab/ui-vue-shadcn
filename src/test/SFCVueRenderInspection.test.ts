@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { registerSFCInspectionElement, registerSFCInspectionRoot } from '@/model/render/sfc/SFCVueRenderInspection'
 import { createSFCVueRenderContext, extendSFCVueRenderContext } from '@/ui/render/sfc/SFCRender_Context'
 
-describe('SFCVueRenderInspection', () => {
+describe('sFCVueRenderInspection', () => {
   it('registers concrete table-cell data under a stable row-key scope', () => {
     const session = new SFCRenderInspectionSession()
     const context = createSFCVueRenderContext(

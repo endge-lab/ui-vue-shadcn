@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import type { SFCVueRenderAdapterProps } from '@/model/render/sfc/sfc-shadcn-render.type'
 import { Endge } from '@endge/core'
-import { computed, defineComponent, h, Fragment, inject, onScopeDispose, ref } from 'vue'
-import type { SFCVueRenderAdapterProps } from '@/domain/types/sfc-render.type'
-import { createSFCVueRenderContext } from '@/ui/render/sfc/SFCRender_Context'
-import { renderSFCNodes } from '@/ui/render/sfc/SFCRender_Node'
+import { computed, defineComponent, Fragment, h, inject, onScopeDispose, ref } from 'vue'
 import { registerSFCInspectionRoot } from '@/model/render/sfc/SFCVueRenderInspection'
 import { ShadcnTooltipManagerKey } from '@/ui/overlay/tooltip/shadcn-tooltip-manager'
+import { createSFCVueRenderContext } from '@/ui/render/sfc/SFCRender_Context'
+import { renderSFCNodes } from '@/ui/render/sfc/SFCRender_Node'
 
 const props = defineProps<SFCVueRenderAdapterProps>()
 const adapterVersion = ref(0)
@@ -32,11 +32,13 @@ const context = computed(() => createSFCVueRenderContext(
 ))
 
 const RenderRoot = defineComponent({
-  name: 'SFC_RenderRoot',
+  name: 'SFCRenderRoot',
   setup() {
     return () => {
       adapterVersion.value
-      if (!props.ir) return null
+      if (!props.ir) {
+        return null
+      }
 
       const renderContext = context.value
       renderContext.inspectionParentId = renderContext.inspection

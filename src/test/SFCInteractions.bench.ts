@@ -5,7 +5,12 @@ import { createSFCVueRenderContext } from '@/ui/render/sfc/SFCRender_Context'
 import { attachSFCInteractionAttrs } from '@/ui/render/sfc/SFCRender_Interaction'
 
 const node: RComponentSFC_IR_ElementNode = {
-  id: 'bench', kind: 'element', tag: 'Text', props: {}, directives: {}, children: [],
+  id: 'bench',
+  kind: 'element',
+  tag: 'Text',
+  props: {},
+  directives: {},
+  children: [],
   interactions: [{ rules: [{
     event: 'click',
     trigger: { kind: 'literal', value: { event: 'click', button: 0 } },
@@ -21,10 +26,11 @@ context.eventBoundary = {
   routeChild: async () => undefined,
 } as any
 
-describe('Shadcn Vue SFC interaction bridge benchmarks', () => {
+describe('shadcn Vue SFC interaction bridge benchmarks', () => {
   bench('attach listeners to 10k visual nodes', () => {
-    for (let index = 0; index < 10_000; index++)
+    for (let index = 0; index < 10_000; index++) {
       attachSFCInteractionAttrs({}, { ...node, id: `node-${index}` }, {}, context)
+    }
   }, { iterations: 10 })
 
   const listeners = Array.from({ length: 10_000 }, (_item, index) => {
@@ -33,9 +39,16 @@ describe('Shadcn Vue SFC interaction bridge benchmarks', () => {
     return attrs.onClick as (event: Event) => void
   })
   bench('dispatch across 10k visual-node listeners', () => {
-    for (const listener of listeners) listener({
-      type: 'click', target: null, currentTarget: null, cancelable: true, button: 0,
-      preventDefault() {}, stopPropagation() {},
-    } as unknown as Event)
+    for (const listener of listeners) {
+      listener({
+        type: 'click',
+        target: null,
+        currentTarget: null,
+        cancelable: true,
+        button: 0,
+        preventDefault() {},
+        stopPropagation() {},
+      } as unknown as Event)
+    }
   }, { iterations: 10 })
 })

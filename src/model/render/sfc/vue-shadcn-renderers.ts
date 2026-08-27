@@ -1,9 +1,9 @@
 import type { SourceFieldOption, SourceFieldType } from '@endge/core'
+import type { SFCVueRenderAdapterFunction } from '@/model/render/sfc/sfc-shadcn-render.type'
 import { isoToDateInput, isoToDateTimeLocalInput, timeToTimeInput } from '@endge/utils'
-import type { SFCVueRenderAdapterFunction } from '@/domain/types/sfc-render.type'
 
-import ShadcnCheckbox from '@/ui/primitives/ShadcnCheckbox.vue'
 import ShadcnBadge from '@/ui/primitives/ShadcnBadge.vue'
+import ShadcnCheckbox from '@/ui/primitives/ShadcnCheckbox.vue'
 import ShadcnIcon from '@/ui/primitives/ShadcnIcon.vue'
 import ShadcnInput from '@/ui/primitives/ShadcnInput.vue'
 import ShadcnSelect from '@/ui/primitives/ShadcnSelect.vue'
@@ -42,9 +42,9 @@ export const VueShadcnRender_Icon: SFCVueRenderAdapterFunction = (input) => {
 
   return input.h(ShadcnIcon, {
     ...input.attrs,
-    class: ['endge-sfc-icon', 'endge-shadcn-icon', input.props.class],
-    name: String(name),
-    size: Number.isFinite(size) ? size : 16,
+    'class': ['endge-sfc-icon', 'endge-shadcn-icon', input.props.class],
+    'name': String(name),
+    'size': Number.isFinite(size) ? size : 16,
     'aria-label': name ? String(name) : undefined,
   })
 }
@@ -62,9 +62,9 @@ export const VueShadcnRender_Dot: SFCVueRenderAdapterFunction = (input) => {
 
   return input.h('span', {
     ...input.attrs,
-    class: ['endge-sfc-dot', 'endge-shadcn-dot', input.props.class],
+    'class': ['endge-sfc-dot', 'endge-shadcn-dot', input.props.class],
     'data-tone': normalizeTone(input.props.tone),
-    style: {
+    'style': {
       ...(input.attrs.style as Record<string, string> | undefined),
       width: `${Number.isFinite(size) ? size : 8}px`,
       height: `${Number.isFinite(size) ? size : 8}px`,
@@ -188,39 +188,61 @@ export const VueShadcnRender_Select: SFCVueRenderAdapterFunction = (input) => {
 }
 
 function normalizeInputType(value: unknown): SFCInputType {
-  if (value === 'Number' || value === 'Date' || value === 'Time' || value === 'DateTime')
+  if (value === 'Number' || value === 'Date' || value === 'Time' || value === 'DateTime') {
     return value
+  }
 
   return 'String'
 }
 
 function toNativeInputType(type: SFCInputType): string {
-  if (type === 'Number') return 'number'
-  if (type === 'Date') return 'date'
-  if (type === 'Time') return 'time'
-  if (type === 'DateTime') return 'datetime-local'
+  if (type === 'Number') {
+    return 'number'
+  }
+  if (type === 'Date') {
+    return 'date'
+  }
+  if (type === 'Time') {
+    return 'time'
+  }
+  if (type === 'DateTime') {
+    return 'datetime-local'
+  }
   return 'text'
 }
 
 function normalizeInputValue(type: SFCInputType, value: unknown): string | number {
-  if (value == null) return ''
+  if (value == null) {
+    return ''
+  }
   if (type === 'Number') {
-    if (typeof value === 'string' && value.trim() === '') return ''
+    if (typeof value === 'string' && value.trim() === '') {
+      return ''
+    }
     const numberValue = Number(value)
     return Number.isFinite(numberValue) ? numberValue : ''
   }
-  if (type === 'Date') return isoToDateInput(value)
-  if (type === 'Time') return timeToTimeInput(value)
-  if (type === 'DateTime') return isoToDateTimeLocalInput(value)
+  if (type === 'Date') {
+    return isoToDateInput(value)
+  }
+  if (type === 'Time') {
+    return timeToTimeInput(value)
+  }
+  if (type === 'DateTime') {
+    return isoToDateTimeLocalInput(value)
+  }
   return String(value)
 }
 
 function normalizeOptions(value: unknown): SourceFieldOption[] {
-  if (!Array.isArray(value)) return []
+  if (!Array.isArray(value)) {
+    return []
+  }
 
   return value.filter((item): item is SourceFieldOption => {
-    if (!item || typeof item !== 'object' || !Object.prototype.hasOwnProperty.call(item, 'value'))
+    if (!item || typeof item !== 'object' || !Object.hasOwn(item, 'value')) {
       return false
+    }
 
     const optionValue = (item as SourceFieldOption).value
     return typeof optionValue === 'string' || typeof optionValue === 'number' || typeof optionValue === 'boolean'
@@ -233,17 +255,22 @@ function normalizeSelectedValues(value: unknown, multiple: boolean): string[] {
 }
 
 function formatDateTime(value: unknown, format: unknown, timezone: unknown): string {
-  if (value == null) return ''
+  if (value == null) {
+    return ''
+  }
 
   const text = String(value).trim()
   const timeOnly = format === 'HH:mm'
     ? text.match(/^(\d{2}):(\d{2})(?::\d{2})?$/)
     : null
-  if (timeOnly)
+  if (timeOnly) {
     return `${timeOnly[1]}:${timeOnly[2]}`
+  }
 
   const date = new Date(text)
-  if (Number.isNaN(date.getTime())) return String(value)
+  if (Number.isNaN(date.getTime())) {
+    return String(value)
+  }
   const timeZone = normalizeTimezone(timezone)
   if (format === 'HH:mm') {
     return formatInTimezone(date, {
@@ -252,7 +279,9 @@ function formatDateTime(value: unknown, format: unknown, timezone: unknown): str
       hour12: false,
     }, timeZone)
   }
-  if (format === 'date') return formatInTimezone(date, {}, timeZone)
+  if (format === 'date') {
+    return formatInTimezone(date, {}, timeZone)
+  }
 
   return formatInTimezone(date, {
     dateStyle: 'medium',
@@ -279,10 +308,14 @@ function formatInTimezone(
 }
 
 function formatNumber(value: unknown, props: Record<string, unknown>): string {
-  if (value == null) return props.empty == null ? '' : String(props.empty)
+  if (value == null) {
+    return props.empty == null ? '' : String(props.empty)
+  }
 
   const numberValue = Number(value)
-  if (!Number.isFinite(numberValue)) return String(value)
+  if (!Number.isFinite(numberValue)) {
+    return String(value)
+  }
   const minimumFractionDigits = toOptionalNumber(props.minFractionDigits)
   const maximumFractionDigits = toOptionalNumber(props.maxFractionDigits ?? props.decimals)
   const formatted = new Intl.NumberFormat(undefined, {
@@ -294,7 +327,9 @@ function formatNumber(value: unknown, props: Record<string, unknown>): string {
 }
 
 function toOptionalNumber(value: unknown): number | undefined {
-  if (value == null || value === '') return undefined
+  if (value == null || value === '') {
+    return undefined
+  }
   const numberValue = Number(value)
   return Number.isFinite(numberValue) ? numberValue : undefined
 }
@@ -304,22 +339,38 @@ function toOptionalString(value: unknown): string | undefined {
 }
 
 function normalizeGap(value: unknown): string | undefined {
-  if (value == null || value === false) return undefined
-  if (typeof value === 'number') return `${value * 4}px`
+  if (value == null || value === false) {
+    return undefined
+  }
+  if (typeof value === 'number') {
+    return `${value * 4}px`
+  }
 
   const source = String(value).trim()
-  if (source === '') return undefined
-  if (/^-?\d+(\.\d+)?$/.test(source)) return `${Number(source) * 4}px`
+  if (source === '') {
+    return undefined
+  }
+  if (/^-?\d+(\.\d+)?$/.test(source)) {
+    return `${Number(source) * 4}px`
+  }
   return source
 }
 
 function normalizeLength(value: unknown): string | undefined {
-  if (value == null || value === false) return undefined
-  if (typeof value === 'number') return `${value}px`
+  if (value == null || value === false) {
+    return undefined
+  }
+  if (typeof value === 'number') {
+    return `${value}px`
+  }
 
   const source = String(value).trim()
-  if (source === '') return undefined
-  if (/^-?\d+(\.\d+)?$/.test(source)) return `${Number(source)}px`
+  if (source === '') {
+    return undefined
+  }
+  if (/^-?\d+(\.\d+)?$/.test(source)) {
+    return `${Number(source)}px`
+  }
   return source
 }
 

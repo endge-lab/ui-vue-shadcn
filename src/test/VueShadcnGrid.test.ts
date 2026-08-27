@@ -2,11 +2,11 @@ import { Endge } from '@endge/core'
 import { describe, expect, it } from 'vitest'
 import { h, isVNode } from 'vue'
 
-import { SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS } from '@/domain/types/sfc-render.type'
-import { VueShadcnSFCAdapter } from '@/model/render/sfc/vue-shadcn-sfc-adapter'
+import { SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS } from '@/model/render/sfc/sfc-shadcn-render.type'
 import { VueShadcnRender_Grid } from '@/model/render/sfc/vue-shadcn-renderers'
+import { VueShadcnSFCAdapter } from '@/model/render/sfc/vue-shadcn-sfc-adapter'
 
-describe('VueShadcnRender_Grid', () => {
+describe('vueShadcnRender_Grid', () => {
   it('completes the required adapter contract', () => {
     expect(Object.keys(VueShadcnSFCAdapter.renderers))
       .toEqual(SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS)
@@ -24,7 +24,9 @@ describe('VueShadcnRender_Grid', () => {
     })
 
     expect(isVNode(grid)).toBe(true)
-    if (!isVNode(grid)) return
+    if (!isVNode(grid)) {
+      return
+    }
     expect(grid.props?.class).toContain('endge-shadcn-grid')
     expect(grid.props?.style).toMatchObject({
       display: 'grid',

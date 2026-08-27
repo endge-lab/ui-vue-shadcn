@@ -1,14 +1,14 @@
+import type { EndgeBootContext, EndgePlugin, EndgeStylePlacement } from '@endge/core'
 import {
+  Endge,
   ENDGE_SFC_RENDER_ADAPTER_PROTOCOL,
   ENDGE_SFC_RENDER_ADAPTER_PROTOCOL_VERSION,
-  Endge,
+
   EndgeModule,
-  type EndgeBootContext,
-  type EndgeStylePlacement,
-  type EndgePlugin,
+
 } from '@endge/core'
 
-import { SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS } from '@/domain/types/sfc-render.type'
+import { SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS } from '@/model/render/sfc/sfc-shadcn-render.type'
 import { VueShadcnSFCAdapter } from '@/model/render/sfc/vue-shadcn-sfc-adapter'
 import { EndgeDOMStyleRuntime } from '@/model/style/EndgeDOMStyleRuntime'
 
@@ -33,7 +33,9 @@ export class EndgeVueShadcnModule extends EndgeModule {
   }
 
   public override start(): void {
-    if (this._started) return
+    if (this._started) {
+      return
+    }
     this._started = true
     this._unsubscribeWorkspace = Endge.workspace.subscribe(() => {
       this._activateWorkspaceAdapter()
@@ -72,7 +74,9 @@ export class EndgeVueShadcnModule extends EndgeModule {
       Endge.uiRegistry.adapters.require({ id: selectedId })
       return
     }
-    if (selected.renderer !== 'vue-shadcn') return
+    if (selected.renderer !== 'vue-shadcn') {
+      return
+    }
     Endge.uiRegistry.adapters.activate({
       id: selected.id,
       protocol: ENDGE_SFC_RENDER_ADAPTER_PROTOCOL,

@@ -1,21 +1,22 @@
 import type {
+  ComponentSFCEventRuntimeSource,
   ComponentSFCInteractionTrigger,
   ComponentSFCInteractionTriggerEvent,
   ComponentSFCInteractionTriggerPlatform,
-  ComponentSFCEventRuntimeSource,
   RComponentSFC_IR_ElementNode,
-  RComponentSFC_IR_EventModifier,
   RComponentSFC_IR_EventBinding,
+  RComponentSFC_IR_EventModifier,
   RComponentSFC_IR_InteractionRule,
 } from '@endge/core'
+import type { KeyboardStateSnapshot } from '@endge/utils'
+import type { SFCVueRenderContext } from '@/model/render/sfc/sfc-shadcn-render.type'
+
 import {
   matchesComponentSFCInteractionTrigger,
   normalizeComponentSFCInteractionTriggers,
   resolveComponentSFCInteractionTriggerPlatform,
 } from '@endge/core'
-import { getKeyboardStateSnapshot, type KeyboardStateSnapshot } from '@endge/utils'
-
-import type { SFCVueRenderContext } from '@/domain/types/sfc-render.type'
+import { getKeyboardStateSnapshot } from '@endge/utils'
 import { evaluateSFCValue } from '@/ui/render/sfc/SFCRender_Evaluator'
 
 const claimedGroups = new WeakMap<Event, Set<string>>()
@@ -28,7 +29,9 @@ export function attachSFCInteractionAttrs(
   context: SFCVueRenderContext,
 ): void {
   const boundary = context.eventBoundary
-  if (!boundary || !node.interactions?.length || node.tag === 'Component') return
+  if (!boundary || !node.interactions?.length || node.tag === 'Component') {
+    return
+  }
   const source: ComponentSFCEventRuntimeSource = {
     nodeId: node.id,
     ref: typeof props.ref === 'string' && props.ref.trim() ? props.ref.trim() : undefined,
@@ -43,9 +46,13 @@ export function attachSFCInteractionAttrs(
   node.interactions.forEach((group, groupIndex) => {
     const evaluated = group.rules.flatMap((rule, ruleIndex) => {
       const trigger = normalizeComponentSFCInteractionTriggers(evaluateSFCValue(rule.trigger, context))[0]
-      if (!trigger) return []
+      if (!trigger) {
+        return []
+      }
       const normalized = applySuffixModifiers(trigger, rule.modifiers)
-      if (normalized.held) ensureSFCInteractionKeyState()
+      if (normalized.held) {
+        ensureSFCInteractionKeyState()
+      }
       return [{ rule, ruleIndex, trigger: normalized }]
     })
     const listenerKeys = [...new Set(evaluated.map(({ rule }) => listenerKey(rule)))]
@@ -56,16 +63,22 @@ export function attachSFCInteractionAttrs(
       const propName = vueEventPropName(eventName, { capture, passive })
       chainSFCEventAttr(attrs, propName, (event: Event) => {
         const claimKey = `${context.consumerScope}:${node.id}:${groupIndex}`
-        if (claimedGroups.get(event)?.has(claimKey)) return
+        if (claimedGroups.get(event)?.has(claimKey)) {
+          return
+        }
         const snapshot = createSFCInteractionTriggerEvent(event)
         const selected = evaluated.find(({ trigger }) => (
           trigger.event === eventName
           && matchesComponentSFCInteractionTrigger(trigger, snapshot, resolveSFCInteractionPlatform())
         ))
-        if (!selected || listenerKey(selected.rule) !== key) return
+        if (!selected || listenerKey(selected.rule) !== key) {
+          return
+        }
         if (selected.trigger.once) {
           const onceKey = `${claimKey}:${selected.ruleIndex}:${selected.rule.sourceRange?.start ?? 0}`
-          if (!boundary.claimLocalOnce(onceKey)) return
+          if (!boundary.claimLocalOnce(onceKey)) {
+            return
+          }
         }
         let claims = claimedGroups.get(event)
         if (!claims) {
@@ -73,8 +86,12 @@ export function attachSFCInteractionAttrs(
           claimedGroups.set(event, claims)
         }
         claims.add(claimKey)
-        if (selected.trigger.prevent && event.cancelable) event.preventDefault()
-        if (selected.trigger.stop) event.stopPropagation()
+        if (selected.trigger.prevent && event.cancelable) {
+          event.preventDefault()
+        }
+        if (selected.trigger.stop) {
+          event.stopPropagation()
+        }
 
         const runtimeSource: ComponentSFCEventRuntimeSource = {
           ...source,
@@ -106,16 +123,22 @@ export function createSFCSemanticInteractionBindings(
   node: RComponentSFC_IR_ElementNode,
   context: SFCVueRenderContext,
 ): RComponentSFC_IR_EventBinding[] {
-  return (node.interactions ?? []).flatMap(group => {
+  return (node.interactions ?? []).flatMap((group) => {
     const seenEvents = new Set<string>()
     return group.rules.flatMap((rule) => {
-      if (seenEvents.has(rule.event)) return []
+      if (seenEvents.has(rule.event)) {
+        return []
+      }
       const trigger = normalizeComponentSFCInteractionTriggers(evaluateSFCValue(rule.trigger, context))[0]
-      if (!trigger) return []
+      if (!trigger) {
+        return []
+      }
       const normalized = applySuffixModifiers(trigger, rule.modifiers)
       seenEvents.add(rule.event)
       const bindingModifiers = interactionBindingModifiers(normalized)
-      if (normalized.once) bindingModifiers.push('once')
+      if (normalized.once) {
+        bindingModifiers.push('once')
+      }
       return [{
         name: rule.event,
         modifiers: bindingModifiers,
@@ -205,18 +228,24 @@ export function normalizeSFCInteractionEvent(
     payload.value = target.multiple && target.selectedOptions
       ? Array.from(target.selectedOptions, option => option.value)
       : target.value
-    if (typeof target.checked === 'boolean') payload.checked = target.checked
+    if (typeof target.checked === 'boolean') {
+      payload.checked = target.checked
+    }
   }
   return payload
 }
 
 export function ensureSFCInteractionKeyState(): KeyboardStateSnapshot | null {
-  if (typeof document === 'undefined') return null
+  if (typeof document === 'undefined') {
+    return null
+  }
   return getKeyboardStateSnapshot(document)
 }
 
 export function resolveSFCInteractionPlatform(): ComponentSFCInteractionTriggerPlatform {
-  if (typeof navigator === 'undefined') return 'unknown'
+  if (typeof navigator === 'undefined') {
+    return 'unknown'
+  }
   const source = navigator as Navigator & { userAgentData?: { platform?: string } }
   return resolveComponentSFCInteractionTriggerPlatform(source.userAgentData?.platform ?? source.platform ?? source.userAgent)
 }
@@ -241,7 +270,9 @@ function vueEventPropName(name: string, options: { capture: boolean, passive: bo
 export function chainSFCEventAttr(attrs: Record<string, unknown>, name: string, next: (event: any) => void): void {
   const previous = attrs[name]
   attrs[name] = (event: Event) => {
-    if (typeof previous === 'function') previous(event)
+    if (typeof previous === 'function') {
+      previous(event)
+    }
     next(event)
   }
 }

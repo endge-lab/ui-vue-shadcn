@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ShadcnTooltipManager } from '@/ui/overlay/tooltip/shadcn-tooltip-manager'
 
-describe('ShadcnTooltipManager', () => {
+describe('shadcnTooltipManager', () => {
   beforeEach(() => vi.useFakeTimers())
   afterEach(() => {
     vi.useRealTimers()
@@ -34,7 +34,10 @@ describe('ShadcnTooltipManager', () => {
     document.body.append(anchor)
     const renderContent = vi.fn(() => 'never')
     const manager = new ShadcnTooltipManager({
-      side: 'bottom', align: 'center', openDelay: 100, closeDelay: 25,
+      side: 'bottom',
+      align: 'center',
+      openDelay: 100,
+      closeDelay: 25,
     })
 
     manager.activate({ ownerId: 'owner', domId: 'tooltip', anchor, kind: 'rich', renderContent }, 'focus')

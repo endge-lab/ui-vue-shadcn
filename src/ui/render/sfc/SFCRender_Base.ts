@@ -1,35 +1,37 @@
 import type {
   ComponentSFCEventRuntimeSource,
+  EndgeStyleMatchNode,
   RComponentSFC_IR_ElementNode,
   RComponentSFC_IR_ForDirective,
   RComponentSFC_IR_Value,
 } from '@endge/core'
-import { createEndgeTooltipDomId, getComponentSFCIntrinsicEventDefinitions } from '@endge/core'
-import type { EndgeStyleMatchNode } from '@endge/core'
 import type {
   SFCVueRenderConditionState,
   SFCVueRenderContext,
   SFCVueRenderElementInput,
   SFCVueRenderFunction,
   SFCVueRenderResult,
-} from '@/domain/types/sfc-render.type'
-import { extendSFCVueRenderContext, extendSFCVueStyleContext } from '@/ui/render/sfc/SFCRender_Context'
-import { evaluateSFCProps, evaluateSFCValue, isTruthySFCValue } from '@/ui/render/sfc/SFCRender_Evaluator'
-import { getEndgeDOMStyleClasses } from '@/model/style/endge-dom-style'
+} from '@/model/render/sfc/sfc-shadcn-render.type'
+import { createEndgeTooltipDomId, getComponentSFCIntrinsicEventDefinitions } from '@endge/core'
 import { createSFCInspectionAttrs, registerSFCInspectionElement } from '@/model/render/sfc/SFCVueRenderInspection'
+import { getEndgeDOMStyleClasses } from '@/model/style/endge-dom-style'
+import { attachShadcnTooltipAttrs } from '@/ui/overlay/tooltip/shadcn-tooltip-manager'
+import { extendSFCVueRenderContext, extendSFCVueStyleContext } from '@/ui/render/sfc/SFCRender_Context'
 import {
   attachSFCEditableAttrs,
   isSFCEditableActive,
   renderSFCEditablePrimitive,
 } from '@/ui/render/sfc/SFCRender_Editable'
+import { evaluateSFCProps, evaluateSFCValue, isTruthySFCValue } from '@/ui/render/sfc/SFCRender_Evaluator'
 import { attachSFCInteractionAttrs, normalizeSFCInteractionEvent } from '@/ui/render/sfc/SFCRender_Interaction'
-import { attachShadcnTooltipAttrs } from '@/ui/overlay/tooltip/shadcn-tooltip-manager'
 
 /** Выполняет общий SFC render pipeline вокруг primitive renderer-а. */
 export function SFCRender_Base(renderFn: SFCVueRenderFunction): SFCVueRenderFunction {
   return (input) => {
     const repeated = renderForDirective(input, renderFn)
-    if (repeated !== undefined) return repeated
+    if (repeated !== undefined) {
+      return repeated
+    }
 
     return renderOnce(input, renderFn)
   }
@@ -101,27 +103,39 @@ export function createSFCBaseAttrs(
   }
 
   const style = createSFCStyle(node, props)
-  if (Object.keys(style).length > 0) attrs.style = style
+  if (Object.keys(style).length > 0) {
+    attrs.style = style
+  }
 
   if (styleNode) {
     attrs['data-endge-node'] = node.id
     attrs['data-endge-tag'] = node.tag
-    if (styleNode.id) attrs['data-endge-id'] = styleNode.id
-    if (styleNode.states.size) attrs['data-endge-state'] = [...styleNode.states].join(' ')
+    if (styleNode.id) {
+      attrs['data-endge-id'] = styleNode.id
+    }
+    if (styleNode.states.size) {
+      attrs['data-endge-state'] = [...styleNode.states].join(' ')
+    }
     if (styleNode.parts.size) {
       attrs.part = [...styleNode.parts].join(' ')
       attrs['data-endge-part'] = [...styleNode.parts].join(' ')
     }
-    if (styleNode.component) attrs['data-endge-component'] = styleNode.component
-    if (styleNode.identity) attrs['data-endge-identity'] = styleNode.identity
+    if (styleNode.component) {
+      attrs['data-endge-component'] = styleNode.component
+    }
+    if (styleNode.identity) {
+      attrs['data-endge-identity'] = styleNode.identity
+    }
     if (styleNode.ownerScopeId) {
       attrs['data-endge-scope'] = styleNode.ownerScopeId
-      if (!styleNode.parent || styleNode.parent.ownerScopeId !== styleNode.ownerScopeId)
+      if (!styleNode.parent || styleNode.parent.ownerScopeId !== styleNode.ownerScopeId) {
         attrs['data-endge-scope-root'] = styleNode.ownerScopeId
+      }
     }
   }
-  if (runtimeScopeIds.length)
+  if (runtimeScopeIds.length) {
     attrs['data-endge-runtime-scope'] = runtimeScopeIds.join(' ')
+  }
 
   return attrs
 }
@@ -134,7 +148,9 @@ function renderOnce(
   const styleNode = createStyleNode(input.node, props, input.context)
   input.context.styleSiblings.push(styleNode)
   const generatedClasses = getEndgeDOMStyleClasses(input.context.styleArtifacts, styleNode)
-  if (generatedClasses.length > 0) props.class = [props.class, ...generatedClasses]
+  if (generatedClasses.length > 0) {
+    props.class = [props.class, ...generatedClasses]
+  }
   const inspectionId = input.context.inspection
     ? registerSFCInspectionElement(input.node, props, input.context)
     : null
@@ -162,7 +178,9 @@ function renderOnce(
     props,
     attrs,
   })
-  if (editablePrimitive !== undefined) return editablePrimitive
+  if (editablePrimitive !== undefined) {
+    return editablePrimitive
+  }
 
   return renderFn({
     ...input,
@@ -179,7 +197,9 @@ function attachSFCShorthandTooltip(
   props: Record<string, unknown>,
   context: SFCVueRenderContext,
 ): void {
-  if (props.tooltip == null) return
+  if (props.tooltip == null) {
+    return
+  }
   const boundaryId = (context.host?.id ?? context.componentStack.join('>')) || 'sfc'
   const ownerId = `${boundaryId}:${context.consumerScope}:${node.id}`
   attachShadcnTooltipAttrs(attrs, context.tooltipManager ?? null, anchor => ({
@@ -222,7 +242,9 @@ function createSFCEventAttrs(
   context: SFCVueRenderContext,
 ): Record<string, unknown> {
   const boundary = context.eventBoundary
-  if (!boundary) return {}
+  if (!boundary) {
+    return {}
+  }
   const source: ComponentSFCEventRuntimeSource = {
     nodeId: node.id,
     ref: typeof props.ref === 'string' && props.ref.trim() ? props.ref.trim() : undefined,
@@ -237,7 +259,9 @@ function createSFCEventAttrs(
   for (const definition of getComponentSFCIntrinsicEventDefinitions(node.tag)) {
     const bindings = (node.events ?? []).filter(binding => binding.name === definition.name)
     const observed = boundary.observesChild(source, definition.name)
-    if (bindings.length === 0 && !observed) continue
+    if (bindings.length === 0 && !observed) {
+      continue
+    }
     const modifiers = new Set(bindings.flatMap(binding => binding.modifiers))
     const propName = vueEventPropName(definition.name, {
       capture: modifiers.has('capture'),
@@ -246,10 +270,16 @@ function createSFCEventAttrs(
     })
     attrs[propName] = (event: Event) => {
       const activeBindings = bindings.filter(binding => !binding.modifiers.includes('self') || event.target === event.currentTarget)
-      if (activeBindings.length === 0 && !observed) return
+      if (activeBindings.length === 0 && !observed) {
+        return
+      }
       const activeModifiers = new Set(activeBindings.flatMap(binding => binding.modifiers))
-      if (activeModifiers.has('prevent') && event.cancelable) event.preventDefault()
-      if (activeModifiers.has('stop')) event.stopPropagation()
+      if (activeModifiers.has('prevent') && event.cancelable) {
+        event.preventDefault()
+      }
+      if (activeModifiers.has('stop')) {
+        event.stopPropagation()
+      }
       const runtimeSource: ComponentSFCEventRuntimeSource = {
         ...source,
         target: source.target ? { ...source.target, value: event.currentTarget } : undefined,
@@ -280,11 +310,15 @@ function renderForDirective(
   renderFn: SFCVueRenderFunction,
 ): SFCVueRenderResult | undefined {
   const directive = input.node.directives.for
-  if (!directive) return undefined
+  if (!directive) {
+    return undefined
+  }
 
   const source = evaluateSFCValue(directive.source, input.context)
   const entries = createForEntries(source)
-  if (!entries) return null
+  if (!entries) {
+    return null
+  }
   const logicalSiblings: EndgeStyleMatchNode[] = []
 
   const children = entries
@@ -310,7 +344,9 @@ function renderForItem(
     [directive.item]: value,
   }
 
-  if (directive.index) locals[directive.index] = index
+  if (directive.index) {
+    locals[directive.index] = index
+  }
 
   const context = extendSFCVueRenderContext(input.context, locals, {
     item: directive.item,
@@ -358,9 +394,19 @@ function createStyleNode(
 function normalizeTokenSet(value: unknown): Set<string> {
   const result = new Set<string>()
   const visit = (item: unknown) => {
-    if (typeof item === 'string') item.trim().split(/\s+/).filter(Boolean).forEach(token => result.add(token))
-    else if (Array.isArray(item)) item.forEach(visit)
-    else if (item && typeof item === 'object') Object.entries(item as Record<string, unknown>).forEach(([key, enabled]) => { if (enabled) result.add(key) })
+    if (typeof item === 'string') {
+      item.trim().split(/\s+/).filter(Boolean).forEach(token => result.add(token))
+    }
+    else if (Array.isArray(item)) {
+      item.forEach(visit)
+    }
+    else if (item && typeof item === 'object') {
+      Object.entries(item as Record<string, unknown>).forEach(([key, enabled]) => {
+        if (enabled) {
+          result.add(key)
+        }
+      })
+    }
   }
   visit(value)
   return result
@@ -371,7 +417,9 @@ function normalizeStateSet(value: unknown): Set<string> {
 }
 
 function createForEntries(source: unknown): Array<[unknown, unknown]> | null {
-  if (source == null) return null
+  if (source == null) {
+    return null
+  }
 
   if (Array.isArray(source)) {
     return source.map((value, index) => [index, value])
@@ -433,8 +481,9 @@ function assignThemeColor(
   surface: 'text' | 'background' | 'border',
 ): void {
   const token = String(value ?? '').trim()
-  if (!token)
+  if (!token) {
     return
+  }
 
   const semanticTokens: Record<typeof surface, Record<string, string>> = {
     text: {
@@ -468,8 +517,9 @@ function assignThemeColor(
 
 function assignTextAlignment(style: Record<string, string>, value: unknown): void {
   const alignment = String(value ?? '').trim()
-  if (alignment === 'left' || alignment === 'center' || alignment === 'right' || alignment === 'justify')
+  if (alignment === 'left' || alignment === 'center' || alignment === 'right' || alignment === 'justify') {
     style.textAlign = alignment
+  }
 }
 
 function assignSemanticTone(
@@ -479,8 +529,9 @@ function assignSemanticTone(
   surface: 'text' | 'background',
 ): void {
   const tone = String(value ?? '').trim()
-  if (!tone || tone === 'default')
+  if (!tone || tone === 'default') {
     return
+  }
 
   const fallbacks: Record<string, string> = surface === 'background'
     ? {
@@ -496,16 +547,18 @@ function assignSemanticTone(
         neutral: '#374151',
       }
   const fallback = fallbacks[tone]
-  if (!fallback)
+  if (!fallback) {
     return
+  }
 
   style[key] = `var(--endge-tone-${tone}-${surface}, ${fallback})`
 }
 
 function assignFontWeight(style: Record<string, string>, value: unknown): void {
   const weight = String(value ?? '').trim()
-  if (!weight)
+  if (!weight) {
     return
+  }
   if (weight === 'normal') {
     style.fontWeight = '400'
     return
@@ -518,8 +571,9 @@ function assignFontWeight(style: Record<string, string>, value: unknown): void {
     style.fontWeight = '700'
     return
   }
-  if (/^[1-9]00$/.test(weight))
+  if (/^[1-9]00$/.test(weight)) {
     style.fontWeight = weight
+  }
 }
 
 function assignGridPlacement(
@@ -544,28 +598,42 @@ function assignGridPlacement(
 }
 
 function normalizePositiveInteger(value: unknown): number | null {
-  if (value == null || value === false || value === '') return null
+  if (value == null || value === false || value === '') {
+    return null
+  }
   const numeric = Number(value)
   return Number.isInteger(numeric) && numeric > 0 ? numeric : null
 }
 
 function assignSpacing(style: Record<string, string>, key: string, value: unknown): void {
   const normalized = normalizeLength(value, 4)
-  if (normalized) style[key] = normalized
+  if (normalized) {
+    style[key] = normalized
+  }
 }
 
 function assignStyle(style: Record<string, string>, key: string, value: unknown): void {
   const normalized = normalizeLength(value, 1)
-  if (normalized) style[key] = normalized
+  if (normalized) {
+    style[key] = normalized
+  }
 }
 
 function normalizeLength(value: unknown, unit: number): string | null {
-  if (value == null || value === false) return null
-  if (typeof value === 'number') return `${value * unit}px`
+  if (value == null || value === false) {
+    return null
+  }
+  if (typeof value === 'number') {
+    return `${value * unit}px`
+  }
 
   const source = String(value).trim()
-  if (source === '') return null
-  if (/^-?\d+(\.\d+)?$/.test(source)) return `${Number(source) * unit}px`
+  if (source === '') {
+    return null
+  }
+  if (/^-?\d+(\.\d+)?$/.test(source)) {
+    return `${Number(source) * unit}px`
+  }
 
   return source
 }
@@ -574,7 +642,9 @@ function resolveKey(
   node: RComponentSFC_IR_ElementNode,
   props: Record<string, unknown>,
 ): unknown {
-  if (node.directives.key) return resolveKeyValue(node.directives.key, props)
+  if (node.directives.key) {
+    return resolveKeyValue(node.directives.key, props)
+  }
   return node.id
 }
 
@@ -582,6 +652,8 @@ function resolveKeyValue(
   value: RComponentSFC_IR_Value,
   props: Record<string, unknown>,
 ): unknown {
-  if (value.kind === 'literal') return value.value
+  if (value.kind === 'literal') {
+    return value.value
+  }
   return props.key
 }

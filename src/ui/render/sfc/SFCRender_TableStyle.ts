@@ -1,23 +1,23 @@
 import type { EndgeStyleMatchNode } from '@endge/core'
 
-import type { SFCVueRenderContext } from '@/domain/types/sfc-render.type'
+import type { SFCVueRenderContext } from '@/model/render/sfc/sfc-shadcn-render.type'
 import { getEndgeDOMStyleClasses } from '@/model/style/endge-dom-style'
 
-export type SFCTablePublicPart =
-  | 'grid'
-  | 'header'
-  | 'header-cell'
-  | 'header-content'
-  | 'body'
-  | 'row'
-  | 'cell'
-  | 'cell-content'
-  | 'group-row'
+export type SFCTablePublicPart
+  = | 'grid'
+    | 'header'
+    | 'header-cell'
+    | 'header-content'
+    | 'body'
+    | 'row'
+    | 'cell'
+    | 'cell-content'
+    | 'group-row'
 
 export interface SFCTablePublicPartAttrs extends Record<string, unknown> {
-  part: SFCTablePublicPart
+  'part': SFCTablePublicPart
   'data-endge-part': SFCTablePublicPart
-  class: string[]
+  'class': string[]
   'data-endge-state'?: string
 }
 
@@ -104,8 +104,9 @@ export function decorateSFCTableRows(
 
   // RevoGrid still exposes the public parts without EndgeCSS rules. Avoid
   // creating logical match nodes and row clones in that common fast path.
-  if (!contract.context.styleArtifacts.some(artifact => artifact.rules.length > 0))
+  if (!contract.context.styleArtifacts.some(artifact => artifact.rules.length > 0)) {
     return [...rows]
+  }
 
   let previousRow: EndgeStyleMatchNode | undefined
 
@@ -146,20 +147,21 @@ export function decorateSFCTableRowWindow(
   startIndex: number,
   totalRowCount: number,
 ): Record<string, unknown>[] {
-  if (!contract.context.styleArtifacts.some(artifact => artifact.rules.length > 0))
+  if (!contract.context.styleArtifacts.some(artifact => artifact.rules.length > 0)) {
     return [...rows]
+  }
 
   const normalizedTotal = Math.max(rows.length, Math.trunc(totalRowCount))
   const normalizedStart = Math.max(0, Math.min(Math.trunc(startIndex), normalizedTotal))
   let previousRow = normalizedStart > 0
     ? createSurface(
-        contract.context,
-        'row',
-        normalizedStart,
-        normalizedTotal,
-        undefined,
-        contract.body.node,
-      ).node
+      contract.context,
+      'row',
+      normalizedStart,
+      normalizedTotal,
+      undefined,
+      contract.body.node,
+    ).node
     : undefined
 
   return rows.map((row, localIndex) => {
@@ -194,8 +196,9 @@ export function getSFCTableCellStyleSurfaces(
   states: Iterable<string> = [],
 ): SFCTableCellStyleSurfaces | null {
   const metadata = (row as unknown as Record<PropertyKey, unknown>)[SFC_TABLE_ROW_STYLE_META] as SFCTableRowStyleMeta | undefined
-  if (!metadata || columnIndex < 0 || columnIndex >= metadata.columnCount)
+  if (!metadata || columnIndex < 0 || columnIndex >= metadata.columnCount) {
     return null
+  }
 
   const cache = getCellSurfaceCache(metadata.contract)
   const normalizedStates = [...new Set(states)].sort()
@@ -226,8 +229,9 @@ export function getSFCTableCellStyleSurfaces(
     previousCell = cell.node
   }
 
-  if (!cell)
+  if (!cell) {
     return null
+  }
 
   const result = {
     cell,
@@ -244,18 +248,19 @@ export function getSFCTableCellStyleSurfaces(
   cache.set(cacheKey, result)
   if (cache.size > MAX_CELL_SURFACE_CACHE_SIZE) {
     const oldest = cache.keys().next().value
-    if (oldest !== undefined)
+    if (oldest !== undefined) {
       cache.delete(oldest)
+    }
   }
   return result
 }
 
 export function toRevoGridSurfaceProps(attrs: SFCTablePublicPartAttrs): Record<string, unknown> {
   return {
-    part: attrs.part,
+    'part': attrs.part,
     'data-endge-part': attrs['data-endge-part'],
     'data-endge-state': attrs['data-endge-state'],
-    class: Object.fromEntries(attrs.class.map(className => [className, true])),
+    'class': Object.fromEntries(attrs.class.map(className => [className, true])),
   }
 }
 
@@ -270,7 +275,9 @@ export function syncSFCTableDOMSurfaces(
   grid.querySelectorAll<HTMLElement>('revogr-data')
     .forEach((element) => {
       const rowType = element.getAttribute('type') ?? (element as HTMLElement & { type?: string }).type
-      if (rowType === 'rgRow') applySurfaceAttrs(element, contract.body.attrs)
+      if (rowType === 'rgRow') {
+        applySurfaceAttrs(element, contract.body.attrs)
+      }
     })
   grid.querySelectorAll<HTMLElement>('.rgRow')
     .forEach((element) => {
@@ -316,7 +323,7 @@ function createSurface(
     attrs: {
       part,
       'data-endge-part': part,
-      class: getEndgeDOMStyleClasses(context.styleArtifacts, node),
+      'class': getEndgeDOMStyleClasses(context.styleArtifacts, node),
       ...(states.size ? { 'data-endge-state': [...states].join(' ') } : {}),
     },
   }
@@ -329,8 +336,10 @@ function applySurfaceAttrs(element: HTMLElement, attrs: SFCTablePublicPartAttrs)
   element.setAttribute(APPLIED_STYLE_CLASSES_ATTRIBUTE, attrs.class.join(' '))
   element.setAttribute('part', attrs.part)
   element.setAttribute('data-endge-part', attrs['data-endge-part'])
-  if (attrs['data-endge-state']) element.setAttribute('data-endge-state', attrs['data-endge-state'])
-  else element.removeAttribute('data-endge-state')
+  if (attrs['data-endge-state']) {
+    element.setAttribute('data-endge-state', attrs['data-endge-state'])
+  }
+  else { element.removeAttribute('data-endge-state') }
 }
 
 function getCellSurfaceCache(

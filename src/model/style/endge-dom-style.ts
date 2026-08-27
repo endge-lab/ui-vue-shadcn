@@ -26,7 +26,7 @@ export interface EndgeDOMStyleMaterialization {
 export type EndgeDOMStyleInput = EndgeStyleSheetArtifact | EndgeStylePlacement
 
 function generatedClass(rule: EndgeStyleRule, selectorIndex: number): string {
-  return `endge-${rule.id}-${selectorIndex}`.replace(/[^a-zA-Z0-9_-]/g, '-')
+  return `endge-${rule.id}-${selectorIndex}`.replace(/[^\w-]/g, '-')
 }
 
 function compareSpecificity(left: EndgeStyleSpecificity, right: EndgeStyleSpecificity): number {
@@ -40,10 +40,18 @@ function cssString(value: string): string {
 function collectCapabilities(rule: EndgeStyleRule): string[] {
   const result: string[] = []
   const visit = (condition: EndgeStyleRule['supports']) => {
-    if (!condition) return
-    if (condition.type === 'capability') result.push(condition.capability)
-    else if (condition.type === 'not') visit(condition.operand)
-    else if (condition.type === 'and' || condition.type === 'or') condition.operands.forEach(visit)
+    if (!condition) {
+      return
+    }
+    if (condition.type === 'capability') {
+      result.push(condition.capability)
+    }
+    else if (condition.type === 'not') {
+      visit(condition.operand)
+    }
+    else if (condition.type === 'and' || condition.type === 'or') {
+      condition.operands.forEach(visit)
+    }
   }
   visit(rule.supports)
   return result
@@ -78,7 +86,7 @@ export function materializeEndgeCSSForDOM(
       const declarationsText = theme.declarations
         .map(declaration => `${declaration.property}:${declaration.value}${declaration.important ? '!important' : ''};`)
         .join('')
-      if (declarationsText)
+      if (declarationsText) {
         declarations.push({
           selector: { source: root, segments: [], specificity: { ids: 0, classes: 0, types: 0 } },
           className: root,
@@ -89,6 +97,7 @@ export function materializeEndgeCSSForDOM(
           boundaryId,
           theme: theme.id,
         })
+      }
     }
 
     for (const rule of artifact.rules) {
@@ -102,7 +111,9 @@ export function materializeEndgeCSSForDOM(
           })
         }
       }
-      if (!evaluateEndgeStyleSupport(rule.supports, target)) continue
+      if (!evaluateEndgeStyleSupport(rule.supports, target)) {
+        continue
+      }
       rule.selectors.forEach((selector, selectorIndex) => {
         const className = generatedClass(rule, selectorIndex)
         classes.push({ artifactIdentity: artifact.identity, ruleId: rule.id, selectorIndex, className })
@@ -148,8 +159,9 @@ export function materializeEndgeCSSForDOM(
             : `:root[data-endge-theme=${cssString(theme)}] ${selectorPart}`,
         ).join(',')
       : baseSelector
-    if (!declaration.property)
+    if (!declaration.property) {
       return `${selector}{${declaration.value}}`
+    }
     return `${selector}{${declaration.property}:${declaration.value}${declaration.important ? '!important' : ''};}`
   }).join('\n')
 
@@ -171,10 +183,11 @@ export function getEndgeDOMStyleClasses(
     for (const rule of artifact.rules) {
       const matched = matchEndgeStyleRule(artifact, rule, node, target, rule.theme)
       rule.selectors.forEach((selector, selectorIndex) => {
-        if (matched.includes(selector)) result.push(generatedClass(rule, selectorIndex))
+        if (matched.includes(selector)) {
+          result.push(generatedClass(rule, selectorIndex))
+        }
       })
     }
   }
   return result
 }
-

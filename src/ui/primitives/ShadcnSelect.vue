@@ -50,8 +50,9 @@ const useEnhancedSelect = computed(() => props.multiple || effectiveSearchable.v
 const hasSelectedOption = computed(() => props.options.some(option => selectedValues.value.has(String(option.value))))
 const filteredOptions = computed(() => {
   const query = search.value.trim().toLocaleLowerCase()
-  if (!query)
+  if (!query) {
     return props.options
+  }
   return props.options.filter((option) => {
     const value = String(option.value).toLocaleLowerCase()
     const label = String(option.label ?? option.value).toLocaleLowerCase()
@@ -80,10 +81,12 @@ const selectedOptions = computed<SourceFieldOption[]>(() => localValues.value.ma
 )))
 const selectedLabels = computed(() => selectedOptions.value.map(option => option.label ?? String(option.value)))
 const selectionLabel = computed(() => {
-  if (!selectedLabels.value.length)
+  if (!selectedLabels.value.length) {
     return props.placeholder || 'Выберите…'
-  if (!props.multiple || selectedLabels.value.length <= 2)
+  }
+  if (!props.multiple || selectedLabels.value.length <= 2) {
     return selectedLabels.value.join(', ')
+  }
   return `${selectedLabels.value.slice(0, 2).join(', ')} +${selectedLabels.value.length - 2}`
 })
 
@@ -93,16 +96,18 @@ watch(() => props.selectedValues, (values) => {
 
 watch(search, () => {
   scrollTop.value = 0
-  if (viewport.value)
+  if (viewport.value) {
     viewport.value.scrollTop = 0
+  }
 })
 
 onMounted(() => document.addEventListener('pointerdown', closeFromOutside))
 onBeforeUnmount(() => document.removeEventListener('pointerdown', closeFromOutside))
 
 async function toggleOpen(): Promise<void> {
-  if (props.disabled || props.readonly)
+  if (props.disabled || props.readonly) {
     return
+  }
   open.value = !open.value
   if (open.value && effectiveSearchable.value) {
     await nextTick()
@@ -111,15 +116,16 @@ async function toggleOpen(): Promise<void> {
 }
 
 async function toggleOption(value: string): Promise<void> {
-  if (props.disabled || props.readonly)
+  if (props.disabled || props.readonly) {
     return
+  }
 
   if (props.multiple) {
     const next = new Set(localValues.value)
-    if (next.has(value))
+    if (next.has(value)) {
       next.delete(value)
-    else
-      next.add(value)
+    }
+    else { next.add(value) }
     localValues.value = props.options
       .map(option => String(option.value))
       .filter(optionValue => next.has(optionValue))
@@ -140,8 +146,9 @@ function close(): void {
 }
 
 function closeFromOutside(event: PointerEvent): void {
-  if (root.value && !root.value.contains(event.target as Node))
+  if (root.value && !root.value.contains(event.target as Node)) {
     close()
+  }
 }
 
 function handleTriggerKeydown(event: KeyboardEvent): void {
@@ -160,8 +167,9 @@ function handleScroll(event: Event): void {
 }
 
 function optionStyle(index: number): Record<string, string> | undefined {
-  if (!effectiveVirtualized.value)
+  if (!effectiveVirtualized.value) {
     return undefined
+  }
   return {
     height: `${ROW_HEIGHT}px`,
     position: 'absolute',

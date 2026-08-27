@@ -1,12 +1,12 @@
 import type {
+  ComponentSFCEventBoundary,
   ComponentSFCTableColumnMenuDescriptor,
-  ComponentSFCTableRowMenuDescriptor,
   ComponentSFCTableColumnPinMode,
   ComponentSFCTableColumnPinStateItem,
+  ComponentSFCTableRowMenuDescriptor,
   ComponentSFCTableSortComparator,
   ComponentSFCTableSortMode,
   ComponentSFCTableSortStateItem,
-  ComponentSFCEventBoundary,
   RComponentSFC_IR_ElementNode,
   RComponentSFC_IR_EventBinding,
   RComponentSFC_IR_Node,
@@ -18,7 +18,7 @@ import type {
   SFCVueRenderContext,
   SFCVueRenderResult,
   SFCVueRuntimeStateController,
-} from '@/domain/types/sfc-render.type'
+} from '@/model/render/sfc/sfc-shadcn-render.type'
 import type { SFCTableColumnStyleSurfaces, SFCTableStyleContract } from '@/ui/render/sfc/SFCRender_TableStyle'
 
 export interface EndgeShadcnTableColumnSort {

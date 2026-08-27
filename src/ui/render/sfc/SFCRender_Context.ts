@@ -1,7 +1,7 @@
 import type { ComponentSFCEventBoundary, ComponentSFCRequiredPortBinding, ComponentSFCRuntimeHost, EndgeStyleMatchNode, EndgeStyleSheetArtifact, ProgramMetadata, RComponentSFC_IR, SFCRenderInspectionSessionLike } from '@endge/core'
-import { Endge, ComponentSFCEventBoundary as EndgeComponentSFCEventBoundary } from '@endge/core'
-import type { SFCVueRenderContext, SFCVueRenderIteration } from '@/domain/types/sfc-render.type'
+import type { SFCVueRenderContext, SFCVueRenderIteration } from '@/model/render/sfc/sfc-shadcn-render.type'
 import type { ShadcnTooltipManager } from '@/ui/overlay/tooltip/shadcn-tooltip-manager'
+import { Endge, ComponentSFCEventBoundary as EndgeComponentSFCEventBoundary } from '@endge/core'
 import { evaluateSFCValue } from '@/ui/render/sfc/SFCRender_Evaluator'
 
 /** Создает root context для одного render pass SFC renderer adapter. */
@@ -22,12 +22,15 @@ export function createSFCVueRenderContext(
 ): SFCVueRenderContext {
   const lifecycleScope = host ? Endge.runtime.getRuntimeScopeByHost(host.id) : null
   const runtimeScopeIds: string[] = []
-  for (let current = lifecycleScope; current; current = current.parent)
+  for (let current = lifecycleScope; current; current = current.parent) {
     runtimeScopeIds.unshift(current.id)
+  }
   const styleArtifacts = inheritedStyleArtifacts
     ? [...inheritedStyleArtifacts]
     : [...Endge.styles.getActiveArtifacts()]
-  if (ir?.style && !styleArtifacts.includes(ir.style)) styleArtifacts.push(ir.style)
+  if (ir?.style && !styleArtifacts.includes(ir.style)) {
+    styleArtifacts.push(ir.style)
+  }
   const context: SFCVueRenderContext = {
     props: props ?? {},
     context: Object.freeze(Endge.context.runtimeSnapshot()),
@@ -112,7 +115,9 @@ function evaluatePortLocals(
   context: SFCVueRenderContext,
 ): Record<string, unknown> {
   const locals: Record<string, unknown> = {}
-  if (!ir) return locals
+  if (!ir) {
+    return locals
+  }
 
   for (const call of ir.script.portCalls ?? []) {
     context.locals = locals

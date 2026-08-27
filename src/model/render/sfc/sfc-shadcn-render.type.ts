@@ -1,27 +1,27 @@
 import type {
-  ComponentSFCRuntimeHost,
   ComponentSFCEventBoundary,
+  ComponentSFCRequiredPortBinding,
+  ComponentSFCRuntimeHost,
+  EndgeRuntimeContextSnapshot,
+  EndgeStyleMatchNode,
+  EndgeStyleSheetArtifact,
+  ProgramMetadata,
   RComponentSFC_IR,
   RComponentSFC_IR_ElementNode,
   RComponentSFC_IR_Node,
   RComponentSFC_IR_Tag,
   RComponentSFC_IR_Value,
+  RuntimeBoundaryPatch,
   RuntimeHostInputSource,
   RuntimeHostLocalInputSource,
   RuntimeHostRaphInputBinding,
   RuntimeHostRaphInputSource,
-  RuntimeBoundaryPatch,
   SFCRenderInspectionSessionLike,
   UIRenderAdapter,
-  EndgeStyleMatchNode,
-  EndgeStyleSheetArtifact,
-  ProgramMetadata,
-  EndgeRuntimeContextSnapshot,
-  ComponentSFCRequiredPortBinding,
 } from '@endge/core'
-import { ENDGE_SFC_RENDER_ADAPTER_REQUIRED_KEYS } from '@endge/core'
-import type { h as VueH, VNode } from 'vue'
+import type { VNode, h as VueH } from 'vue'
 import type { ShadcnTooltipManager } from '@/ui/overlay/tooltip/shadcn-tooltip-manager'
+import { ENDGE_SFC_RENDER_ADAPTER_REQUIRED_KEYS } from '@endge/core'
 
 /** Полный контракт Vue adapter-а: простые primitives и compound Table renderer. */
 export const SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS = [
@@ -41,10 +41,10 @@ export type SFCVueRenderBinding
     kind: 'literal'
     value: unknown
   }
-    | {
-      kind: 'prop'
-      path: string
-    }
+  | {
+    kind: 'prop'
+    path: string
+  }
 
 /** Контекст текущего SFC render pass. */
 export interface SFCVueRenderContext {
@@ -92,13 +92,13 @@ export interface SFCVueRuntimeStateController {
   readonly runtimeId: string
   readonly storageKey: string
 
-  get<T>(entityKey: string, section: string, fallback: T): T
+  get: <T>(entityKey: string, section: string, fallback: T) => T
 
-  set<T>(entityKey: string, section: string, value: T): void
+  set: <T>(entityKey: string, section: string, value: T) => void
 
-  remove(entityKey: string, section?: string): void
+  remove: (entityKey: string, section?: string) => void
 
-  clear(): void
+  clear: () => void
 }
 
 /** Данные текущей for-итерации. */
@@ -198,8 +198,8 @@ export interface SFCVueRenderAdapter extends UIRenderAdapter<SFCVueRenderFunctio
   renderer: 'vue-shadcn'
   renderers: SFCVueRenderAdapterRendererMap
   roots: {
-    shell: unknown
-    sfc: unknown
+    'shell': unknown
+    'sfc': unknown
     'sfc-runtime': unknown
     'filter-view': unknown
   }

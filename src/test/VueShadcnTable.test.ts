@@ -1,14 +1,14 @@
 import type { ComponentSFCRuntimeHost } from '@endge/core'
 import {
   compileComponentSFC,
+  Endge,
   ENDGE_SFC_RENDER_ADAPTER_PROTOCOL,
   ENDGE_SFC_RENDER_ADAPTER_PROTOCOL_VERSION,
-  Endge,
 } from '@endge/core'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick } from 'vue'
 
-import { SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS } from '@/domain/types/sfc-render.type'
+import { SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS } from '@/model/render/sfc/sfc-shadcn-render.type'
 import {
   VUE_SHADCN_SFC_ADAPTER_ID,
   VueShadcnSFCAdapter,
@@ -50,7 +50,7 @@ const ROWS = [
   { id: '1', flight: 'SU 100', gate: 'A04' },
 ]
 
-describe('VueShadcnRender_Table', () => {
+describe('vueShadcnRender_Table', () => {
   beforeEach(() => {
     vi.stubGlobal('ResizeObserver', class {
       observe() {}
@@ -205,8 +205,9 @@ async function mountTable(
   rows = ROWS,
 ) {
   const result = compileComponentSFC(source)
-  if (!result.ir)
+  if (!result.ir) {
     throw new Error(`Table source failed to compile: ${JSON.stringify(result.diagnostics)}`)
+  }
 
   const root = document.createElement('div')
   document.body.append(root)

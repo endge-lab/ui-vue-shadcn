@@ -16,7 +16,9 @@ const builtinProps = computed<FilterViewBuiltinProps>(() => {
   return value && typeof value === 'object' ? value as FilterViewBuiltinProps : {}
 })
 const showLabels = computed(() => builtinProps.value.showLabels !== false)
-const refresh = () => { model.value = props.runtime.getRenderModel() }
+function refresh() {
+  model.value = props.runtime.getRenderModel()
+}
 const unsubscribeAdapter = Endge.uiRegistry.subscribe(() => {
   adapterVersion.value += 1
 })
@@ -42,8 +44,9 @@ onBeforeUnmount(() => {
 })
 
 async function updateField(key: string, value: unknown): Promise<void> {
-  if (props.readonly)
+  if (props.readonly) {
     return
+  }
   await props.runtime.setValue(key, value)
 }
 

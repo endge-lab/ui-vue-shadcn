@@ -1,26 +1,26 @@
 import type { RComponentSFC_IR_ElementNode, RComponentSFC_IR_Node, TableSelectionTrigger } from '@endge/core'
+import type { SFCVueRenderContext, SFCVueRenderFunction } from '@/model/render/sfc/sfc-shadcn-render.type'
+import type { EndgeShadcnTableColumn, EndgeShadcnTablePaging } from '@/ui/table/table.types'
 import {
   normalizeComponentSFCTableColumnMenu,
-  normalizeComponentSFCTableRowMenu,
   normalizeComponentSFCTableColumnPin,
   normalizeComponentSFCTableColumnPinMode,
   normalizeComponentSFCTableColumnVisibility,
+  normalizeComponentSFCTableRowMenu,
   normalizeComponentSFCTableSort,
   normalizeComponentSFCTableSortMode,
 } from '@endge/core'
-import type { SFCVueRenderContext, SFCVueRenderFunction } from '@/domain/types/sfc-render.type'
+import { createSFCNodeEventAttrs, SFCRender_Base } from '@/ui/render/sfc/SFCRender_Base'
+import { extendSFCVueRenderContext } from '@/ui/render/sfc/SFCRender_Context'
+import { evaluateSFCProps, evaluateSFCValue, readSFCObjectPath } from '@/ui/render/sfc/SFCRender_Evaluator'
+import { renderSFCNodes } from '@/ui/render/sfc/SFCRender_Node'
+import { normalizeSFCTableCellAlignment } from '@/ui/render/sfc/SFCRender_TableAlignment'
+
 import {
   createSFCTableColumnStyleSurfaces,
   createSFCTableStyleContract,
   getSFCTableCellStyleSurfaces,
 } from '@/ui/render/sfc/SFCRender_TableStyle'
-import { evaluateSFCProps, evaluateSFCValue, readSFCObjectPath } from '@/ui/render/sfc/SFCRender_Evaluator'
-import { extendSFCVueRenderContext } from '@/ui/render/sfc/SFCRender_Context'
-import { renderSFCNodes } from '@/ui/render/sfc/SFCRender_Node'
-import { createSFCNodeEventAttrs, SFCRender_Base } from '@/ui/render/sfc/SFCRender_Base'
-import { normalizeSFCTableCellAlignment } from '@/ui/render/sfc/SFCRender_TableAlignment'
-
-import type { EndgeShadcnTableColumn, EndgeShadcnTablePaging } from '@/ui/table/table.types'
 import ShadcnSfcDataTable from '@/ui/table/ShadcnSfcDataTable.vue'
 
 /** Shadcn/TanStack implementation of the compound SFC Table tag. */
@@ -57,8 +57,8 @@ export const VueShadcnRender_Table: SFCVueRenderFunction = SFCRender_Base((input
   return input.h('div', {
     ...input.attrs,
     'data-endge-layout-fill-height': fillsAvailableHeight ? '' : undefined,
-    class: ['endge-sfc-table', 'endge-shadcn-sfc-table', input.props.class],
-    style: {
+    'class': ['endge-sfc-table', 'endge-shadcn-sfc-table', input.props.class],
+    'style': {
       ...(isPlainObject(input.attrs.style) ? input.attrs.style : {}),
       width: normalizeCssSize(input.props.width ?? input.props.w, '100%'),
       height: normalizeCssSize(explicitHeight, '100%'),
@@ -133,10 +133,10 @@ export const VueShadcnRender_Table: SFCVueRenderFunction = SFCRender_Base((input
 
         return input.h('div', {
           ...eventAttrs,
-          part: contentAttrs?.part ?? 'cell-content',
+          'part': contentAttrs?.part ?? 'cell-content',
           'data-endge-part': contentAttrs?.['data-endge-part'] ?? 'cell-content',
-          class: ['endge-sfc-table-cell-content', 'endge-shadcn-table__cell-content', contentAttrs?.class],
-          style: {
+          'class': ['endge-sfc-table-cell-content', 'endge-shadcn-table__cell-content', contentAttrs?.class],
+          'style': {
             display: 'flex',
             alignItems: mapVerticalAlignment(cellAlignment.vertical),
             justifyContent: mapHorizontalAlignment(cellAlignment.horizontal),
@@ -202,15 +202,20 @@ function normalizeColumnKey(
   fallback: string,
 ): string {
   const evaluated = propValue ?? evaluateSFCValue(columnNode.directives.key, context)
-  if (evaluated != null) return normalizeText(evaluated, fallback)
+  if (evaluated != null) {
+    return normalizeText(evaluated, fallback)
+  }
   const directiveKey = columnNode.directives.key
-  if (directiveKey?.kind === 'expression' && directiveKey.reads.length === 0)
+  if (directiveKey?.kind === 'expression' && directiveKey.reads.length === 0) {
     return normalizeText(directiveKey.source.replace(/^['"]|['"]$/g, ''), fallback)
+  }
   return fallback
 }
 
 function normalizeRows(value: unknown): Record<string, unknown>[] {
-  if (!Array.isArray(value)) return []
+  if (!Array.isArray(value)) {
+    return []
+  }
   return value.map((row, index) => isPlainObject(row) ? row : { id: index, value: row })
 }
 
@@ -250,7 +255,9 @@ function normalizeTablePaging(value: unknown): EndgeShadcnTablePaging {
 }
 
 function normalizeOptionalNumber(value: unknown): number | null {
-  if (value == null || value === '') return null
+  if (value == null || value === '') {
+    return null
+  }
   const number = Number(value)
   return Number.isFinite(number) && number > 0 ? number : null
 }
@@ -269,17 +276,23 @@ function normalizePageSizes(value: unknown): number[] {
 }
 
 function normalizeCssSize(value: unknown, fallback: string): string {
-  if (value == null || value === '') return fallback
+  if (value == null || value === '') {
+    return fallback
+  }
   return typeof value === 'number' ? `${value}px` : String(value)
 }
 
 function mapHorizontalAlignment(value: string): 'flex-start' | 'center' | 'flex-end' {
-  if (value === 'center') return 'center'
+  if (value === 'center') {
+    return 'center'
+  }
   return value === 'right' ? 'flex-end' : 'flex-start'
 }
 
 function mapVerticalAlignment(value: string): 'flex-start' | 'center' | 'flex-end' {
-  if (value === 'middle') return 'center'
+  if (value === 'middle') {
+    return 'center'
+  }
   return value === 'bottom' ? 'flex-end' : 'flex-start'
 }
 

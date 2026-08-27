@@ -1,25 +1,25 @@
 import type {
-  ComponentSFCEventRuntimeSource,
   ComponentSFCEditedEventPayload,
+  ComponentSFCEventRuntimeSource,
   RComponentSFC_IR_ElementNode,
   RComponentSFC_IR_EventModifier,
   RComponentSFC_IR_Value,
 } from '@endge/core'
+import type {
+  SFCVueRenderContext,
+  SFCVueRenderElementInput,
+  SFCVueRenderResult,
+} from '@/model/render/sfc/sfc-shadcn-render.type'
 import {
   matchesComponentSFCEditTrigger,
   normalizeComponentSFCEditTriggers,
 } from '@endge/core'
+
 import {
   isoDateTimeToTimeInput,
   isoToDateTimeLocalInput,
   mergeTimeIntoDateTime,
 } from '@endge/utils'
-
-import type {
-  SFCVueRenderContext,
-  SFCVueRenderElementInput,
-  SFCVueRenderResult,
-} from '@/domain/types/sfc-render.type'
 import { requireSFCAdapterRenderer } from '@/ui/render/sfc/SFCRender_Adapter'
 import { evaluateSFCValue } from '@/ui/render/sfc/SFCRender_Evaluator'
 import {
@@ -63,7 +63,9 @@ export function attachSFCEditableAttrs(
   props: Record<string, unknown>,
   context: SFCVueRenderContext,
 ): void {
-  if (!node.editable || !context.host) return
+  if (!node.editable || !context.host) {
+    return
+  }
   const key = editableConsumerKey(node, context)
   const active = context.host.getEditSession(key)
   if (active) {
@@ -78,14 +80,24 @@ export function attachSFCEditableAttrs(
   const triggerValue = evaluateSFCValue(node.editable.triggers, context)
   const triggers = normalizeComponentSFCEditTriggers(triggerValue)
     .map(trigger => applySuffixModifiers(trigger, node.editable?.modifiers))
-  if (triggers.some(trigger => trigger.held)) ensureSFCInteractionKeyState()
+  if (triggers.some(trigger => trigger.held)) {
+    ensureSFCInteractionKeyState()
+  }
   for (const [triggerIndex, trigger] of triggers.entries()) {
     const attr = vueEventPropName(trigger.event, trigger.capture === true, trigger.passive === true)
     chainSFCEventAttr(attrs, attr, (event: Event) => {
-      if (!matchesComponentSFCEditTrigger(trigger, createSFCInteractionTriggerEvent(event), resolveSFCInteractionPlatform())) return
-      if (trigger.once && context.eventBoundary && !context.eventBoundary.claimLocalOnce(`${key}:edit:${triggerIndex}`)) return
-      if (trigger.prevent && event.cancelable) event.preventDefault()
-      if (trigger.stop) event.stopPropagation()
+      if (!matchesComponentSFCEditTrigger(trigger, createSFCInteractionTriggerEvent(event), resolveSFCInteractionPlatform())) {
+        return
+      }
+      if (trigger.once && context.eventBoundary && !context.eventBoundary.claimLocalOnce(`${key}:edit:${triggerIndex}`)) {
+        return
+      }
+      if (trigger.prevent && event.cancelable) {
+        event.preventDefault()
+      }
+      if (trigger.stop) {
+        event.stopPropagation()
+      }
       const original = evaluateSFCValue(node.editable?.value, context)
       const baseVariant = String(props.variant ?? context.variant ?? 'default')
       context.host?.beginEditSession(key, original, baseVariant)
@@ -97,12 +109,18 @@ export function attachSFCEditableAttrs(
 export function renderSFCEditablePrimitive(
   input: SFCVueRenderElementInput & { props: Record<string, unknown>, attrs: Record<string, unknown> },
 ): SFCVueRenderResult | undefined {
-  if (!input.node.editable || !['Text', 'Number', 'DateTime'].includes(input.node.tag)) return undefined
+  if (!input.node.editable || !['Text', 'Number', 'DateTime'].includes(input.node.tag)) {
+    return undefined
+  }
   const host = input.context.host
-  if (!host) return undefined
+  if (!host) {
+    return undefined
+  }
   const key = editableConsumerKey(input.node, input.context)
   const session = host.getEditSession(key)
-  if (!session) return undefined
+  if (!session) {
+    return undefined
+  }
 
   const timeOnly = input.node.tag === 'DateTime'
     && (input.props.editMode ?? input.props['edit-mode']) === 'time'
@@ -115,7 +133,7 @@ export function renderSFCEditablePrimitive(
     ? timeOnly
       ? isoDateTimeToTimeInput(session.draftValue, input.props.timezone)
       : isoToDateTimeLocalInput(session.draftValue)
-    : session.draftValue == null ? '' : session.draftValue
+    : session.draftValue ?? ''
   const attrs = { ...input.attrs }
   delete attrs.onClick
   delete attrs.onDblclick
@@ -154,16 +172,28 @@ function attachEditableOutcomeAttrs(
   const suffixes = outcome === 'cancel' ? editable?.cancelModifiers : editable?.commitModifiers
   const triggers = normalizeComponentSFCEditTriggers(evaluateSFCValue(binding, context))
     .map(trigger => applySuffixModifiers(trigger, suffixes))
-  if (triggers.some(trigger => trigger.held)) ensureSFCInteractionKeyState()
+  if (triggers.some(trigger => trigger.held)) {
+    ensureSFCInteractionKeyState()
+  }
   for (const [triggerIndex, trigger] of triggers.entries()) {
     const eventName = trigger.event === 'blur' ? 'focusout' : trigger.event
     const attr = vueEventPropName(eventName, trigger.capture === true, trigger.passive === true)
     chainSFCEventAttr(attrs, attr, (event: Event) => {
-      if (!matchesComponentSFCEditTrigger(trigger, createSFCInteractionTriggerEvent(event), resolveSFCInteractionPlatform())) return
-      if (eventName === 'focusout' && focusRemainsInside(event)) return
-      if (trigger.once && context.eventBoundary && !context.eventBoundary.claimLocalOnce(`${key}:${outcome}:${triggerIndex}`)) return
-      if (trigger.prevent && event.cancelable) event.preventDefault()
-      if (trigger.stop) event.stopPropagation()
+      if (!matchesComponentSFCEditTrigger(trigger, createSFCInteractionTriggerEvent(event), resolveSFCInteractionPlatform())) {
+        return
+      }
+      if (eventName === 'focusout' && focusRemainsInside(event)) {
+        return
+      }
+      if (trigger.once && context.eventBoundary && !context.eventBoundary.claimLocalOnce(`${key}:${outcome}:${triggerIndex}`)) {
+        return
+      }
+      if (trigger.prevent && event.cancelable) {
+        event.preventDefault()
+      }
+      if (trigger.stop) {
+        event.stopPropagation()
+      }
       if (outcome === 'cancel') {
         context.host?.cancelEditSession(key)
         return
@@ -200,7 +230,9 @@ async function commitEditable(
   const payload = nextValue === undefined
     ? context.host?.commitEditSession(key)
     : context.host?.commitEditSession(key, nextValue)
-  if (!payload || !context.eventBoundary) return
+  if (!payload || !context.eventBoundary) {
+    return
+  }
   const source: ComponentSFCEventRuntimeSource = {
     nodeId: node.id,
     componentTag: node.componentTag ?? node.tag,
@@ -223,8 +255,9 @@ function normalizePrimitiveEditedValue(
   value: unknown,
 ): unknown {
   const editMode = evaluateSFCValue(node.props.editMode ?? node.props['edit-mode'], context)
-  if (node.tag !== 'DateTime' || editMode !== 'time')
+  if (node.tag !== 'DateTime' || editMode !== 'time') {
     return value
+  }
 
   const original = context.host?.getEditSession(key)?.originalValue
   const originalDate = new Date(String(original ?? '').trim())
@@ -235,7 +268,9 @@ function normalizePrimitiveEditedValue(
 
 function readTargetValue(event: Event, tag: string): unknown {
   const target = event.target as HTMLInputElement | HTMLSelectElement | null
-  if (!target) return undefined
+  if (!target) {
+    return undefined
+  }
   if (tag === 'Number') {
     const value = Number(target.value)
     return target.value === '' || !Number.isFinite(value) ? null : value
@@ -258,7 +293,9 @@ function focusSFCEditableControl(target: unknown): void {
 }
 
 function asFocusable(value: unknown): { focus: () => void } | null {
-  if (!value || typeof value !== 'object') return null
+  if (!value || typeof value !== 'object') {
+    return null
+  }
   const focus = (value as { focus?: unknown }).focus
   return typeof focus === 'function' ? { focus: () => focus.call(value) } : null
 }
@@ -268,5 +305,5 @@ function vueEventPropName(name: string, capture: boolean, passive: boolean): str
 }
 
 function isEditedPayload(value: unknown): value is ComponentSFCEditedEventPayload {
-  return Boolean(value && typeof value === 'object' && Object.prototype.hasOwnProperty.call(value, 'value'))
+  return Boolean(value && typeof value === 'object' && Object.hasOwn(value, 'value'))
 }

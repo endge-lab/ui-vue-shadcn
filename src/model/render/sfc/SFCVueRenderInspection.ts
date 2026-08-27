@@ -4,11 +4,13 @@ import type {
   RComponentSFC_IR_Value,
   SFCRenderInspectionBinding,
 } from '@endge/core'
-import type { SFCVueRenderContext } from '@/domain/types/sfc-render.type'
+import type { SFCVueRenderContext } from '@/model/render/sfc/sfc-shadcn-render.type'
 
 /** Registers the authored component boundary that owns the current IR roots. */
 export function registerSFCInspectionRoot(context: SFCVueRenderContext): string | null {
-  if (!context.inspection) return null
+  if (!context.inspection) {
+    return null
+  }
   const componentIdentity = getComponentIdentity(context)
   return context.inspection.registerNode({
     runtimeId: getRuntimeId(context),
@@ -33,7 +35,9 @@ export function registerSFCInspectionElement(
   props: Record<string, unknown>,
   context: SFCVueRenderContext,
 ): string | null {
-  if (!context.inspection) return null
+  if (!context.inspection) {
+    return null
+  }
   const calledComponentIdentity = node.tag === 'Component'
     ? String(props.is ?? props.identity ?? '').trim() || undefined
     : undefined
@@ -68,7 +72,9 @@ export function registerSFCInspectionValueNode(
   value: unknown,
   context: SFCVueRenderContext,
 ): string | null {
-  if (!context.inspection) return null
+  if (!context.inspection) {
+    return null
+  }
   const binding = node.kind === 'expression' ? toBinding(node.value, value) : null
   return context.inspection.registerNode({
     runtimeId: getRuntimeId(context),
@@ -93,12 +99,16 @@ export function registerSFCInspectionDefinitionTree(
   node: RComponentSFC_IR_Node,
   context: SFCVueRenderContext,
 ): string | null {
-  if (!context.inspection) return null
-  if (node.kind !== 'element') return registerSFCInspectionValueNode(
-    node,
-    node.kind === 'text' ? node.value : undefined,
-    context,
-  )
+  if (!context.inspection) {
+    return null
+  }
+  if (node.kind !== 'element') {
+    return registerSFCInspectionValueNode(
+      node,
+      node.kind === 'text' ? node.value : undefined,
+      context,
+    )
+  }
   const props = Object.fromEntries(Object.entries(node.props).map(([key, value]) => [
     key,
     value.kind === 'literal' ? value.value : undefined,
@@ -121,7 +131,9 @@ export function registerSFCInspectionDefinitionTree(
     meta: { definition: true },
   })
   const childContext = { ...context, inspectionParentId: id }
-  for (const child of node.children) registerSFCInspectionDefinitionTree(child, childContext)
+  for (const child of node.children) {
+    registerSFCInspectionDefinitionTree(child, childContext)
+  }
   return id
 }
 
@@ -130,10 +142,12 @@ export function createSFCInspectionAttrs(
   context: SFCVueRenderContext,
   id: string | null,
 ): Record<string, unknown> {
-  if (!id || !context.inspection) return {}
+  if (!id || !context.inspection) {
+    return {}
+  }
   return {
     'data-endge-inspect-id': id,
-    onVnodeUnmounted: () => context.inspection?.unregisterNode(id),
+    'onVnodeUnmounted': () => context.inspection?.unregisterNode(id),
   }
 }
 
@@ -148,7 +162,9 @@ function collectBindings(
 }
 
 function toBinding(value: RComponentSFC_IR_Value, evaluated: unknown): SFCRenderInspectionBinding {
-  if (value.kind === 'literal') return { kind: 'literal', reads: [], value: evaluated }
+  if (value.kind === 'literal') {
+    return { kind: 'literal', reads: [], value: evaluated }
+  }
   return {
     kind: 'expression',
     source: value.source,

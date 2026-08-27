@@ -24,18 +24,19 @@ export function createSFCVueBoundaryRegistry(): SFCVueBoundaryRegistry {
     register(boundaryId, controller) {
       controllers.set(boundaryId, controller)
       return () => {
-        if (controllers.get(boundaryId) === controller)
+        if (controllers.get(boundaryId) === controller) {
           controllers.delete(boundaryId)
+        }
       }
     },
 
     async applyPatch(patch) {
       const controller = controllers.get(patch.boundaryId)
-      if (!controller)
+      if (!controller) {
         return false
+      }
 
       return await controller.applyPatch(patch)
     },
   }
 }
-

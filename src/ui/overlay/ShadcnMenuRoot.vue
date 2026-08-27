@@ -3,7 +3,6 @@ import type { ContextMenuItemDescriptor } from '@endge/core'
 import { Endge } from '@endge/core'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
-import ShadcnIcon from '@/ui/primitives/ShadcnIcon.vue'
 import {
   closeShadcnMenu,
   executeShadcnMenuItem,
@@ -11,6 +10,7 @@ import {
   resolveShadcnMenuItemLabel,
   shadcnMenuState,
 } from '@/ui/overlay/shadcn-menu-manager'
+import ShadcnIcon from '@/ui/primitives/ShadcnIcon.vue'
 
 const menuRef = ref<HTMLElement | null>(null)
 const i18nVersion = ref(0)
@@ -62,7 +62,9 @@ function removeGlobalListeners(): void {
 }
 
 function onDocumentMouseDown(event: MouseEvent): void {
-  if (!menuRef.value?.contains(event.target as Node)) closeShadcnMenu()
+  if (!menuRef.value?.contains(event.target as Node)) {
+    closeShadcnMenu()
+  }
 }
 
 function onDocumentKeydown(event: KeyboardEvent): void {
@@ -70,9 +72,13 @@ function onDocumentKeydown(event: KeyboardEvent): void {
     closeShadcnMenu()
     return
   }
-  if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return
+  if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
+    return
+  }
   const buttons = [...(menuRef.value?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled)') ?? [])]
-  if (buttons.length === 0) return
+  if (buttons.length === 0) {
+    return
+  }
   event.preventDefault()
   const current = buttons.indexOf(document.activeElement as HTMLButtonElement)
   const next = event.key === 'Home'
@@ -89,7 +95,9 @@ function closeOnViewportChange(): void {
 
 function placeMenu(): void {
   const menu = menuRef.value
-  if (!menu) return
+  if (!menu) {
+    return
+  }
   const anchor = shadcnMenuState.anchor
   const margin = 8
   const desiredLeft = anchor.kind === 'element' ? anchor.left : anchor.x
@@ -100,7 +108,9 @@ function placeMenu(): void {
 }
 
 async function runItem(item: ContextMenuItemDescriptor): Promise<void> {
-  if (executing.value || item.disabled) return
+  if (executing.value || item.disabled) {
+    return
+  }
   executing.value = true
   try {
     await executeShadcnMenuItem(item)

@@ -52,8 +52,9 @@ async function toggle(): Promise<void> {
 function mountSortable(): void {
   sortable?.destroy()
   sortable = null
-  if (!sortableRef.value)
+  if (!sortableRef.value) {
     return
+  }
 
   sortable = Sortable.create(sortableRef.value, {
     animation: 160,
@@ -61,12 +62,14 @@ function mountSortable(): void {
     ghostClass: 'endge-shadcn-table-column-manager__ghost',
     chosenClass: 'endge-shadcn-table-column-manager__chosen',
     onEnd: ({ oldIndex, newIndex }) => {
-      if (oldIndex == null || newIndex == null || oldIndex === newIndex)
+      if (oldIndex == null || newIndex == null || oldIndex === newIndex) {
         return
+      }
       const next = [...orderList.value]
       const [moved] = next.splice(oldIndex, 1)
-      if (!moved)
+      if (!moved) {
         return
+      }
       next.splice(newIndex, 0, moved)
       orderList.value = next
       props.table.setColumnOrder(next)
@@ -75,8 +78,9 @@ function mountSortable(): void {
 }
 
 function closeFromOutside(event: PointerEvent): void {
-  if (root.value && !root.value.contains(event.target as Node))
+  if (root.value && !root.value.contains(event.target as Node)) {
     open.value = false
+  }
 }
 
 function title(id: string): string {
@@ -100,7 +104,9 @@ function title(id: string): string {
 
     <section v-if="open" class="endge-shadcn-table-column-manager__popover" aria-label="Настройка колонок">
       <div class="endge-shadcn-table-column-manager__section">
-        <div class="endge-shadcn-table-column-manager__label">Видимость</div>
+        <div class="endge-shadcn-table-column-manager__label">
+          Видимость
+        </div>
         <button
           v-for="column in hideableColumns"
           :key="column.id"
@@ -120,7 +126,9 @@ function title(id: string): string {
       <div class="endge-shadcn-table-column-manager__separator" />
 
       <div class="endge-shadcn-table-column-manager__section">
-        <div class="endge-shadcn-table-column-manager__label">Порядок</div>
+        <div class="endge-shadcn-table-column-manager__label">
+          Порядок
+        </div>
         <div ref="sortableRef" class="endge-shadcn-table-column-manager__order">
           <div v-for="id in orderList" :key="id" class="endge-shadcn-table-column-manager__item">
             <button type="button" data-drag-handle class="endge-shadcn-table-column-manager__drag" :aria-label="`Переместить ${title(id)}`">

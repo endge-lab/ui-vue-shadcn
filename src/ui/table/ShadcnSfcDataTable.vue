@@ -1,5 +1,20 @@
 <script setup lang="ts">
 import type {
+  ComponentSFCEventRuntimeSource,
+  ComponentSFCTableColumnPinStateItem,
+  ComponentSFCTableSortStateItem,
+  ContextMenuDescriptor,
+  RuntimeBoundaryPatch,
+  TableColumnActionContext,
+  TableColumnPinSide,
+  TableEventMap,
+  TableEventName,
+  TableRowActionContext,
+  TableRuntimeActionTarget,
+  TableSelectedCell,
+  TableSortDirection,
+} from '@endge/core'
+import type {
   Cell,
   Column,
   ColumnDef,
@@ -13,30 +28,9 @@ import type {
   VisibilityState,
 } from '@tanstack/vue-table'
 import type { VirtualItem } from '@tanstack/vue-virtual'
-import type {
-  ComponentSFCTableColumnPinStateItem,
-  ComponentSFCTableSortStateItem,
-  ComponentSFCEventRuntimeSource,
-  ContextMenuDescriptor,
-  RuntimeBoundaryPatch,
-  TableColumnActionContext,
-  TableRowActionContext,
-  TableColumnPinSide,
-  TableRuntimeActionTarget,
-  TableEventMap,
-  TableEventName,
-  TableSelectedCell,
-  TableSortDirection,
-} from '@endge/core'
 import type { CSSProperties } from 'vue'
-import {
-  FlexRender,
-  getCoreRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useVueTable,
-} from '@tanstack/vue-table'
-import { useVirtualizer } from '@tanstack/vue-virtual'
+import type { EndgeShadcnTableColumn, EndgeShadcnTableProps } from './table.types'
+import { TABLE_RUNTIME_ACTION_IDS } from '@endge/core'
 import {
   ArrowDown,
   ArrowUp,
@@ -47,13 +41,14 @@ import {
   ChevronsUpDown,
   Filter,
 } from '@lucide/vue'
-import { TABLE_RUNTIME_ACTION_IDS } from '@endge/core'
 import {
-  decorateSFCTableRowWindow,
-  getSFCTableCellStyleSurfaces,
-  SFC_TABLE_ROW_CLASS_FIELD,
-} from '@/ui/render/sfc/SFCRender_TableStyle'
-import { SFCVueBoundaryRegistryKey } from '@/ui/render/sfc/SFCRender_BoundaryRegistry'
+  FlexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useVueTable,
+} from '@tanstack/vue-table'
+import { useVirtualizer } from '@tanstack/vue-virtual'
 import {
   computed,
   inject,
@@ -63,8 +58,9 @@ import {
   shallowRef,
   watch,
 } from 'vue'
+import { resolveSFCTableMenu } from '@/model/render/sfc/resolve-sfc-table-menu'
 
-import type { EndgeShadcnTableColumn, EndgeShadcnTableProps } from './table.types'
+import VueShadcnFilterRenderer from '@/ui/filter/VueShadcnFilterRenderer.vue'
 import {
   closeShadcnMenu,
   elementMenuAnchor,
@@ -72,12 +68,16 @@ import {
   pointMenuAnchor,
 } from '@/ui/overlay/shadcn-menu-manager'
 import ShadcnInput from '@/ui/primitives/ShadcnInput.vue'
-import VueShadcnFilterRenderer from '@/ui/filter/VueShadcnFilterRenderer.vue'
-import ShadcnTableColumnManager from './ShadcnTableColumnManager.vue'
-import { ShadcnTableRuntimeContextKey } from './shadcn-table-runtime-context'
+import { SFCVueBoundaryRegistryKey } from '@/ui/render/sfc/SFCRender_BoundaryRegistry'
 import { extendSFCVueRenderContext } from '@/ui/render/sfc/SFCRender_Context'
 import { readSFCObjectPath } from '@/ui/render/sfc/SFCRender_Evaluator'
-import { resolveSFCTableMenu } from '@/model/render/sfc/resolve-sfc-table-menu'
+import {
+  decorateSFCTableRowWindow,
+  getSFCTableCellStyleSurfaces,
+  SFC_TABLE_ROW_CLASS_FIELD,
+} from '@/ui/render/sfc/SFCRender_TableStyle'
+import { ShadcnTableRuntimeContextKey } from './shadcn-table-runtime-context'
+import ShadcnTableColumnManager from './ShadcnTableColumnManager.vue'
 
 defineOptions({ name: 'EndgeShadcnSfcDataTable' })
 
@@ -141,16 +141,16 @@ let columnSizeTimer: ReturnType<typeof setTimeout> | null = null
 const columnDefinitions = computed<ColumnDef<Record<string, unknown>>[]>(() => [
   ...(showSelectionControl.value
     ? [{
-        id: SELECTION_COLUMN_ID,
-        header: '',
-        size: 44,
-        minSize: 44,
-        maxSize: 44,
-        enableHiding: false,
-        enablePinning: false,
-        enableSorting: false,
-        enableResizing: false,
-      } satisfies ColumnDef<Record<string, unknown>>]
+      id: SELECTION_COLUMN_ID,
+      header: '',
+      size: 44,
+      minSize: 44,
+      maxSize: 44,
+      enableHiding: false,
+      enablePinning: false,
+      enableSorting: false,
+      enableResizing: false,
+    } satisfies ColumnDef<Record<string, unknown>>]
     : []),
   ...tableColumns.value.map(column => ({
     id: column.key,
@@ -232,8 +232,9 @@ function getStableVisibleCells(
 
   return row.getVisibleCells().map((cell) => {
     const cached = rowCells.get(cell.column.id)
-    if (cached?.column === cell.column)
+    if (cached?.column === cell.column) {
       return cached
+    }
 
     rowCells.set(cell.column.id, cell)
     return cell
@@ -268,7 +269,9 @@ const rowVirtualizer = useVirtualizer<HTMLElement, HTMLTableRowElement>(computed
 const virtualItems = computed(() => rowVirtualizer.value.getVirtualItems())
 const virtualRows = computed<VirtualTableRow[]>(() => {
   const items = virtualItems.value
-  if (items.length === 0) return []
+  if (items.length === 0) {
+    return []
+  }
 
   const rows = items
     .map(item => tableRows.value[item.index])
@@ -290,15 +293,17 @@ const virtualRows = computed<VirtualTableRow[]>(() => {
 })
 
 function updateSearchValue(event: Event): void {
-  if (!runtimeContext)
+  if (!runtimeContext) {
     return
+  }
 
   runtimeContext.searchValue.value = (event.target as HTMLInputElement).value
 }
 
 function toggleFilters(): void {
-  if (!runtimeContext)
+  if (!runtimeContext) {
     return
+  }
 
   runtimeContext.filtersVisible.value = !runtimeContext.filtersVisible.value
 }
@@ -387,12 +392,16 @@ watch(
     else if (selectionMode === 'single' && selectedRowIds.value.size > 1) {
       selectedRowIds.value = new Set([...selectedRowIds.value].slice(0, 1))
     }
-    if (cellSelectionMode === 'none') commitCellSelection(null)
+    if (cellSelectionMode === 'none') {
+      commitCellSelection(null)
+    }
   },
 )
 
 onBeforeUnmount(() => {
-  if (columnSizeTimer) clearTimeout(columnSizeTimer)
+  if (columnSizeTimer) {
+    clearTimeout(columnSizeTimer)
+  }
   unregisterBoundary?.()
   closeShadcnMenu(props.boundaryId)
 })
@@ -420,8 +429,9 @@ function updatePagination(updater: Updater<PaginationState>): void {
     pageSize,
   }
   persistTableState('pagination', pagination.value)
-  if (scrollRoot.value)
+  if (scrollRoot.value) {
     scrollRoot.value.scrollTop = 0
+  }
   if (previous.pageIndex !== pagination.value.pageIndex || previous.pageSize !== pagination.value.pageSize) {
     emitTableEvent('pageChanged', {
       tableId: effectiveTableId(),
@@ -434,7 +444,9 @@ function updatePagination(updater: Updater<PaginationState>): void {
 
 function setPageSize(event: Event): void {
   const target = event.target
-  if (!(target instanceof HTMLSelectElement)) return
+  if (!(target instanceof HTMLSelectElement)) {
+    return
+  }
   updatePagination({ pageIndex: 0, pageSize: Number(target.value) })
 }
 
@@ -456,8 +468,9 @@ function readInitialPagination(): PaginationState {
 }
 
 function updateSorting(updater: Updater<SortingState>): void {
-  if (props.sortMode === 'disabled' || props.sortMode === 'fixed')
+  if (props.sortMode === 'disabled' || props.sortMode === 'fixed') {
     return
+  }
   const next = resolveUpdater(updater, sorting.value)
   setSorting(props.sortMode === 'single' ? next.slice(0, 1) : next)
 }
@@ -475,8 +488,9 @@ function setSorting(next: SortingState): void {
 }
 
 function updatePinning(updater: Updater<ColumnPinningState>): void {
-  if (props.pinMode === 'disabled')
+  if (props.pinMode === 'disabled') {
     return
+  }
   const previous = JSON.stringify(columnPinning.value)
   columnPinning.value = resolveUpdater(updater, columnPinning.value)
   persistTableState('pin', toEndgePinning(columnPinning.value))
@@ -492,7 +506,9 @@ function updatePinning(updater: Updater<ColumnPinningState>): void {
 function updateColumnOrder(updater: Updater<ColumnOrderState>): void {
   const next = resolveUpdater(updater, resolvedColumnOrder.value)
     .filter(key => key !== SELECTION_COLUMN_ID)
-  if (JSON.stringify(next) === JSON.stringify(columnOrder.value)) return
+  if (JSON.stringify(next) === JSON.stringify(columnOrder.value)) {
+    return
+  }
   columnOrder.value = next
   persistTableState('order', next)
   emitTableEvent('columnOrderChanged', { tableId: effectiveTableId(), columnKeys: [...next] })
@@ -500,7 +516,9 @@ function updateColumnOrder(updater: Updater<ColumnOrderState>): void {
 
 function updateColumnVisibility(updater: Updater<VisibilityState>): void {
   const next = resolveUpdater(updater, columnVisibility.value)
-  if (JSON.stringify(next) === JSON.stringify(columnVisibility.value)) return
+  if (JSON.stringify(next) === JSON.stringify(columnVisibility.value)) {
+    return
+  }
   columnVisibility.value = next
   persistTableState('visibility', next)
   const visibility = Object.fromEntries(tableColumns.value.map(column => [column.key, next[column.key] !== false]))
@@ -514,11 +532,15 @@ function updateColumnVisibility(updater: Updater<VisibilityState>): void {
 function updateColumnSizing(updater: Updater<ColumnSizingState>): void {
   const previous = columnSizing.value
   const next = resolveUpdater(updater, previous)
-  if (JSON.stringify(next) === JSON.stringify(previous)) return
+  if (JSON.stringify(next) === JSON.stringify(previous)) {
+    return
+  }
   columnSizing.value = next
   persistTableState('sizing', next)
   const changedColumnKey = Object.keys(next).find(key => next[key] !== previous[key]) ?? null
-  if (columnSizeTimer) clearTimeout(columnSizeTimer)
+  if (columnSizeTimer) {
+    clearTimeout(columnSizeTimer)
+  }
   columnSizeTimer = setTimeout(() => {
     columnSizeTimer = null
     emitTableEvent('columnSizeChanged', {
@@ -547,7 +569,9 @@ function readInitialSorting(): SortingState {
 }
 
 function readInitialPinning(): ColumnPinningState {
-  if (props.pinMode === 'disabled') return { left: [], right: [] }
+  if (props.pinMode === 'disabled') {
+    return { left: [], right: [] }
+  }
   return toTanStackPinning(
     readTableArrayState<ComponentSFCTableColumnPinStateItem>('pin', defaultPinItems.value)
       .filter(isTablePinStateItem),
@@ -566,8 +590,9 @@ function readInitialVisibility(): VisibilityState {
 
 function readTableState<T>(section: string, fallback: T): T {
   const key = tableStateKey.value
-  if (!props.runtimeState || !key)
+  if (!props.runtimeState || !key) {
     return fallback
+  }
   const value = props.runtimeState.get<unknown>(key, section, fallback)
   return value == null ? fallback : value as T
 }
@@ -584,8 +609,9 @@ function readTableRecordState<T extends Record<string, unknown>>(section: string
 
 function persistTableState<T>(section: string, value: T): void {
   const key = tableStateKey.value
-  if (!props.runtimeState || !key)
+  if (!props.runtimeState || !key) {
     return
+  }
   props.runtimeState.set(key, section, value)
 }
 
@@ -605,7 +631,9 @@ function reconcileColumnState(): void {
 }
 
 function setColumnSort(columnKey: string, direction: TableSortDirection): void {
-  if (props.sortMode === 'disabled' || props.sortMode === 'fixed') return
+  if (props.sortMode === 'disabled' || props.sortMode === 'fixed') {
+    return
+  }
   const next = { id: columnKey, desc: direction === 'desc' }
   if (props.sortMode === 'single') {
     setSorting([next])
@@ -624,10 +652,13 @@ function openColumnMenu(
 ): void {
   const descriptor = getColumnDescriptor(column)
   const menu = resolveColumnMenu(descriptor)
-  if (!menu) return
-  const context = createColumnActionContext(column, descriptor)
-  if (!menu.items.some(item => item.kind === 'item'))
+  if (!menu) {
     return
+  }
+  const context = createColumnActionContext(column, descriptor)
+  if (!menu.items.some(item => item.kind === 'item')) {
+    return
+  }
   event.preventDefault()
   event.stopPropagation()
   openShadcnMenu({
@@ -645,12 +676,18 @@ function onColumnHeaderClick(column: Column<Record<string, unknown>>, event: Mou
     openColumnMenu(column, event, 'element')
     return
   }
-  if (column.getCanSort() && props.sortMode !== 'fixed') column.toggleSorting()
+  if (column.getCanSort() && props.sortMode !== 'fixed') {
+    column.toggleSorting()
+  }
 }
 
 function resolveColumnMenu(_column: EndgeShadcnTableColumn): ContextMenuDescriptor | null {
-  if (props.columnMenu.mode === 'disabled') return null
-  if (props.columnMenu.mode === 'inline') return props.menuContext ? resolveSFCTableMenu(props.columnMenu.menu, props.menuContext) : null
+  if (props.columnMenu.mode === 'disabled') {
+    return null
+  }
+  if (props.columnMenu.mode === 'inline') {
+    return props.menuContext ? resolveSFCTableMenu(props.columnMenu.menu, props.menuContext) : null
+  }
   return defaultColumnMenu
 }
 
@@ -686,12 +723,17 @@ function createColumnActionContext(
 }
 
 async function applyRuntimePatch(patch: RuntimeBoundaryPatch): Promise<boolean> {
-  if (patch.kind !== 'collection-projection-update' || patch.boundaryId !== props.boundaryId)
+  if (patch.kind !== 'collection-projection-update' || patch.boundaryId !== props.boundaryId) {
     return false
+  }
   const next = copyRows(baseRows.value)
   const rowIndex = resolvePatchedRowIndex(next, patch)
-  if (rowIndex < 0) return false
-  if (!isPlainObject(patch.itemSnapshot)) return false
+  if (rowIndex < 0) {
+    return false
+  }
+  if (!isPlainObject(patch.itemSnapshot)) {
+    return false
+  }
   next[rowIndex] = { ...patch.itemSnapshot }
   baseRows.value = next
   await nextTick()
@@ -702,7 +744,9 @@ function resolvePatchedRowIndex(rows: Record<string, unknown>[], patch: RuntimeB
   const key = isPlainObject(patch.itemSnapshot) ? patch.itemSnapshot[props.rowKey] : undefined
   if (key != null) {
     const index = rows.findIndex(row => row[props.rowKey] === key)
-    if (index >= 0) return index
+    if (index >= 0) {
+      return index
+    }
   }
   return patch.itemIndex != null && patch.itemIndex >= 0 && patch.itemIndex < rows.length ? patch.itemIndex : -1
 }
@@ -716,24 +760,34 @@ function isSelectionColumn(column: Column<Record<string, unknown>>): boolean {
 }
 
 function toggleVisibleRows(checked: boolean): void {
-  if (!rowSelectionEnabled.value || props.selectionMode !== 'multiple') return
+  if (!rowSelectionEnabled.value || props.selectionMode !== 'multiple') {
+    return
+  }
   const next = new Set(selectedRowIds.value)
   for (const rowId of visibleRowIds.value) {
-    if (checked) next.add(rowId)
-    else next.delete(rowId)
+    if (checked) {
+      next.add(rowId)
+    }
+    else { next.delete(rowId) }
   }
   commitSelection(next)
 }
 
 function toggleRowFromControl(row: Row<Record<string, unknown>>, checked: boolean): void {
-  if (!rowSelectionEnabled.value) return
+  if (!rowSelectionEnabled.value) {
+    return
+  }
   const next = new Set(selectedRowIds.value)
   if (props.selectionMode === 'single') {
-    if (!checked) return
+    if (!checked) {
+      return
+    }
     next.clear()
   }
-  if (checked) next.add(row.id)
-  else next.delete(row.id)
+  if (checked) {
+    next.add(row.id)
+  }
+  else { next.delete(row.id) }
   selectionAnchorId.value = row.id
   commitSelection(next)
 }
@@ -776,10 +830,10 @@ function getCellAttrs(
   states: string[],
 ): Record<string, unknown> {
   return getSFCTableCellStyleSurfaces(row, column.index, states)?.cell.attrs ?? {
-    part: 'cell',
+    'part': 'cell',
     'data-endge-part': 'cell',
     ...(states.length ? { 'data-endge-state': states.join(' ') } : {}),
-    class: [],
+    'class': [],
   }
 }
 
@@ -787,14 +841,20 @@ function getCellStates(rowId: string, columnKey: string): string[] {
   const states: string[] = []
   if (selectedRowIds.value.has(rowId)) {
     states.push('selected', 'row-selected')
-    if (props.selectionMode === 'multiple') states.push('multi-selected')
+    if (props.selectionMode === 'multiple') {
+      states.push('multi-selected')
+    }
   }
-  if (isCellSelected(rowId, columnKey)) states.push('selected', 'cell-selected')
+  if (isCellSelected(rowId, columnKey)) {
+    states.push('selected', 'cell-selected')
+  }
   return [...new Set(states)]
 }
 
 function getRowStates(rowId: string): string[] {
-  if (!selectedRowIds.value.has(rowId)) return []
+  if (!selectedRowIds.value.has(rowId)) {
+    return []
+  }
   return [
     'selected',
     'row-selected',
@@ -804,8 +864,12 @@ function getRowStates(rowId: string): string[] {
 
 function getRowClass(row: Record<string, unknown>): string | string[] | undefined {
   const value = row[SFC_TABLE_ROW_CLASS_FIELD]
-  if (typeof value === 'string') return value
-  if (Array.isArray(value) && value.every(item => typeof item === 'string')) return value
+  if (typeof value === 'string') {
+    return value
+  }
+  if (Array.isArray(value) && value.every(item => typeof item === 'string')) {
+    return value
+  }
   return undefined
 }
 
@@ -828,8 +892,9 @@ function eventSource(): ComponentSFCEventRuntimeSource {
 
 function emitTableEvent<TName extends TableEventName>(name: TName, payload: TableEventMap[TName]): void {
   const boundary = props.eventBoundary
-  if (boundary && typeof boundary.routeChild === 'function')
+  if (boundary && typeof boundary.routeChild === 'function') {
     void boundary.routeChild(eventSource(), name, payload, runtimeEventBindings.value)
+  }
 }
 
 function resolveColumnKey(event: MouseEvent | KeyboardEvent): string | null {
@@ -865,7 +930,9 @@ function requestRowContextMenu(entry: VirtualTableRow, event: MouseEvent): void 
   })
   const column = props.columns.find(candidate => candidate.key === columnKey)
   const menuDescriptor = column?.cellMenu ?? props.rowMenu
-  if (menuDescriptor.mode !== 'inline' || !menuDescriptor.menu || !props.menuContext || !column) return
+  if (menuDescriptor.mode !== 'inline' || !menuDescriptor.menu || !props.menuContext || !column) {
+    return
+  }
   const tableContext = {
     id: effectiveTableId(),
     runtimeId: props.runtimeState?.runtimeId ?? props.boundaryId,
@@ -928,7 +995,9 @@ function requestRowContextMenu(entry: VirtualTableRow, event: MouseEvent): void 
 }
 
 function onRowClick(entry: VirtualTableRow, event: MouseEvent): void {
-  if (!selectOnRow.value) return
+  if (!selectOnRow.value) {
+    return
+  }
   const next = new Set(selectedRowIds.value)
   if (props.selectionMode === 'single') {
     next.clear()
@@ -939,14 +1008,19 @@ function onRowClick(entry: VirtualTableRow, event: MouseEvent): void {
     const from = rows.findIndex(row => row.id === selectionAnchorId.value)
     const to = rows.findIndex(row => row.id === entry.row.id)
     if (from >= 0 && to >= 0) {
-      if (!event.metaKey && !event.ctrlKey) next.clear()
-      for (let index = Math.min(from, to); index <= Math.max(from, to); index += 1)
+      if (!event.metaKey && !event.ctrlKey) {
+        next.clear()
+      }
+      for (let index = Math.min(from, to); index <= Math.max(from, to); index += 1) {
         next.add(rows[index]!.id)
+      }
     }
   }
   else if (event.metaKey || event.ctrlKey) {
-    if (next.has(entry.row.id)) next.delete(entry.row.id)
-    else next.add(entry.row.id)
+    if (next.has(entry.row.id)) {
+      next.delete(entry.row.id)
+    }
+    else { next.add(entry.row.id) }
   }
   else {
     next.clear()
@@ -957,7 +1031,9 @@ function onRowClick(entry: VirtualTableRow, event: MouseEvent): void {
 }
 
 function selectRowFromCell(entry: VirtualTableRow, event: MouseEvent | KeyboardEvent): void {
-  if (!selectOnRow.value) return
+  if (!selectOnRow.value) {
+    return
+  }
   const next = new Set(selectedRowIds.value)
   if (props.selectionMode === 'single') {
     next.clear()
@@ -968,9 +1044,12 @@ function selectRowFromCell(entry: VirtualTableRow, event: MouseEvent | KeyboardE
     const from = rows.findIndex(row => row.id === selectionAnchorId.value)
     const to = rows.findIndex(row => row.id === entry.row.id)
     if (from >= 0 && to >= 0) {
-      if (!event.metaKey && !event.ctrlKey) next.clear()
-      for (let index = Math.min(from, to); index <= Math.max(from, to); index += 1)
+      if (!event.metaKey && !event.ctrlKey) {
+        next.clear()
+      }
+      for (let index = Math.min(from, to); index <= Math.max(from, to); index += 1) {
         next.add(rows[index]!.id)
+      }
     }
   }
   else if (event.metaKey || event.ctrlKey) {
@@ -996,11 +1075,15 @@ function onRowKeydown(entry: VirtualTableRow, event: KeyboardEvent): void {
 }
 
 function commitSelection(next: Set<string>): void {
-  if (!rowSelectionEnabled.value) return
+  if (!rowSelectionEnabled.value) {
+    return
+  }
   const previous = selectedRowIds.value
   const addedRowIds = [...next].filter(id => !previous.has(id))
   const removedRowIds = [...previous].filter(id => !next.has(id))
-  if (addedRowIds.length === 0 && removedRowIds.length === 0) return
+  if (addedRowIds.length === 0 && removedRowIds.length === 0) {
+    return
+  }
   selectedRowIds.value = next
   const rowsById = new Map(table.getCoreRowModel().rows.map(row => [row.id, row.original] as const))
   const selectedRowIdsOrdered = [...next].filter(id => rowsById.has(id))
@@ -1015,7 +1098,9 @@ function commitSelection(next: Set<string>): void {
 }
 
 function reconcileSelection(): void {
-  if (!rowSelectionEnabled.value || selectedRowIds.value.size === 0) return
+  if (!rowSelectionEnabled.value || selectedRowIds.value.size === 0) {
+    return
+  }
   const available = new Set(table.getCoreRowModel().rows.map(row => row.id))
   commitSelection(new Set([...selectedRowIds.value].filter(id => available.has(id))))
 }
@@ -1025,7 +1110,9 @@ function isCellSelected(rowId: string, columnKey: string): boolean {
 }
 
 function selectCell(entry: VirtualTableRow, cell: Cell<Record<string, unknown>, unknown>): void {
-  if (props.cellSelectionMode !== 'single' || isSelectionColumn(cell.column)) return
+  if (props.cellSelectionMode !== 'single' || isSelectionColumn(cell.column)) {
+    return
+  }
   commitCellSelection({
     rowId: entry.row.id,
     rowIndex: entry.rowIndex,
@@ -1040,13 +1127,19 @@ function onCellClick(
   cell: Cell<Record<string, unknown>, unknown>,
   event: MouseEvent,
 ): void {
-  if (props.cellSelectionMode !== 'single' || isSelectionColumn(cell.column)) return
+  if (props.cellSelectionMode !== 'single' || isSelectionColumn(cell.column)) {
+    return
+  }
   const target = event.target instanceof Element ? event.target : null
-  if (target?.closest('button, a, input, select, textarea, [contenteditable="true"], [role="button"], [role="menuitem"]')) return
+  if (target?.closest('button, a, input, select, textarea, [contenteditable="true"], [role="button"], [role="menuitem"]')) {
+    return
+  }
   event.stopPropagation()
   selectCell(entry, cell)
   selectRowFromCell(entry, event)
-  if (event.currentTarget instanceof HTMLElement) event.currentTarget.focus()
+  if (event.currentTarget instanceof HTMLElement) {
+    event.currentTarget.focus()
+  }
 }
 
 function onCellKeydown(
@@ -1054,7 +1147,9 @@ function onCellKeydown(
   cell: Cell<Record<string, unknown>, unknown>,
   event: KeyboardEvent,
 ): void {
-  if (props.cellSelectionMode !== 'single' || (event.key !== ' ' && event.key !== 'Enter')) return
+  if (props.cellSelectionMode !== 'single' || (event.key !== ' ' && event.key !== 'Enter')) {
+    return
+  }
   event.preventDefault()
   event.stopPropagation()
   selectCell(entry, cell)
@@ -1062,8 +1157,12 @@ function onCellKeydown(
 }
 
 function onTableKeydown(event: KeyboardEvent): void {
-  if (!shouldClearSelectionOnEscape(event)) return
-  if (selectedRowIds.value.size === 0 && selectedCell.value === null) return
+  if (!shouldClearSelectionOnEscape(event)) {
+    return
+  }
+  if (selectedRowIds.value.size === 0 && selectedCell.value === null) {
+    return
+  }
   event.preventDefault()
   event.stopPropagation()
   selectionAnchorId.value = null
@@ -1073,7 +1172,9 @@ function onTableKeydown(event: KeyboardEvent): void {
 
 function commitCellSelection(next: TableSelectedCell | null): void {
   const previous = selectedCell.value
-  if (previous?.rowId === next?.rowId && previous?.columnKey === next?.columnKey) return
+  if (previous?.rowId === next?.rowId && previous?.columnKey === next?.columnKey) {
+    return
+  }
   selectedCell.value = next
   emitTableEvent('cellSelectionChanged', {
     tableId: effectiveTableId(),
@@ -1084,7 +1185,9 @@ function commitCellSelection(next: TableSelectedCell | null): void {
 
 function reconcileCellSelection(): void {
   const current = selectedCell.value
-  if (!current || props.cellSelectionMode === 'none') return
+  if (!current || props.cellSelectionMode === 'none') {
+    return
+  }
   const row = table.getCoreRowModel().rows.find(candidate => candidate.id === current.rowId)
   if (!row || !tableColumns.value.some(column => column.key === current.columnKey)) {
     commitCellSelection(null)
@@ -1104,10 +1207,14 @@ function getSortIndex(columnId: string): number | null {
 }
 
 function compareRows(left: Record<string, unknown>, right: Record<string, unknown>, column: EndgeShadcnTableColumn): number {
-  if (!column.sort) return 0
+  if (!column.sort) {
+    return 0
+  }
   for (const path of column.sort.paths) {
     const result = compareValues(readPath(left, path), readPath(right, path), column.sort.comparator)
-    if (result !== 0) return result
+    if (result !== 0) {
+      return result
+    }
   }
   return 0
 }
@@ -1115,11 +1222,21 @@ function compareRows(left: Record<string, unknown>, right: Record<string, unknow
 function compareValues(left: unknown, right: unknown, comparator: string): number {
   const leftEmpty = left == null || left === ''
   const rightEmpty = right == null || right === ''
-  if (leftEmpty || rightEmpty) return leftEmpty === rightEmpty ? 0 : leftEmpty ? 1 : -1
-  if (comparator === 'number') return compareNumber(left, right)
-  if (comparator === 'date') return compareNumber(Date.parse(String(left)), Date.parse(String(right)))
-  if (comparator === 'time') return compareNumber(parseTime(left), parseTime(right))
-  if (comparator === 'boolean') return Number(Boolean(left)) - Number(Boolean(right))
+  if (leftEmpty || rightEmpty) {
+    return leftEmpty === rightEmpty ? 0 : leftEmpty ? 1 : -1
+  }
+  if (comparator === 'number') {
+    return compareNumber(left, right)
+  }
+  if (comparator === 'date') {
+    return compareNumber(Date.parse(String(left)), Date.parse(String(right)))
+  }
+  if (comparator === 'time') {
+    return compareNumber(parseTime(left), parseTime(right))
+  }
+  if (comparator === 'boolean') {
+    return Number(Boolean(left)) - Number(Boolean(right))
+  }
   return new Intl.Collator(undefined, { numeric: comparator !== 'text', sensitivity: 'base' })
     .compare(String(left), String(right))
 }
@@ -1127,8 +1244,9 @@ function compareValues(left: unknown, right: unknown, comparator: string): numbe
 function compareNumber(left: unknown, right: unknown): number {
   const a = Number(left)
   const b = Number(right)
-  if (!Number.isFinite(a) || !Number.isFinite(b))
+  if (!Number.isFinite(a) || !Number.isFinite(b)) {
     return String(left).localeCompare(String(right), undefined, { numeric: true })
+  }
   return a - b
 }
 
@@ -1151,13 +1269,17 @@ function toTanStackPinning(value: ComponentSFCTableColumnPinStateItem[]): Column
 }
 
 function isTableSortStateItem(value: unknown): value is ComponentSFCTableSortStateItem {
-  if (!isPlainObject(value)) return false
+  if (!isPlainObject(value)) {
+    return false
+  }
   return typeof value.key === 'string'
     && (value.direction === 'asc' || value.direction === 'desc')
 }
 
 function isTablePinStateItem(value: unknown): value is ComponentSFCTableColumnPinStateItem {
-  if (!isPlainObject(value)) return false
+  if (!isPlainObject(value)) {
+    return false
+  }
   return typeof value.key === 'string'
     && (value.side === 'left' || value.side === 'right')
 }
@@ -1193,7 +1315,9 @@ function normalizeNonNegativeInteger(value: unknown, fallback: number): number {
 }
 
 function shouldClearSelectionOnEscape(event: KeyboardEvent): boolean {
-  if (event.key !== 'Escape' || event.defaultPrevented || event.isComposing) return false
+  if (event.key !== 'Escape' || event.defaultPrevented || event.isComposing) {
+    return false
+  }
   return !event.composedPath().some(node => node instanceof Element && node.matches(
     'button, a, input, select, textarea, [contenteditable="true"], [role="button"], [role="combobox"], [role="dialog"], [role="listbox"], [role="menu"], [role="menuitem"], [role="textbox"]',
   ))
@@ -1383,7 +1507,9 @@ function menuItem(id: string, label: string, icon: string) {
             </td>
           </tr>
           <tr v-if="tableRows.length === 0">
-            <td :colspan="visibleColumnCount" class="endge-shadcn-table__empty">Нет данных</td>
+            <td :colspan="visibleColumnCount" class="endge-shadcn-table__empty">
+              Нет данных
+            </td>
           </tr>
         </tbody>
       </table>
