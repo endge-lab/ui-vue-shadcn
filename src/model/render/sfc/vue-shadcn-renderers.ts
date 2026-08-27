@@ -350,7 +350,7 @@ function normalizeGap(value: unknown): string | undefined {
   if (source === '') {
     return undefined
   }
-  if (/^-?\d+(\.\d+)?$/.test(source)) {
+  if (/^-?\d+(?:\.\d+)?$/.test(source)) {
     return `${Number(source) * 4}px`
   }
   return source
@@ -368,7 +368,7 @@ function normalizeLength(value: unknown): string | undefined {
   if (source === '') {
     return undefined
   }
-  if (/^-?\d+(\.\d+)?$/.test(source)) {
+  if (/^-?\d+(?:\.\d+)?$/.test(source)) {
     return `${Number(source)}px`
   }
   return source

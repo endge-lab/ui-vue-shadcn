@@ -631,7 +631,7 @@ function normalizeLength(value: unknown, unit: number): string | null {
   if (source === '') {
     return null
   }
-  if (/^-?\d+(\.\d+)?$/.test(source)) {
+  if (/^-?\d+(?:\.\d+)?$/.test(source)) {
     return `${Number(source) * unit}px`
   }
 

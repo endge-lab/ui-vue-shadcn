@@ -150,7 +150,7 @@ export function evaluateSFCExpression(expression: string, context: SFCVueRenderC
   if (isQuotedString(source)) {
     return source.slice(1, -1)
   }
-  if (/^-?\d+(\.\d+)?$/.test(source)) {
+  if (/^-?\d+(?:\.\d+)?$/.test(source)) {
     return Number(source)
   }
 
@@ -847,8 +847,8 @@ function asExpressionNode(value: unknown): SFCExpressionNode | null {
 }
 
 function isSupportedPath(source: string): boolean {
-  const identifier = String.raw`[A-Za-z_$][\w$]*`
-  const selectorKey = String.raw`[A-Za-z_$][\w$-]*`
+  const identifier = String.raw`[A-Z_$][\w$]*`
+  const selectorKey = String.raw`[A-Z_$][\w$-]*`
   const singleQuoted = String.raw`'(?:\\.|[^'\\])*'`
   const doubleQuoted = String.raw`"(?:\\.|[^"\\])*"`
   const selectorValue = String.raw`(?:${singleQuoted}|${doubleQuoted}|\d+)`
@@ -858,6 +858,7 @@ function isSupportedPath(source: string): boolean {
 
   return new RegExp(
     String.raw`^${identifier}(?:${dotSegment}|${indexSegment}|${selectorSegment})*$`,
+    'i',
   ).test(source)
 }
 
