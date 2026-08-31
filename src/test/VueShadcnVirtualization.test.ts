@@ -12,6 +12,7 @@ import type { EndgeShadcnTableColumn, EndgeShadcnTableProps } from '@/ui/table/t
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { createApp, h, nextTick } from 'vue'
+import { createSFCVueRenderContext } from '@/ui/render/sfc/SFCRender_Context'
 import ShadcnSfcDataTable from '@/ui/table/ShadcnSfcDataTable.vue'
 
 describe('vueShadcnSfcDataTable virtualization', () => {
@@ -318,24 +319,15 @@ function createColumns(): EndgeShadcnTableColumn[] {
 }
 
 function createStyleContract(): SFCTableStyleContract {
-  const context = {
-    props: {},
-    locals: {},
-    iteration: null,
-    renderVersion: 0,
-    host: null,
-    runtimeState: null,
-    componentStack: [],
-    consumerScope: 'virtualization-test',
-    variant: 'default',
-    styleArtifacts: [],
-    styleParent: undefined,
-    styleSiblings: [],
-    styleSiblingCount: 0,
-    styleOwnerScopeId: undefined,
-    runtimeScopeIds: [],
-    metadata: null,
-  } satisfies SFCVueRenderContext
+  const context: SFCVueRenderContext = createSFCVueRenderContext(
+    {},
+    0,
+    null,
+    null,
+    [],
+    'virtualization-test',
+    [],
+  )
 
   return {
     context,

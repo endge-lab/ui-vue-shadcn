@@ -159,6 +159,8 @@ function getSFCElementRenderer(
     case 'MenuItem':
     case 'MenuSeparator':
       return SFCRender_Structural
+    default:
+      throw new Error(`Unsupported SFC render tag: ${node.tag}`)
   }
 }
 

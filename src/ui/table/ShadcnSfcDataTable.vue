@@ -5,6 +5,7 @@ import type {
   ComponentSFCTableSortStateItem,
   ContextMenuDescriptor,
   RuntimeBoundaryPatch,
+  RuntimeCollectionProjectionUpdatePatch,
   TableColumnActionContext,
   TableColumnPinSide,
   TableEventMap,
@@ -723,7 +724,10 @@ function createColumnActionContext(
 }
 
 async function applyRuntimePatch(patch: RuntimeBoundaryPatch): Promise<boolean> {
-  if (patch.kind !== 'collection-projection-update' || patch.boundaryId !== props.boundaryId) {
+  if (patch.kind !== 'collection-projection-update') {
+    return false
+  }
+  if (patch.boundaryId !== props.boundaryId) {
     return false
   }
   const next = copyRows(baseRows.value)
@@ -740,7 +744,7 @@ async function applyRuntimePatch(patch: RuntimeBoundaryPatch): Promise<boolean> 
   return true
 }
 
-function resolvePatchedRowIndex(rows: Record<string, unknown>[], patch: RuntimeBoundaryPatch): number {
+function resolvePatchedRowIndex(rows: Record<string, unknown>[], patch: RuntimeCollectionProjectionUpdatePatch): number {
   const key = isPlainObject(patch.itemSnapshot) ? patch.itemSnapshot[props.rowKey] : undefined
   if (key != null) {
     const index = rows.findIndex(row => row[props.rowKey] === key)

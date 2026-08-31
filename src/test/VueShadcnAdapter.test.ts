@@ -15,7 +15,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createApp, h, isVNode, nextTick } from 'vue'
 
-import { EndgeVueShadcnModule } from '@/domain/core/endge-vue-shadcn'
+import { EndgeVueShadcnModule } from '@/model/kernel/endge-vue-shadcn'
 import { SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS } from '@/model/render/sfc/sfc-shadcn-render.type'
 import {
   VUE_SHADCN_SFC_ADAPTER_ID,
@@ -33,6 +33,7 @@ const TEST_WORKSPACE: EndgeWorkspaceDefinition = {
   installedIntegrations: [],
   configuration: {
     vars: [],
+    values: {},
     locales: [{ code: 'en', displayName: 'English', shortLabel: 'EN', direction: 'ltr' }],
     defaultLocale: 'en',
     fallbackLocale: 'en',

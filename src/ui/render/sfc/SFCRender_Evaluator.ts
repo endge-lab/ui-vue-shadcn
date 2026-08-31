@@ -524,7 +524,7 @@ function readSafeMember(object: unknown, property: string | number): SFCExpressi
     return index == null ? undefined : object[index]
   }
 
-  if (typeof object !== 'object' && typeof object !== 'function') {
+  if (object === null || (typeof object !== 'object' && typeof object !== 'function')) {
     return undefined
   }
   if (!Object.hasOwn(object, key)) {

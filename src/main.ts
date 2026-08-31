@@ -1,7 +1,7 @@
 import '@/assets/vue-shadcn.css'
 
-export * from '@/domain/core/endge-vue-shadcn'
 export * from '@/domain/types/filter-renderer.type'
+export * from '@/model/kernel/endge-vue-shadcn'
 export * from '@/model/render/sfc/sfc-shadcn-render.type'
 export * from '@/model/render/sfc/vue-shadcn-renderers'
 export * from '@/model/render/sfc/vue-shadcn-sfc-adapter'
