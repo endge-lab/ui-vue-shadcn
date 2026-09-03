@@ -1,5 +1,5 @@
 import type { RComponentSFC_IR_ElementNode, RComponentSFC_IR_Node, TableSelectionTrigger } from '@endge/core'
-import type { SFCVueRenderContext, SFCVueRenderFunction } from '@/model/render/sfc/sfc-shadcn-render.type'
+import type { SFCVueRenderContext, SFCVueRenderFunction } from '@/services/render/sfc/sfc-shadcn-render.type'
 import type { EndgeShadcnTableColumn, EndgeShadcnTablePaging } from '@/ui/table/table.types'
 import {
   normalizeComponentSFCTableColumnMenu,

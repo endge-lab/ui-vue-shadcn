@@ -3,7 +3,7 @@ import type {
   EndgeTooltipMarkdownInline,
   RComponentSFC_IR_Node,
 } from '@endge/core'
-import type { SFCVueRenderFunction } from '@/model/render/sfc/sfc-shadcn-render.type'
+import type { SFCVueRenderFunction } from '@/services/render/sfc/sfc-shadcn-render.type'
 import { createEndgeTooltipDomId, parseEndgeTooltipMarkdown } from '@endge/core'
 
 import { cloneVNode, isVNode } from 'vue'

@@ -2,9 +2,9 @@ import { Endge } from '@endge/core'
 import { describe, expect, it } from 'vitest'
 import { h, isVNode } from 'vue'
 
-import { SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS } from '@/model/render/sfc/sfc-shadcn-render.type'
-import { VueShadcnRender_Grid } from '@/model/render/sfc/vue-shadcn-renderers'
-import { VueShadcnSFCAdapter } from '@/model/render/sfc/vue-shadcn-sfc-adapter'
+import { SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS } from '@/services/render/sfc/sfc-shadcn-render.type'
+import { VueShadcnRender_Grid } from '@/services/render/sfc/vue-shadcn-renderers'
+import { VueShadcnSFCAdapter } from '@/services/render/sfc/vue-shadcn-sfc-adapter'
 
 describe('vueShadcnRender_Grid', () => {
   it('completes the required adapter contract', () => {

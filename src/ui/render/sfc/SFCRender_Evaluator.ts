@@ -1,5 +1,5 @@
 import type { RComponentSFC_IR_Value } from '@endge/core'
-import type { SFCVueRenderBinding, SFCVueRenderContext } from '@/model/render/sfc/sfc-shadcn-render.type'
+import type { SFCVueRenderBinding, SFCVueRenderContext } from '@/services/render/sfc/sfc-shadcn-render.type'
 import { parseExpression } from '@babel/parser'
 import { DataPath } from '@endge/raph'
 

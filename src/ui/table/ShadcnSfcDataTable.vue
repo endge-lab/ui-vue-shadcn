@@ -59,7 +59,7 @@ import {
   shallowRef,
   watch,
 } from 'vue'
-import { resolveSFCTableMenu } from '@/model/render/sfc/resolve-sfc-table-menu'
+import { resolveSFCTableMenu } from '@/services/render/sfc/resolve-sfc-table-menu'
 
 import VueShadcnFilterRenderer from '@/ui/filter/VueShadcnFilterRenderer.vue'
 import {

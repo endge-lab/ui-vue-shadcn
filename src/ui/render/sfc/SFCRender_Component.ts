@@ -1,5 +1,5 @@
 import type { ComponentSFCProgramPayload } from '@endge/core'
-import type { SFCVueRenderContext, SFCVueRenderFunction } from '@/model/render/sfc/sfc-shadcn-render.type'
+import type { SFCVueRenderContext, SFCVueRenderFunction } from '@/services/render/sfc/sfc-shadcn-render.type'
 import { Endge } from '@endge/core'
 
 import { cloneVNode, isVNode } from 'vue'

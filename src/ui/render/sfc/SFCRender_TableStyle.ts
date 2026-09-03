@@ -1,7 +1,7 @@
 import type { EndgeStyleMatchNode } from '@endge/core'
 
-import type { SFCVueRenderContext } from '@/model/render/sfc/sfc-shadcn-render.type'
-import { getEndgeDOMStyleClasses } from '@/model/style/endge-dom-style'
+import type { SFCVueRenderContext } from '@/services/render/sfc/sfc-shadcn-render.type'
+import { getEndgeDOMStyleClasses } from '@/services/style/endge-dom-style'
 
 export type SFCTablePublicPart
   = | 'grid'

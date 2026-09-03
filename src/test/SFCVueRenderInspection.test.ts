@@ -2,7 +2,7 @@ import type { RComponentSFC_IR_ElementNode } from '@endge/core'
 import { SFCRenderInspectionSession } from '@endge/core'
 import { describe, expect, it } from 'vitest'
 
-import { registerSFCInspectionElement, registerSFCInspectionRoot } from '@/model/render/sfc/SFCVueRenderInspection'
+import { registerSFCInspectionElement, registerSFCInspectionRoot } from '@/services/render/sfc/SFCVueRenderInspection'
 import { createSFCVueRenderContext, extendSFCVueRenderContext } from '@/ui/render/sfc/SFCRender_Context'
 
 describe('sFCVueRenderInspection', () => {

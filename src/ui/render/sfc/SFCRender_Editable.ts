@@ -9,7 +9,7 @@ import type {
   SFCVueRenderContext,
   SFCVueRenderElementInput,
   SFCVueRenderResult,
-} from '@/model/render/sfc/sfc-shadcn-render.type'
+} from '@/services/render/sfc/sfc-shadcn-render.type'
 import {
   matchesComponentSFCEditTrigger,
   normalizeComponentSFCEditTriggers,

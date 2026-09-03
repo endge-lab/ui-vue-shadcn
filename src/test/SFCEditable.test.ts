@@ -10,11 +10,11 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick } from 'vue'
 
-import { SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS } from '@/model/render/sfc/sfc-shadcn-render.type'
+import { SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS } from '@/services/render/sfc/sfc-shadcn-render.type'
 import {
   VUE_SHADCN_SFC_ADAPTER_ID,
   VueShadcnSFCAdapter,
-} from '@/model/render/sfc/vue-shadcn-sfc-adapter'
+} from '@/services/render/sfc/vue-shadcn-sfc-adapter'
 import VueShadcnShell from '@/ui/layout/VueShadcnShell.vue'
 import SFC_RuntimeRenderer from '@/ui/render/sfc/SFC_RuntimeRenderer.vue'
 

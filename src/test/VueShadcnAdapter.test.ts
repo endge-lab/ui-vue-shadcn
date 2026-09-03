@@ -15,12 +15,12 @@ import {
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createApp, h, isVNode, nextTick } from 'vue'
 
-import { EndgeVueShadcn_Module } from '@/model/kernel/EndgeVueShadcn_Module'
-import { SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS } from '@/model/render/sfc/sfc-shadcn-render.type'
+import { EndgeVueShadcn_Module } from '@/modules/EndgeVueShadcn_Module'
+import { SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS } from '@/services/render/sfc/sfc-shadcn-render.type'
 import {
   VUE_SHADCN_SFC_ADAPTER_ID,
   VueShadcnSFCAdapter,
-} from '@/model/render/sfc/vue-shadcn-sfc-adapter'
+} from '@/services/render/sfc/vue-shadcn-sfc-adapter'
 import { createSFCVueRenderContext } from '@/ui/render/sfc/SFCRender_Context'
 import { renderSFCNode } from '@/ui/render/sfc/SFCRender_Node'
 

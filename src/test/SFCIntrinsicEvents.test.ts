@@ -7,8 +7,8 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { h, isVNode } from 'vue'
 
-import { SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS } from '@/model/render/sfc/sfc-shadcn-render.type'
-import { VueShadcnSFCAdapter } from '@/model/render/sfc/vue-shadcn-sfc-adapter'
+import { SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS } from '@/services/render/sfc/sfc-shadcn-render.type'
+import { VueShadcnSFCAdapter } from '@/services/render/sfc/vue-shadcn-sfc-adapter'
 import { createSFCVueRenderContext } from '@/ui/render/sfc/SFCRender_Context'
 import { renderSFCNode } from '@/ui/render/sfc/SFCRender_Node'
 

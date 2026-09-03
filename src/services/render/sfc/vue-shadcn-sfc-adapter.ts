@@ -1,4 +1,4 @@
-import type { SFCVueRenderAdapter } from '@/model/render/sfc/sfc-shadcn-render.type'
+import type { SFCVueRenderAdapter } from '@/services/render/sfc/sfc-shadcn-render.type'
 import {
   ENDGE_SFC_RENDER_ADAPTER_PROTOCOL,
   ENDGE_SFC_RENDER_ADAPTER_PROTOCOL_VERSION,
@@ -20,9 +20,9 @@ import {
   VueShadcnRender_Select,
   VueShadcnRender_Text,
   VueShadcnRender_Textarea,
-} from '@/model/render/sfc/vue-shadcn-renderers'
-import { VueShadcnRender_Table } from '@/model/render/sfc/vue-shadcn-table-renderer'
-import { VueShadcnRender_Tooltip } from '@/model/render/sfc/vue-shadcn-tooltip-renderer'
+} from '@/services/render/sfc/vue-shadcn-renderers'
+import { VueShadcnRender_Table } from '@/services/render/sfc/vue-shadcn-table-renderer'
+import { VueShadcnRender_Tooltip } from '@/services/render/sfc/vue-shadcn-tooltip-renderer'
 import VueShadcnFilterRenderer from '@/ui/filter/VueShadcnFilterRenderer.vue'
 
 import VueShadcnShell from '@/ui/layout/VueShadcnShell.vue'

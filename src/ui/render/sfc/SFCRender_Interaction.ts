@@ -9,7 +9,7 @@ import type {
   RComponentSFC_IR_InteractionRule,
 } from '@endge/core'
 import type { KeyboardStateSnapshot } from '@endge/utils'
-import type { SFCVueRenderContext } from '@/model/render/sfc/sfc-shadcn-render.type'
+import type { SFCVueRenderContext } from '@/services/render/sfc/sfc-shadcn-render.type'
 
 import {
   matchesComponentSFCInteractionTrigger,

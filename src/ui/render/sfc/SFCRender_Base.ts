@@ -11,10 +11,10 @@ import type {
   SFCVueRenderElementInput,
   SFCVueRenderFunction,
   SFCVueRenderResult,
-} from '@/model/render/sfc/sfc-shadcn-render.type'
+} from '@/services/render/sfc/sfc-shadcn-render.type'
 import { createEndgeTooltipDomId, getComponentSFCIntrinsicEventDefinitions } from '@endge/core'
-import { createSFCInspectionAttrs, registerSFCInspectionElement } from '@/model/render/sfc/SFCVueRenderInspection'
-import { getEndgeDOMStyleClasses } from '@/model/style/endge-dom-style'
+import { createSFCInspectionAttrs, registerSFCInspectionElement } from '@/services/render/sfc/SFCVueRenderInspection'
+import { getEndgeDOMStyleClasses } from '@/services/style/endge-dom-style'
 import { attachShadcnTooltipAttrs } from '@/ui/overlay/tooltip/shadcn-tooltip-manager'
 import { extendSFCVueRenderContext, extendSFCVueStyleContext } from '@/ui/render/sfc/SFCRender_Context'
 import {

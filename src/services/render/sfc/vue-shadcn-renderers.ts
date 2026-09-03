@@ -1,5 +1,5 @@
 import type { SourceFieldOption, SourceFieldType } from '@endge/core'
-import type { SFCVueRenderAdapterFunction } from '@/model/render/sfc/sfc-shadcn-render.type'
+import type { SFCVueRenderAdapterFunction } from '@/services/render/sfc/sfc-shadcn-render.type'
 import { isoToDateInput, isoToDateTimeLocalInput, timeToTimeInput } from '@endge/utils'
 
 import ShadcnBadge from '@/ui/primitives/ShadcnBadge.vue'

@@ -1,5 +1,5 @@
 import type { ComponentSFCEventBoundary, ComponentSFCRequiredPortBinding, ComponentSFCRuntimeHost, EndgeStyleMatchNode, EndgeStyleSheetArtifact, ProgramMetadata, RComponentSFC_IR, SFCRenderInspectionSessionLike } from '@endge/core'
-import type { SFCVueRenderContext, SFCVueRenderIteration } from '@/model/render/sfc/sfc-shadcn-render.type'
+import type { SFCVueRenderContext, SFCVueRenderIteration } from '@/services/render/sfc/sfc-shadcn-render.type'
 import type { ShadcnTooltipManager } from '@/ui/overlay/tooltip/shadcn-tooltip-manager'
 import { Endge, ComponentSFCEventBoundary as EndgeComponentSFCEventBoundary } from '@endge/core'
 import { evaluateSFCValue } from '@/ui/render/sfc/SFCRender_Evaluator'

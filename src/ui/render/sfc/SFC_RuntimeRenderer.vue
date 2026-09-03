@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { SFCVueRuntimeRendererProps } from '@/model/render/sfc/sfc-shadcn-render.type'
+import type { SFCVueRuntimeRendererProps } from '@/services/render/sfc/sfc-shadcn-render.type'
 import { onBeforeUnmount, provide, ref, shallowRef, watch } from 'vue'
-import { SFCVueRuntimeBridge } from '@/model/render/sfc/SFCVueRuntimeBridge'
+import { SFCVueRuntimeBridge } from '@/services/render/sfc/SFCVueRuntimeBridge'
 import SFC_Renderer from '@/ui/render/sfc/SFC_Renderer.vue'
 import {
   createSFCVueBoundaryRegistry,

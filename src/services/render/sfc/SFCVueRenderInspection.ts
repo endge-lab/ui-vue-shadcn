@@ -4,7 +4,7 @@ import type {
   RComponentSFC_IR_Value,
   SFCRenderInspectionBinding,
 } from '@endge/core'
-import type { SFCVueRenderContext } from '@/model/render/sfc/sfc-shadcn-render.type'
+import type { SFCVueRenderContext } from '@/services/render/sfc/sfc-shadcn-render.type'
 
 /** Registers the authored component boundary that owns the current IR roots. */
 export function registerSFCInspectionRoot(context: SFCVueRenderContext): string | null {

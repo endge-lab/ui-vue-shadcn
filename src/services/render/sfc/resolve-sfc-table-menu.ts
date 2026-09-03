@@ -1,5 +1,5 @@
 import type { ComponentSFCTableMenuDescriptor, ContextMenuDescriptor, ContextMenuNodeDescriptor } from '@endge/core'
-import type { SFCVueRenderContext } from '@/model/render/sfc/sfc-shadcn-render.type'
+import type { SFCVueRenderContext } from '@/services/render/sfc/sfc-shadcn-render.type'
 import { evaluateSFCValue } from '@/ui/render/sfc/SFCRender_Evaluator'
 
 export function resolveSFCTableMenu(

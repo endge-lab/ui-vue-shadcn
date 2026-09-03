@@ -1,7 +1,7 @@
 import type { EndgeStyleMatchNode } from '@endge/core'
 import type {
   SFCVueRenderContext,
-} from '@/model/render/sfc/sfc-shadcn-render.type'
+} from '@/services/render/sfc/sfc-shadcn-render.type'
 import type {
   SFCTableColumnStyleSurfaces,
   SFCTablePublicPart,

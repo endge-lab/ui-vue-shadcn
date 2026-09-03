@@ -8,9 +8,9 @@ import {
 
 } from '@endge/core'
 
-import { SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS } from '@/model/render/sfc/sfc-shadcn-render.type'
-import { VueShadcnSFCAdapter } from '@/model/render/sfc/vue-shadcn-sfc-adapter'
-import { EndgeDOMStyleRuntime } from '@/model/style/EndgeDOMStyleRuntime'
+import { SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS } from '@/services/render/sfc/sfc-shadcn-render.type'
+import { VueShadcnSFCAdapter } from '@/services/render/sfc/vue-shadcn-sfc-adapter'
+import { EndgeDOMStyleRuntime } from '@/services/style/EndgeDOMStyleRuntime'
 
 /** Регистрирует системный vue-shadcn adapter в общем UI registry. */
 export class EndgeVueShadcn_Module extends EndgeModule {

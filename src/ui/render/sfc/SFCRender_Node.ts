@@ -6,9 +6,9 @@ import type {
   SFCVueRenderH,
   SFCVueRenderListResult,
   SFCVueRenderResult,
-} from '@/model/render/sfc/sfc-shadcn-render.type'
-import { SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS } from '@/model/render/sfc/sfc-shadcn-render.type'
-import { registerSFCInspectionDefinitionTree, registerSFCInspectionValueNode } from '@/model/render/sfc/SFCVueRenderInspection'
+} from '@/services/render/sfc/sfc-shadcn-render.type'
+import { SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS } from '@/services/render/sfc/sfc-shadcn-render.type'
+import { registerSFCInspectionDefinitionTree, registerSFCInspectionValueNode } from '@/services/render/sfc/SFCVueRenderInspection'
 import { requireSFCAdapterRenderer } from '@/ui/render/sfc/SFCRender_Adapter'
 import { resolveSFCConditionState, SFCRender_Base } from '@/ui/render/sfc/SFCRender_Base'
 import { SFCRender_Component } from '@/ui/render/sfc/SFCRender_Component'
