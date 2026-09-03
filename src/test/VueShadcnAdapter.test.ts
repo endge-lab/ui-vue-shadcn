@@ -15,7 +15,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createApp, h, isVNode, nextTick } from 'vue'
 
-import { EndgeVueShadcnModule } from '@/model/kernel/endge-vue-shadcn'
+import { EndgeVueShadcn_Module } from '@/model/kernel/EndgeVueShadcn_Module'
 import { SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS } from '@/model/render/sfc/sfc-shadcn-render.type'
 import {
   VUE_SHADCN_SFC_ADAPTER_ID,
@@ -68,7 +68,7 @@ describe('vueShadcnSFCAdapter', () => {
   beforeEach(() => {
     Endge.uiRegistry.adapters.reset()
     Endge.workspace.apply(TEST_WORKSPACE)
-    new EndgeVueShadcnModule().setup()
+    new EndgeVueShadcn_Module().setup()
     Endge.uiRegistry.adapters.activate({
       id: VUE_SHADCN_SFC_ADAPTER_ID,
       protocol: ENDGE_SFC_RENDER_ADAPTER_PROTOCOL,
@@ -194,7 +194,7 @@ describe('vueShadcnSFCAdapter', () => {
 
   it('owns workspace activation without the Native Vue module', () => {
     Endge.uiRegistry.adapters.reset()
-    const module = new EndgeVueShadcnModule()
+    const module = new EndgeVueShadcn_Module()
     module.setup()
     module.build()
     module.start()

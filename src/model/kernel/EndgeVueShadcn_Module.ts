@@ -13,7 +13,7 @@ import { VueShadcnSFCAdapter } from '@/model/render/sfc/vue-shadcn-sfc-adapter'
 import { EndgeDOMStyleRuntime } from '@/model/style/EndgeDOMStyleRuntime'
 
 /** Регистрирует системный vue-shadcn adapter в общем UI registry. */
-export class EndgeVueShadcnModule extends EndgeModule {
+export class EndgeVueShadcn_Module extends EndgeModule {
   private _started = false
   private _adapterFallbackIds: readonly string[] = []
   private _unsubscribeWorkspace: (() => void) | null = null
@@ -106,7 +106,7 @@ export const EndgeVueShadcnPlugin: EndgePlugin = {
   install(): void {
     Endge.defineModule({
       key: 'vueShadcn',
-      module: new EndgeVueShadcnModule(),
+      module: new EndgeVueShadcn_Module(),
       before: 'runtime',
     })
   },
