@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest'
 import { registerSFCInspectionElement, registerSFCInspectionRoot } from '@/services/render/sfc/SFCVueRenderInspection'
 import { createSFCVueRenderContext, extendSFCVueRenderContext } from '@/ui/render/sfc/SFCRender_Context'
 
-describe('sFCVueRenderInspection', () => {
-  it('registers concrete table-cell data under a stable row-key scope', () => {
+describe('инспекция render SFC Vue', () => {
+  it('регистрирует конкретные данные ячейки таблицы в стабильном scope ключа строки', () => {
     const session = new SFCRenderInspectionSession()
     const context = createSFCVueRenderContext(
       { rows: [{ id: 'SU-100', status: 'boarding' }] },

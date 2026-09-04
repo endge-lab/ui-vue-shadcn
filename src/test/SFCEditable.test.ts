@@ -38,7 +38,7 @@ defineProps<{ rows: Array<{ id: number, status: string }> }>()
   </Table>
 </template>`
 
-describe('shadcn SFC Editable integration', () => {
+describe('интеграция Editable SFC Shadcn', () => {
   beforeEach(() => {
     vi.stubGlobal('ResizeObserver', class {
       observe() {}
@@ -66,7 +66,7 @@ describe('shadcn SFC Editable integration', () => {
     vi.restoreAllMocks()
   })
 
-  it('opens the primitive editor in a virtualized cell and publishes edited on commit', async () => {
+  it('открывает редактор примитива в виртуализированной ячейке и публикует edited при фиксации', async () => {
     const mounted = await mountRuntimeTable()
     const display = mounted.root.querySelector<HTMLElement>('.endge-shadcn-text')
     expect(display?.textContent).toBe('RUN')

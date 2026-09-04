@@ -16,7 +16,7 @@ import {
 } from '@endge/core'
 import { defineComponent, h } from 'vue'
 
-/** Renders a semantic filter control through the active vue-shadcn adapter. */
+/** Отображает семантический элемент управления фильтром через активный адаптер vue-shadcn. */
 export const VueShadcnFilterControlRenderer = defineComponent({
   name: 'VueShadcnFilterControlRenderer',
   props: {

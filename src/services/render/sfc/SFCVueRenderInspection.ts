@@ -6,7 +6,7 @@ import type {
 } from '@endge/core'
 import type { SFCVueRenderContext } from '@/services/render/sfc/sfc-shadcn-render.type'
 
-/** Registers the authored component boundary that owns the current IR roots. */
+/** Регистрирует пользовательскую границу компонента, владеющую текущими корнями IR. */
 export function registerSFCInspectionRoot(context: SFCVueRenderContext): string | null {
   if (!context.inspection) {
     return null
@@ -29,7 +29,7 @@ export function registerSFCInspectionRoot(context: SFCVueRenderContext): string 
   })
 }
 
-/** Registers one evaluated IR element instance and returns its DOM-neutral id. */
+/** Регистрирует один вычисленный экземпляр элемента IR и возвращает его нейтральный к DOM id. */
 export function registerSFCInspectionElement(
   node: RComponentSFC_IR_ElementNode,
   props: Record<string, unknown>,
@@ -66,7 +66,7 @@ export function registerSFCInspectionElement(
   })
 }
 
-/** Registers text/interpolation nodes even though they do not own a DOM element. */
+/** Регистрирует узлы текста и интерполяции, хотя они не владеют DOM-элементом. */
 export function registerSFCInspectionValueNode(
   node: Exclude<RComponentSFC_IR_Node, RComponentSFC_IR_ElementNode>,
   value: unknown,
@@ -94,7 +94,7 @@ export function registerSFCInspectionValueNode(
   })
 }
 
-/** Registers a logical template branch without executing its cell renderers. */
+/** Регистрирует логическую ветвь template без выполнения renderer ячеек. */
 export function registerSFCInspectionDefinitionTree(
   node: RComponentSFC_IR_Node,
   context: SFCVueRenderContext,
@@ -137,7 +137,7 @@ export function registerSFCInspectionDefinitionTree(
   return id
 }
 
-/** Adds only a locator to DOM renderers; the semantic contract stays session-based. */
+/** Добавляет в DOM-renderers только locator; семантический контракт остаётся основанным на сессии. */
 export function createSFCInspectionAttrs(
   context: SFCVueRenderContext,
   id: string | null,

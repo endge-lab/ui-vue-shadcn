@@ -104,7 +104,7 @@ export function resolveShadcnMenuItemLabel(item: ContextMenuItemDescriptor): str
     }
   }
   catch {
-    // A shell can mount before workspace locale hydration; the descriptor label is its safe fallback.
+    // Shell может смонтироваться до гидратации локали workspace; метка описателя служит безопасным fallback.
   }
   return item.label
 }

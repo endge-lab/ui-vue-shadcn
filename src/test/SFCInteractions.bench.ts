@@ -26,7 +26,7 @@ context.eventBoundary = {
   routeChild: async () => undefined,
 } as any
 
-describe('shadcn Vue SFC interaction bridge benchmarks', () => {
+describe('бенчмарки моста взаимодействий SFC Shadcn Vue', () => {
   bench('attach listeners to 10k visual nodes', () => {
     for (let index = 0; index < 10_000; index++) {
       attachSFCInteractionAttrs({}, { ...node, id: `node-${index}` }, {}, context)

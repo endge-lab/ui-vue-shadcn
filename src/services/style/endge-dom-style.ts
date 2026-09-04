@@ -57,7 +57,7 @@ function collectCapabilities(rule: EndgeStyleRule): string[] {
   return result
 }
 
-/** Converts neutral EndgeCSS artifacts to browser CSS over generated runtime classes. */
+/** Преобразует нейтральные артефакты EndgeCSS в браузерный CSS поверх сгенерированных runtime-классов. */
 export function materializeEndgeCSSForDOM(
   inputs: readonly EndgeDOMStyleInput[],
   target: EndgeStyleTargetProfile = { renderer: 'dom', capabilities: [] },
@@ -141,9 +141,9 @@ export function materializeEndgeCSSForDOM(
   const css = declarations.map((declaration) => {
     let baseSelector = declaration.className.startsWith(':root') || declaration.className.startsWith('[data-')
       ? declaration.className
-      // Every generated class has the same non-zero CSS specificity. Endge has
-      // already resolved its own specificity through declaration order, while
-      // the class must still be able to override renderer/vendor tag defaults.
+      // Все сгенерированные классы имеют одинаковую ненулевую специфичность CSS. Endge уже
+      // разрешил собственную специфичность порядком объявлений, при этом класс всё ещё
+      // должен иметь возможность переопределить стандартные теги renderer или vendor.
       : `.${declaration.className}`
     if (declaration.boundaryId) {
       const marker = `[data-endge-runtime-scope~=${cssString(declaration.boundaryId)}]`
@@ -172,7 +172,7 @@ function isPlacement(input: EndgeDOMStyleInput): input is EndgeStylePlacement {
   return 'artifact' in input && 'boundaryId' in input
 }
 
-/** Returns stable classes for all neutral selectors matching one logical node. */
+/** Возвращает стабильные классы для всех нейтральных селекторов, соответствующих одному логическому узлу. */
 export function getEndgeDOMStyleClasses(
   artifacts: readonly EndgeStyleSheetArtifact[],
   node: EndgeStyleMatchNode,

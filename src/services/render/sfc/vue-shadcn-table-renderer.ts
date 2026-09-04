@@ -23,7 +23,7 @@ import {
 } from '@/ui/render/sfc/SFCRender_TableStyle'
 import ShadcnSfcDataTable from '@/ui/table/ShadcnSfcDataTable.vue'
 
-/** Shadcn/TanStack implementation of the compound SFC Table tag. */
+/** Реализация Shadcn/TanStack составного тега SFC Table. */
 export const VueShadcnRender_Table: SFCVueRenderFunction = SFCRender_Base((input) => {
   const rows = normalizeRows(input.props.rows)
   const explicitHeight = input.props.height ?? input.props.h
@@ -116,9 +116,9 @@ export const VueShadcnRender_Table: SFCVueRenderFunction = SFCRender_Base((input
           $cell: { value },
           row,
           rowIndex,
-          // TanStack requires its internal row id to be a string, but the SFC
-          // lexical rowKey must preserve the authored data type. Store
-          // selectors commonly compare numeric ids and must receive a number.
+          // TanStack требует строковый внутренний идентификатор строки, но лексический
+          // rowKey в SFC должен сохранять авторский тип данных. Селекторы Store
+          // часто сравнивают числовые идентификаторы и должны получать число.
           rowKey: resolveLexicalRowKey(row[rowKey], rowId),
           columnKey: column.key,
           columnMeta: column.metadata ?? {},

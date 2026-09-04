@@ -31,7 +31,7 @@ import SFC_RuntimeRenderer from '@/ui/render/sfc/SFC_RuntimeRenderer.vue'
 
 export const VUE_SHADCN_SFC_ADAPTER_ID = 'vue-shadcn'
 
-/** Self-contained vue-shadcn visual adapter for the Endge Vue SFC renderer. */
+/** Самодостаточный визуальный адаптер vue-shadcn для renderer Endge Vue SFC. */
 export const VueShadcnSFCAdapter: SFCVueRenderAdapter = {
   id: VUE_SHADCN_SFC_ADAPTER_ID,
   protocol: ENDGE_SFC_RENDER_ADAPTER_PROTOCOL,

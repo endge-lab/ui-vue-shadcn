@@ -8,10 +8,10 @@ import {
   openShadcnMenu,
 } from '@/ui/overlay/shadcn-menu-manager'
 
-describe('vue-shadcn menu Actions', () => {
+describe('проверка Actions меню Vue Shadcn', () => {
   afterEach(() => closeShadcnMenu())
 
-  it('passes compiled input to the unified Action facade', async () => {
+  it('передаёт скомпилированный input в единый facade Action', async () => {
     const consoleLog = vi.spyOn(console, 'log').mockImplementation(() => {})
     openShadcnMenu({
       ownerId: 'test-menu',

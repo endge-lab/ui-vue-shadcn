@@ -15,13 +15,13 @@ import { createApp, h, nextTick } from 'vue'
 import { createSFCVueRenderContext } from '@/ui/render/sfc/SFCRender_Context'
 import ShadcnSfcDataTable from '@/ui/table/ShadcnSfcDataTable.vue'
 
-describe('vueShadcnSfcDataTable virtualization', () => {
+describe('виртуализация VueShadcnSfcDataTable', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
     vi.restoreAllMocks()
   })
 
-  it('uses safe collection defaults and ignores malformed persisted table state', async () => {
+  it('использует безопасные значения коллекции по умолчанию и игнорирует повреждённое сохранённое состояние таблицы', async () => {
     vi.stubGlobal('ResizeObserver', class {
       observe() {}
       unobserve() {}
@@ -67,7 +67,7 @@ describe('vueShadcnSfcDataTable virtualization', () => {
     app.unmount()
   })
 
-  it('does not crash setup when collection props contain null from a stale runtime artifact', async () => {
+  it('не нарушает setup, когда props коллекции содержат null из устаревшего runtime-артефакта', async () => {
     vi.stubGlobal('ResizeObserver', class {
       observe() {}
       unobserve() {}
@@ -103,7 +103,7 @@ describe('vueShadcnSfcDataTable virtualization', () => {
     app.unmount()
   })
 
-  it('uses pagination defaults with lazy and virtualizes the active page', async () => {
+  it('использует стандартные настройки pagination с lazy и виртуализирует активную страницу', async () => {
     vi.stubGlobal('ResizeObserver', class {
       observe() {}
       unobserve() {}
@@ -168,7 +168,7 @@ describe('vueShadcnSfcDataTable virtualization', () => {
     app.unmount()
   })
 
-  it('virtualizes the complete local collection without rendering pagination', async () => {
+  it('виртуализирует полную локальную коллекцию без render pagination', async () => {
     vi.stubGlobal('ResizeObserver', class {
       observe() {}
       unobserve() {}
@@ -233,7 +233,7 @@ describe('vueShadcnSfcDataTable virtualization', () => {
     app.unmount()
   })
 
-  it('publishes renderer-neutral row and selection Events without initial occurrences', async () => {
+  it('публикует независимые от renderer Events строк и выбора без начальных вхождений', async () => {
     vi.stubGlobal('ResizeObserver', class {
       observe() {}
       unobserve() {}

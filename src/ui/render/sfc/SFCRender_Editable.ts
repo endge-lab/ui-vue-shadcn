@@ -46,17 +46,17 @@ const DEFAULT_COMMIT_TRIGGERS: RComponentSFC_IR_Value = {
   value: [{ event: 'keydown', key: ['Enter'], prevent: true }],
 }
 
-/** Stable host-owned key shared by display, edit and virtualized Table renders. */
+/** Стабильный ключ host, общий для отображения, редактирования и виртуализированных renders Table. */
 export function editableConsumerKey(node: RComponentSFC_IR_ElementNode, context: SFCVueRenderContext): string {
   return `${context.consumerScope}/editable:${node.id}`
 }
 
-/** Returns true while this exact consumer owns the runtime's single edit session. */
+/** Возвращает true, пока именно этот потребитель владеет единственной сессией редактирования runtime. */
 export function isSFCEditableActive(node: RComponentSFC_IR_ElementNode, context: SFCVueRenderContext): boolean {
   return Boolean(node.editable && context.host?.getEditSession(editableConsumerKey(node, context)))
 }
 
-/** Adds entry/cancel/commit listeners without replacing authored semantic handlers. */
+/** Добавляет listeners входа, отмены и подтверждения без замены авторских семантических handlers. */
 export function attachSFCEditableAttrs(
   attrs: Record<string, unknown>,
   node: RComponentSFC_IR_ElementNode,
@@ -105,7 +105,7 @@ export function attachSFCEditableAttrs(
   }
 }
 
-/** Renders built-in editors for the three primitive shortcuts. */
+/** Отображает встроенные редакторы для трёх сокращений примитивов. */
 export function renderSFCEditablePrimitive(
   input: SFCVueRenderElementInput & { props: Record<string, unknown>, attrs: Record<string, unknown> },
 ): SFCVueRenderResult | undefined {
@@ -209,7 +209,7 @@ function focusRemainsInside(event: Event): boolean {
   return Boolean(current && related && current.contains(related))
 }
 
-/** Commits an editable child event and returns the normalized payload for parent routing. */
+/** Подтверждает событие редактируемого дочернего элемента и возвращает нормализованную нагрузку для маршрутизации родителем. */
 export function commitSFCEditableChild(
   node: RComponentSFC_IR_ElementNode,
   context: SFCVueRenderContext,

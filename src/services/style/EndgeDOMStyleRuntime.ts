@@ -2,7 +2,7 @@ import type { EndgeStylePlacement, EndgeStyleSheetArtifact, EndgeStyleTargetProf
 
 import { materializeEndgeCSSForDOM } from '@/services/style/endge-dom-style'
 
-/** Owns one atomically replaced stylesheet for the Vue DOM renderer. */
+/** Владеет одной атомарно заменяемой таблицей стилей для Vue DOM renderer. */
 export class EndgeDOMStyleRuntime {
   private _sheet: CSSStyleSheet | null = null
   private _fallback: HTMLStyleElement | null = null

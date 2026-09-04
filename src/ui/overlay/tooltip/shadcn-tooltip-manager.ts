@@ -37,7 +37,7 @@ export interface ShadcnTooltipState {
   content: VNodeChild | null
 }
 
-/** Shadcn-specific single-overlay manager; it never registers dormant cell instances. */
+/** Специфичный для Shadcn manager единственного overlay; он не регистрирует неактивные экземпляры ячеек. */
 export class ShadcnTooltipManager {
   public readonly state: ShadcnTooltipState
   private readonly _defaults: EndgeTooltipConfiguration

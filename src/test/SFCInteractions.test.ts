@@ -16,7 +16,7 @@ import { createSFCVueRenderContext } from '@/ui/render/sfc/SFCRender_Context'
 import { createSFCSemanticInteractionBindings } from '@/ui/render/sfc/SFCRender_Interaction'
 import { renderSFCNode } from '@/ui/render/sfc/SFCRender_Node'
 
-describe('sFC :on interactions in Shadcn Vue renderer', () => {
+describe('взаимодействия :on SFC в renderer Shadcn Vue', () => {
   beforeEach(() => {
     Endge.uiRegistry.adapters.reset()
     Endge.uiRegistry.adapters.register(VueShadcnSFCAdapter)
@@ -31,7 +31,7 @@ describe('sFC :on interactions in Shadcn Vue renderer', () => {
 
   afterEach(() => Endge.uiRegistry.adapters.reset())
 
-  it('compiles Source, selects the first matching rule and routes ordered reactions', async () => {
+  it('компилирует Source, выбирает первое совпавшее правило и маршрутизирует упорядоченные реакции', async () => {
     const node = compileText(`<Text value="Open" :on.stop.prevent.self.once="[
       { event: 'click', button: 1, reaction: action({ identity: 'wrong' }) },
       { event: 'click', button: 0, held: { code: ['KeyW'], exact: true }, modifiers: { shift: true }, reaction: [action({ identity: 'first' }), action({ identity: 'second' })] },
@@ -128,7 +128,7 @@ describe('sFC :on interactions in Shadcn Vue renderer', () => {
     document.dispatchEvent(new KeyboardEvent('keyup', { key: 'w', code: 'KeyW', bubbles: true }))
   })
 
-  it('uses capture/passive VNode options and keeps :on independent from editable', () => {
+  it('использует параметры capture/passive VNode и сохраняет :on независимым от editable', () => {
     const node = compileText(`<Text value="Open" editable edit-on="click" :on.capture.passive="{ event: 'click', reaction: action({ identity: 'audit' }) }" />`)
     const boundary = {
       observesChild: vi.fn(() => false),
@@ -180,7 +180,7 @@ describe('sFC :on interactions in Shadcn Vue renderer', () => {
     expect(host.beginEditSession).toHaveBeenCalledOnce()
   })
 
-  it('projects nested component :on rules to the semantic Event boundary', () => {
+  it('проецирует правила :on вложенного компонента на семантическую границу Event', () => {
     const node: RComponentSFC_IR_ElementNode = {
       id: 'child',
       kind: 'element',
@@ -205,7 +205,7 @@ describe('sFC :on interactions in Shadcn Vue renderer', () => {
     ])
   })
 
-  it('attaches Cell interactions to the table cell surface with row and column locals', async () => {
+  it('присоединяет взаимодействия Cell к поверхности ячейки таблицы с локальными row и column', async () => {
     const result = compileComponentSFC(`<template><Table :rows="rows" row-key="id"><Column key="status"><Cell :on="{ event: 'click', modifiers: { shift: true }, held: { code: ['KeyW'] }, reaction: action({ identity: 'cell.inspect' }) }"><Text>{{ value }}</Text></Cell></Column></Table></template>`)
     const node = result.ir?.template?.roots[0]
     if (!node || node.kind !== 'element') {

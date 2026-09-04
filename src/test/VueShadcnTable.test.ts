@@ -50,7 +50,7 @@ const ROWS = [
   { id: '1', flight: 'SU 100', gate: 'A04' },
 ]
 
-describe('vueShadcnRender_Table', () => {
+describe('отрисовка Table Vue Shadcn', () => {
   beforeEach(() => {
     vi.stubGlobal('ResizeObserver', class {
       observe() {}
@@ -77,7 +77,7 @@ describe('vueShadcnRender_Table', () => {
     vi.restoreAllMocks()
   })
 
-  it('renders nested SFC primitives inside TanStack cells and sorts rows', async () => {
+  it('отрисовывает вложенные примитивы SFC в ячейках TanStack и сортирует строки', async () => {
     const mounted = await mountTable()
 
     expect(mounted.root.querySelectorAll('.endge-shadcn-badge')).toHaveLength(2)
@@ -102,7 +102,7 @@ describe('vueShadcnRender_Table', () => {
     mounted.unmount()
   })
 
-  it('restores column order and allows visibility changes from the column manager', async () => {
+  it('восстанавливает порядок столбцов и разрешает изменение видимости из менеджера столбцов', async () => {
     const runtimeState = {
       runtimeId: 'runtime-test',
       storageKey: 'runtime-test',
@@ -135,7 +135,7 @@ describe('vueShadcnRender_Table', () => {
     mounted.unmount()
   })
 
-  it('uses default-hidden as the initial TanStack visibility state', async () => {
+  it('использует default-hidden как начальное состояние видимости TanStack', async () => {
     const mounted = await mountTable(null, HIDDEN_GATE_TABLE_SOURCE)
 
     expect(readHeaders(mounted.root)).toEqual(['Flight'])
@@ -152,7 +152,7 @@ describe('vueShadcnRender_Table', () => {
     mounted.unmount()
   })
 
-  it('recognizes lazy and paginates materialized rows with declarative page settings', async () => {
+  it('распознаёт lazy и разбивает материализованные строки по декларативным настройкам страниц', async () => {
     const mounted = await mountTable(null, LAZY_TABLE_SOURCE)
 
     expect(mounted.root.querySelector('.endge-shadcn-table')?.getAttribute('data-lazy')).toBe('true')
@@ -169,7 +169,7 @@ describe('vueShadcnRender_Table', () => {
     mounted.unmount()
   })
 
-  it('uses 10 rows per page by default', async () => {
+  it('по умолчанию использует 10 строк на страницу', async () => {
     const rows = Array.from({ length: 11 }, (_, index) => ({
       id: String(index),
       flight: `SU ${String(index).padStart(3, '0')}`,
@@ -183,7 +183,7 @@ describe('vueShadcnRender_Table', () => {
     mounted.unmount()
   })
 
-  it('renders the complete local collection as one virtualized row model', async () => {
+  it('отрисовывает полную локальную коллекцию как одну виртуализированную модель строк', async () => {
     const rows = Array.from({ length: 11 }, (_, index) => ({
       id: String(index),
       flight: `SU ${String(index).padStart(3, '0')}`,

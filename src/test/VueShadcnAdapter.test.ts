@@ -64,7 +64,7 @@ const TEST_WORKSPACE: EndgeWorkspaceDefinition = {
   },
 }
 
-describe('vueShadcnSFCAdapter', () => {
+describe('проверка SFC-адаптер Vue Shadcn', () => {
   beforeEach(() => {
     Endge.uiRegistry.adapters.reset()
     Endge.workspace.apply(TEST_WORKSPACE)
@@ -84,13 +84,13 @@ describe('vueShadcnSFCAdapter', () => {
     Endge.workspace.apply(TEST_WORKSPACE)
   })
 
-  it('registers the complete Vue adapter contract', () => {
+  it('регистрирует полный контракт адаптера Vue', () => {
     expect(Endge.uiRegistry.adapters.active?.id).toBe('vue-shadcn')
     expect(Object.keys(VueShadcnSFCAdapter.renderers)).toEqual(SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS)
     expect(Object.keys(VueShadcnSFCAdapter.roots)).toEqual(['shell', 'sfc', 'sfc-runtime', 'filter-view'])
   })
 
-  it('maps the neutral background tone used by GroundHandlingProcess', () => {
+  it('сопоставляет нейтральный тон фона, используемый GroundHandlingProcess', () => {
     const node: RComponentSFC_IR_ElementNode = {
       id: 'test-neutral-flex',
       kind: 'element',
@@ -117,7 +117,7 @@ describe('vueShadcnSFCAdapter', () => {
     ['Date', 'date', '2026-07-13'],
     ['Time', 'time', '12:34'],
     ['DateTime', 'datetime-local', '2026-07-13T10:20'],
-  ])('renders %s through the shadcn input primitive', async (type, nativeType, expectedValue) => {
+  ])('отрисовывает %s через input-примитив Shadcn', async (type, nativeType, expectedValue) => {
     const sourceValue = type === 'Date'
       ? '2026-07-13T00:00:00.000Z'
       : type === 'Time'
@@ -134,7 +134,7 @@ describe('vueShadcnSFCAdapter', () => {
     mounted.unmount()
   })
 
-  it('renders textarea, checkbox and single/multiple select values', async () => {
+  it('отрисовывает значения textarea, checkbox и одиночного либо множественного select', async () => {
     const textarea = await mountControl('Textarea', {
       value: 'Комментарий',
       rows: 4,
@@ -178,7 +178,7 @@ describe('vueShadcnSFCAdapter', () => {
     multiple.unmount()
   })
 
-  it('does not expose runtime update callbacks from adapter renderers', () => {
+  it('не предоставляет callbacks runtime-обновления из renderers адаптера', () => {
     const controls: Array<[Extract<RComponentSFC_IR_Tag, 'Input' | 'Textarea' | 'Checkbox' | 'Select'>, Record<string, unknown>]> = [
       ['Input', { value: 'SU' }],
       ['Textarea', { value: 'Комментарий' }],
@@ -192,7 +192,7 @@ describe('vueShadcnSFCAdapter', () => {
     }
   })
 
-  it('owns workspace activation without the Native Vue module', () => {
+  it('владеет активацией Workspace без модуля Native Vue', () => {
     Endge.uiRegistry.adapters.reset()
     const module = new EndgeVueShadcn_Module()
     module.setup()
@@ -205,7 +205,7 @@ describe('vueShadcnSFCAdapter', () => {
     module.reset()
   })
 
-  it('renders generated filter views through its own adapter root', async () => {
+  it('отрисовывает сгенерированные представления фильтра через собственный корень адаптера', async () => {
     const runtime = {
       getRenderModel: () => ({
         implementation: { kind: 'generated' as const },

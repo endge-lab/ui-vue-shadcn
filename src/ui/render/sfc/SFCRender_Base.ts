@@ -225,7 +225,7 @@ function optionalText(value: unknown): string | undefined {
   return normalized || undefined
 }
 
-/** Connects intrinsic `@event` and conditional `:on` to a renderer-owned surface. */
+/** Подключает встроенные `@event` и условные `:on` к поверхности, принадлежащей renderer. */
 export function createSFCNodeEventAttrs(
   node: RComponentSFC_IR_ElementNode,
   props: Record<string, unknown>,

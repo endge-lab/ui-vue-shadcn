@@ -3,14 +3,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ShadcnTooltipManager } from '@/ui/overlay/tooltip/shadcn-tooltip-manager'
 
-describe('shadcnTooltipManager', () => {
+describe('менеджер tooltip Shadcn', () => {
   beforeEach(() => vi.useFakeTimers())
   afterEach(() => {
     vi.useRealTimers()
     document.body.replaceChildren()
   })
 
-  it('keeps one request, renders lazily and clears recycled anchors', () => {
+  it('сохраняет один запрос, лениво отрисовывает и очищает повторно используемые anchors', () => {
     const first = document.createElement('span')
     const second = document.createElement('span')
     document.body.append(first, second)
@@ -29,7 +29,7 @@ describe('shadcnTooltipManager', () => {
     expect(manager.state.content).toBeNull()
   })
 
-  it('cancels pending content and releases the anchor on dispose', () => {
+  it('отменяет ожидающее содержимое и освобождает anchor при dispose', () => {
     const anchor = document.createElement('span')
     document.body.append(anchor)
     const renderContent = vi.fn(() => 'never')

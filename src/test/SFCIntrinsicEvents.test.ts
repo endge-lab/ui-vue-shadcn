@@ -12,7 +12,7 @@ import { VueShadcnSFCAdapter } from '@/services/render/sfc/vue-shadcn-sfc-adapte
 import { createSFCVueRenderContext } from '@/ui/render/sfc/SFCRender_Context'
 import { renderSFCNode } from '@/ui/render/sfc/SFCRender_Node'
 
-describe('sFC intrinsic Events in shadcn renderer', () => {
+describe('встроенные Events SFC в renderer Shadcn', () => {
   beforeEach(() => {
     Endge.uiRegistry.adapters.reset()
     Endge.uiRegistry.adapters.register(VueShadcnSFCAdapter)
@@ -27,7 +27,7 @@ describe('sFC intrinsic Events in shadcn renderer', () => {
 
   afterEach(() => Endge.uiRegistry.adapters.reset())
 
-  it('routes a Text click through the same renderer-neutral boundary', () => {
+  it('маршрутизирует клик Text через ту же независимую от renderer границу', () => {
     const boundary = {
       observesChild: vi.fn(() => false),
       routeChild: vi.fn(async () => undefined),

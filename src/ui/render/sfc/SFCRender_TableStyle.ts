@@ -102,8 +102,8 @@ export function decorateSFCTableRows(
 ): Record<string, unknown>[] {
   cellSurfaceCaches.delete(contract)
 
-  // RevoGrid still exposes the public parts without EndgeCSS rules. Avoid
-  // creating logical match nodes and row clones in that common fast path.
+  // RevoGrid всё равно предоставляет публичные parts без правил EndgeCSS. Избегаем
+  // создания логических узлов сопоставления и копий строк в этом обычном быстром пути.
   if (!contract.context.styleArtifacts.some(artifact => artifact.rules.length > 0)) {
     return [...rows]
   }
@@ -136,9 +136,9 @@ export function decorateSFCTableRows(
 }
 
 /**
- * Decorates only one contiguous viewport window while preserving logical
- * row indexes from the complete table. TanStack adapters use this to avoid
- * materializing EndgeCSS match nodes for every row before first paint.
+ * Оформляет только одно непрерывное окно viewport, сохраняя логические индексы
+ * строк полной таблицы. Адаптеры TanStack избегают благодаря этому материализации
+ * узлов сопоставления EndgeCSS для каждой строки до первой отрисовки.
  */
 export function decorateSFCTableRowWindow(
   rows: readonly Record<string, unknown>[],
@@ -205,15 +205,15 @@ export function getSFCTableCellStyleSurfaces(
   const cacheKey = `${metadata.row.node.index}:${metadata.row.node.siblingCount}:${metadata.columnCount}:${columnIndex}:${normalizedStates.join(',')}`
   const cached = cache.get(cacheKey)
   if (cached) {
-    // Refresh insertion order so active viewport cells stay in the bounded LRU.
+    // Обновляем порядок вставки, чтобы активные ячейки viewport оставались в ограниченном LRU.
     cache.delete(cacheKey)
     cache.set(cacheKey, cached)
     return cached
   }
 
-  // RevoGrid virtualizes cells. Build the neutral sibling chain only for the
-  // cell it is currently asking the renderer to display, and do not retain it
-  // on any of the 10k+ source rows.
+  // RevoGrid виртуализирует ячейки. Строим нейтральную цепочку соседей только для ячейки,
+  // которую renderer должен отобразить сейчас, и не сохраняем эту цепочку
+  // ни в одной из более чем 10 тысяч исходных строк.
   let previousCell: EndgeStyleMatchNode | undefined
   let cell: SFCTablePublicSurface | undefined
   for (let index = 0; index <= columnIndex; index++) {
@@ -264,7 +264,7 @@ export function toRevoGridSurfaceProps(attrs: SFCTablePublicPartAttrs): Record<s
   }
 }
 
-/** Applies logical surfaces to RevoGrid-owned DOM without leaking vendor selectors into EndgeCSS. */
+/** Применяет логические поверхности к DOM, принадлежащему RevoGrid, не пропуская vendor-селекторы в EndgeCSS. */
 export function syncSFCTableDOMSurfaces(
   grid: HTMLElement,
   contract: SFCTableStyleContract,

@@ -10,7 +10,7 @@ import {
 } from '@endge/core'
 import { SFC_VUE_RENDER_ADAPTER_REQUIRED_KEYS } from '@/services/render/sfc/sfc-shadcn-render.type'
 
-/** Resolves one renderer from the active Shadcn adapter for structural renderers. */
+/** Получает один renderer из активного адаптера Shadcn для структурных renderers. */
 export function requireSFCAdapterRenderer(tag: SFCVueRenderAdapterKey): SFCVueRenderFunction {
   const adapter = Endge.uiRegistry.adapters.requireActive<SFCVueRenderFunction>({
     protocol: ENDGE_SFC_RENDER_ADAPTER_PROTOCOL,

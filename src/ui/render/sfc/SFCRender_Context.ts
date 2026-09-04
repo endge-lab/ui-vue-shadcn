@@ -97,7 +97,7 @@ export function extendSFCVueRenderContext(
   }
 }
 
-/** Creates a logical child frame without carrying physical Vue wrappers into selector semantics. */
+/** Создаёт логический дочерний frame, не перенося физические Vue-обёртки в семантику селекторов. */
 export function extendSFCVueStyleContext(
   context: SFCVueRenderContext,
   parent: EndgeStyleMatchNode,
