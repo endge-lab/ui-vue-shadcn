@@ -1,4 +1,4 @@
-import type { EndgeBootContext, EndgePlugin, EndgeStylePlacement } from '@endge/core'
+import type { EndgeBootContext, EndgeFederationContext, EndgePlugin, EndgeStylePlacement } from '@endge/core'
 import {
   Endge,
   ENDGE_SFC_RENDER_ADAPTER_PROTOCOL,
@@ -23,8 +23,8 @@ export class EndgeVueShadcn_Module extends EndgeModule {
   private _unsubscribeRuntimeScopes: (() => void) | null = null
   private readonly _styleRuntime = new EndgeDOMStyleRuntime()
 
-  public override setup(ctx?: EndgeBootContext): void {
-    this._adapterFallbackIds = ctx?.ui?.adapterFallbackIds ?? []
+  public override setup(ctx?: EndgeFederationContext): void {
+    this._adapterFallbackIds = (ctx as EndgeBootContext | undefined)?.ui?.adapterFallbackIds ?? []
     Endge.uiRegistry.adapters.register(VueShadcnSFCAdapter)
   }
 

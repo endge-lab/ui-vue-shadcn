@@ -127,7 +127,7 @@ function evaluatePortLocals(
       ?? call.defaultIdentity
     locals[call.local] = context.host
       ? context.host.getComputationResource(identity, input, consumerKey, call.port)
-      : Endge.runtime.computation.createResource(identity, input, consumerKey)
+      : Endge.computations.createResource(identity, input, consumerKey)
   }
   return locals
 }

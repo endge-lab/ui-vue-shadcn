@@ -87,7 +87,7 @@ export async function executeShadcnMenuItem(item: ContextMenuItemDescriptor): Pr
   }
 
   try {
-    await Endge.runtime.actions.execute(item.action, context, item.input)
+    await Endge.actions.execute(item.action, context, item.input)
   }
   finally {
     closeShadcnMenu()
