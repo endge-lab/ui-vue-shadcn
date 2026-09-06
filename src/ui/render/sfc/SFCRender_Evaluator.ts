@@ -550,6 +550,10 @@ function evaluateCallExpression(
     return UNSUPPORTED_EXPRESSION
   }
 
+  if (isDataMetaOfCallee(callee)) {
+    return evaluateDataMetaOf(node, context)
+  }
+
   const args = evaluateCallArguments(node.arguments, context)
   if (args === UNSUPPORTED_EXPRESSION) {
     return args
@@ -595,6 +599,71 @@ function evaluateCallExpression(
   }
 
   return callSafeInstance(receiver, method, args)
+}
+
+function isDataMetaOfCallee(callee: SFCExpressionNode): boolean {
+  if (callee.type !== 'MemberExpression' || callee.computed === true) {
+    return false
+  }
+  const object = asExpressionNode(callee.object)
+  const property = asExpressionNode(callee.property)
+  return object?.type === 'Identifier'
+    && readIdentifierName(object) === '$data'
+    && property?.type === 'Identifier'
+    && readIdentifierName(property) === 'metaOf'
+}
+
+function evaluateDataMetaOf(node: SFCExpressionNode, context: SFCVueRenderContext): unknown {
+  const args = Array.isArray(node.arguments) ? node.arguments.map(asExpressionNode) : []
+  if (!context.host || args.length < 1 || args.length > 2 || !args[0]) {
+    return undefined
+  }
+  const path = readStaticMemberPath(args[0])
+  const namespace = args[1]?.type === 'StringLiteral' ? String(args[1].value ?? '').trim() : undefined
+  if (!path.length || (args[1] && !namespace)) {
+    return undefined
+  }
+  if (path[0] === 'props') {
+    path.shift()
+  }
+  const prop = path[0]
+  if (prop && Object.hasOwn(context.props, prop)) {
+    return context.host.readDataMeta({ kind: 'prop', prop, path: path.slice(1) }, namespace)
+  }
+  const rowPath = path[0] === 'row'
+    ? path.slice(1)
+    : path[0] === '$row' && path[1] === 'data'
+      ? path.slice(2)
+      : null
+  if (!rowPath?.length || !context.dataScope) {
+    return undefined
+  }
+  return context.host.readDataMeta({
+    kind: 'table-row',
+    path: rowPath,
+    boundaryId: context.dataScope.boundaryId,
+    rowKey: context.dataScope.rowKey,
+  }, namespace)
+}
+
+function readStaticMemberPath(node: SFCExpressionNode): string[] {
+  if (node.type === 'Identifier') {
+    const name = readIdentifierName(node)
+    return typeof name === 'string' ? [name] : []
+  }
+  if (node.type !== 'MemberExpression' && node.type !== 'OptionalMemberExpression') {
+    return []
+  }
+  const object = asExpressionNode(node.object)
+  const property = asExpressionNode(node.property)
+  if (!object || !property) {
+    return []
+  }
+  const parent = readStaticMemberPath(object)
+  const key = node.computed === true
+    ? property.type === 'StringLiteral' ? String(property.value ?? '') : ''
+    : readIdentifierName(property)
+  return parent.length && typeof key === 'string' && key ? [...parent, key] : []
 }
 
 function evaluateCallArguments(

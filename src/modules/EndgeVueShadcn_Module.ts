@@ -100,14 +100,21 @@ export class EndgeVueShadcn_Module extends EndgeModule {
   }
 }
 
+declare module '@endge/core' {
+  interface EndgeExtensions {
+    readonly vueShadcn: EndgeVueShadcn_Module
+  }
+}
+
 /** Подключает vue-shadcn adapter к federation до Endge.boot(). */
 export const EndgeVueShadcnPlugin: EndgePlugin = {
   id: '@endge/ui-vue-shadcn',
-  install(): void {
-    Endge.defineModule({
+  modules: [
+    {
       key: 'vueShadcn',
-      module: new EndgeVueShadcn_Module(),
+      create: () => new EndgeVueShadcn_Module(),
+      after: ['configuration', 'uiRegistry'],
       before: 'runtime',
-    })
-  },
+    },
+  ],
 }

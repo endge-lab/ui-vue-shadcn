@@ -53,6 +53,8 @@ export interface SFCVueRenderContext {
   context: Readonly<EndgeRuntimeContextSnapshot>
   locals: Record<string, unknown>
   iteration: SFCVueRenderIteration | null
+  /** Provenance текущей строки для read-only `$data.metaOf(row.field)`. */
+  dataScope: { kind: 'table-row', boundaryId: string, rowKey: unknown } | null
   renderVersion: number
   host: ComponentSFCRuntimeHost | null
   runtimeState: SFCVueRuntimeStateController | null

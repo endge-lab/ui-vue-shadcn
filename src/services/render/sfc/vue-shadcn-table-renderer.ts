@@ -123,7 +123,11 @@ export const VueShadcnRender_Table: SFCVueRenderFunction = SFCRender_Base((input
           columnKey: column.key,
           columnMeta: column.metadata ?? {},
           value,
-        }, tableContext.iteration, `${tableContext.consumerScope}/row:${rowId}/column:${column.key}`)
+        }, tableContext.iteration, `${tableContext.consumerScope}/row:${rowId}/column:${column.key}`, {
+          kind: 'table-row',
+          boundaryId: input.node.id,
+          rowKey: resolveLexicalRowKey(row[rowKey], rowId),
+        })
         const children = renderSFCNodes(input.h, column.cellNodes, cellContext)
         const contentAttrs = getSFCTableCellStyleSurfaces(row, column.index)?.cellContent.attrs
         const cellProps = column.cellNode ? evaluateSFCProps(column.cellNode.props, cellContext) : {}
