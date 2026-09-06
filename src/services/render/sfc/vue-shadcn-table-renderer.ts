@@ -26,6 +26,7 @@ import ShadcnSfcDataTable from '@/ui/table/ShadcnSfcDataTable.vue'
 /** Реализация Shadcn/TanStack составного тега SFC Table. */
 export const VueShadcnRender_Table: SFCVueRenderFunction = SFCRender_Base((input) => {
   const rows = normalizeRows(input.props.rows)
+  const rowState = input.node.props['row-state'] ?? input.node.props.rowState
   const explicitHeight = input.props.height ?? input.props.h
   const fillsAvailableHeight = explicitHeight == null || explicitHeight === ''
   const rowKey = normalizeText(input.props['row-key'] ?? input.props.rowKey, 'id')
@@ -129,7 +130,10 @@ export const VueShadcnRender_Table: SFCVueRenderFunction = SFCRender_Base((input
           rowKey: resolveLexicalRowKey(row[rowKey], rowId),
         })
         const children = renderSFCNodes(input.h, column.cellNodes, cellContext)
-        const contentAttrs = getSFCTableCellStyleSurfaces(row, column.index)?.cellContent.attrs
+        const rowStates = normalizeTableRowStates(
+          rowState ? evaluateSFCValue(rowState, cellContext) : undefined,
+        )
+        const contentAttrs = getSFCTableCellStyleSurfaces(row, column.index, rowStates)?.cellContent.attrs
         const cellProps = column.cellNode ? evaluateSFCProps(column.cellNode.props, cellContext) : {}
         const eventAttrs = column.cellNode
           ? createSFCNodeEventAttrs(column.cellNode, cellProps, cellContext)
@@ -139,6 +143,7 @@ export const VueShadcnRender_Table: SFCVueRenderFunction = SFCRender_Base((input
           ...eventAttrs,
           'part': contentAttrs?.part ?? 'cell-content',
           'data-endge-part': contentAttrs?.['data-endge-part'] ?? 'cell-content',
+          'data-endge-state': contentAttrs?.['data-endge-state'],
           'class': ['endge-sfc-table-cell-content', 'endge-shadcn-table__cell-content', contentAttrs?.class],
           'style': {
             display: 'flex',
@@ -197,6 +202,27 @@ function resolveCellNodes(columnNode: RComponentSFC_IR_ElementNode): RComponentS
 
 function resolveCellNode(columnNode: RComponentSFC_IR_ElementNode): RComponentSFC_IR_ElementNode | null {
   return columnNode.children.filter(isElementNode).find(node => node.tag === 'Cell') ?? null
+}
+
+function normalizeTableRowStates(value: unknown): string[] {
+  const result = new Set<string>()
+  const visit = (item: unknown): void => {
+    if (typeof item === 'string') {
+      item.trim().split(/\s+/).filter(Boolean).forEach(token => result.add(token))
+    }
+    else if (Array.isArray(item)) {
+      item.forEach(visit)
+    }
+    else if (item && typeof item === 'object') {
+      Object.entries(item as Record<string, unknown>).forEach(([state, enabled]) => {
+        if (enabled) {
+          result.add(state)
+        }
+      })
+    }
+  }
+  visit(value)
+  return [...result]
 }
 
 function normalizeColumnKey(

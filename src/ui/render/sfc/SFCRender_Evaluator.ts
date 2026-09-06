@@ -635,7 +635,7 @@ function evaluateDataMetaOf(node: SFCExpressionNode, context: SFCVueRenderContex
     : path[0] === '$row' && path[1] === 'data'
       ? path.slice(2)
       : null
-  if (!rowPath?.length || !context.dataScope) {
+  if (rowPath === null || !context.dataScope) {
     return undefined
   }
   return context.host.readDataMeta({
