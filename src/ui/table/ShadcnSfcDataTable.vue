@@ -60,8 +60,8 @@ import {
   watch,
 } from 'vue'
 import { resolveSFCTableMenu } from '@/services/render/sfc/resolve-sfc-table-menu'
-
 import VueShadcnFilterRenderer from '@/ui/filter/VueShadcnFilterRenderer.vue'
+
 import {
   closeShadcnMenu,
   elementMenuAnchor,
@@ -70,6 +70,7 @@ import {
 } from '@/ui/overlay/shadcn-menu-manager'
 import ShadcnInput from '@/ui/primitives/ShadcnInput.vue'
 import { SFCVueBoundaryRegistryKey } from '@/ui/render/sfc/SFCRender_BoundaryRegistry'
+import { reconcileTableComputations } from '@/ui/render/sfc/SFCRender_Computations'
 import { extendSFCVueRenderContext } from '@/ui/render/sfc/SFCRender_Context'
 import { readSFCObjectPath } from '@/ui/render/sfc/SFCRender_Evaluator'
 import {
@@ -399,7 +400,12 @@ watch(
   },
 )
 
+watch(() => [baseRows.value, tableColumns.value] as const, ([rows, columns]) => {
+  reconcileTableComputations(props.menuContext, rows, props.rowKey, columns)
+}, { flush: 'sync' })
+
 onBeforeUnmount(() => {
+  props.menuContext?.host?.releaseComputationResources(props.menuContext.consumerScope)
   if (columnSizeTimer) {
     clearTimeout(columnSizeTimer)
   }

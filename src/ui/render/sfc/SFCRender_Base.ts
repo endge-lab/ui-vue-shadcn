@@ -16,6 +16,7 @@ import { createEndgeTooltipDomId, getComponentSFCIntrinsicEventDefinitions } fro
 import { createSFCInspectionAttrs, registerSFCInspectionElement } from '@/services/render/sfc/SFCVueRenderInspection'
 import { getEndgeDOMStyleClasses } from '@/services/style/endge-dom-style'
 import { attachShadcnTooltipAttrs } from '@/ui/overlay/tooltip/shadcn-tooltip-manager'
+import { computationScopeKey, reconcileForComputations } from '@/ui/render/sfc/SFCRender_Computations'
 import { extendSFCVueRenderContext, extendSFCVueStyleContext } from '@/ui/render/sfc/SFCRender_Context'
 import {
   attachSFCEditableAttrs,
@@ -316,6 +317,7 @@ function renderForDirective(
 
   const source = evaluateSFCValue(directive.source, input.context)
   const entries = createForEntries(source)
+  reconcileForComputations(input.context, input.node.id, (entries ?? []).map(([key]) => key))
   if (!entries) {
     return null
   }
@@ -354,7 +356,7 @@ function renderForItem(
     value,
     indexValue: index,
     key,
-  }, `${input.context.consumerScope}/for:${input.node.id}:${String(key)}`)
+  }, `${input.context.consumerScope}/for:${input.node.id}:${computationScopeKey(key)}`)
   context.styleSiblings = styleSiblings
   context.styleSiblingCount = count
 

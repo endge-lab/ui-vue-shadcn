@@ -118,6 +118,7 @@ describe('отрисовка Table Vue Shadcn', () => {
       entityIdentity: 'table-test',
       runtimeState,
       getArtifact: vi.fn(() => null),
+      releaseComputationResources: vi.fn(),
     } as unknown as ComponentSFCRuntimeHost
     const mounted = await mountTable(host)
 

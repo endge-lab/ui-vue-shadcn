@@ -11,6 +11,7 @@ import {
   normalizeComponentSFCTableSortMode,
 } from '@endge/core'
 import { createSFCNodeEventAttrs, SFCRender_Base } from '@/ui/render/sfc/SFCRender_Base'
+import { computationScopeKey } from '@/ui/render/sfc/SFCRender_Computations'
 import { extendSFCVueRenderContext } from '@/ui/render/sfc/SFCRender_Context'
 import { evaluateSFCProps, evaluateSFCValue, readSFCObjectPath } from '@/ui/render/sfc/SFCRender_Evaluator'
 import { renderSFCNodes } from '@/ui/render/sfc/SFCRender_Node'
@@ -124,7 +125,7 @@ export const VueShadcnRender_Table: SFCVueRenderFunction = SFCRender_Base((input
           columnKey: column.key,
           columnMeta: column.metadata ?? {},
           value,
-        }, tableContext.iteration, `${tableContext.consumerScope}/row:${rowId}/column:${column.key}`, {
+        }, tableContext.iteration, `${tableContext.consumerScope}/row:${computationScopeKey(rowId)}/column:${computationScopeKey(column.key)}`, {
           kind: 'table-row',
           boundaryId: input.node.id,
           rowKey: resolveLexicalRowKey(row[rowKey], rowId),

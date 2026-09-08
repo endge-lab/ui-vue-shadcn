@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { SFCVueRenderAdapterProps } from '@/services/render/sfc/sfc-shadcn-render.type'
 import { Endge } from '@endge/core'
-import { computed, defineComponent, Fragment, h, inject, onScopeDispose, ref } from 'vue'
+import { computed, defineComponent, Fragment, getCurrentInstance, h, inject, onScopeDispose, ref, watch } from 'vue'
 import { registerSFCInspectionRoot } from '@/services/render/sfc/SFCVueRenderInspection'
 import { ShadcnTooltipManagerKey } from '@/ui/overlay/tooltip/shadcn-tooltip-manager'
 import { createSFCVueRenderContext } from '@/ui/render/sfc/SFCRender_Context'
@@ -9,6 +9,11 @@ import { renderSFCNodes } from '@/ui/render/sfc/SFCRender_Node'
 
 const props = defineProps<SFCVueRenderAdapterProps>()
 const adapterVersion = ref(0)
+const consumerScope = `renderer:${getCurrentInstance()!.uid}`
+watch(() => [props.host, props.ir] as const, (_next, previous) => {
+  previous?.[0]?.releaseComputationResources(consumerScope)
+}, { flush: 'sync' })
+onScopeDispose(() => props.host?.releaseComputationResources(consumerScope))
 const tooltipManager = inject(ShadcnTooltipManagerKey, null)
 
 const unsubscribeUIRegistry = Endge.uiRegistry.subscribe(() => {
@@ -22,7 +27,7 @@ const context = computed(() => createSFCVueRenderContext(
   props.host ?? null,
   props.ir,
   undefined,
-  undefined,
+  consumerScope,
   undefined,
   undefined,
   props.inspection ?? null,

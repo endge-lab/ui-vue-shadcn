@@ -12,11 +12,13 @@ import { registerSFCInspectionDefinitionTree, registerSFCInspectionValueNode } f
 import { requireSFCAdapterRenderer } from '@/ui/render/sfc/SFCRender_Adapter'
 import { resolveSFCConditionState, SFCRender_Base } from '@/ui/render/sfc/SFCRender_Base'
 import { SFCRender_Component } from '@/ui/render/sfc/SFCRender_Component'
+import { releaseNodeComputations } from '@/ui/render/sfc/SFCRender_Computations'
 import { evaluateSFCProps, evaluateSFCValue } from '@/ui/render/sfc/SFCRender_Evaluator'
 
 const SFCRender_Variant: SFCVueRenderFunction = (input) => {
   const props = evaluateSFCProps(input.node.props, input.context)
   if (String(props.name ?? '') !== input.context.variant) {
+    releaseNodeComputations(input.context, input.node)
     return null
   }
   const children = input.renderChildren(input.context)
@@ -83,6 +85,7 @@ export function renderSFCNodes(
     if (condition.shouldRender) {
       appendRenderedNode(result, renderSFCElement(h, node, context))
     }
+    else { releaseNodeComputations(context, node) }
 
     chainActive = condition.startsChain && !condition.closesChain
     previousMatched = condition.startsChain ? condition.matchedChain : false
