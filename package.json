@@ -1,7 +1,7 @@
 {
   "name": "@endge/ui-vue-shadcn",
   "type": "module",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "private": false,
   "license": "Apache-2.0",
   "exports": {
@@ -28,9 +28,9 @@
     "lint-fix": "eslint . --fix --cache"
   },
   "peerDependencies": {
-    "@endge/core": "^8.1.0",
-    "@endge/raph": "^3.2.0",
-    "@endge/utils": "^0.26.0",
+    "@endge/core": "^8.0.0",
+    "@endge/raph": "^3.3.0",
+    "@endge/utils": "^0.26.1",
     "vue": "^3.5.0"
   },
   "dependencies": {
@@ -42,9 +42,9 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "9.3.0",
-    "@endge/core": "^8.1.0",
-    "@endge/raph": "^3.2.0",
-    "@endge/utils": "^0.26.0",
+    "@endge/core": "^8.0.0",
+    "@endge/raph": "^3.3.0",
+    "@endge/utils": "^0.26.1",
     "@types/sortablejs": "^1.15.9",
     "@vitejs/plugin-vue": "^6.0.1",
     "@vue/language-core": "^3.3.11",
