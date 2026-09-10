@@ -1,4 +1,4 @@
-import type { ComponentSFCRuntimeHost, RuntimeBoundaryPatch, RuntimeHostUpdateContext } from '@endge/core'
+import type { ComponentSFCRenderPort, RuntimeBoundaryPatch, RuntimeHostUpdateContext } from '@endge/core'
 import type {
   SFCVueRuntimeBridgeBoundaryPatch,
   SFCVueRuntimeBridgeUpdate,
@@ -12,7 +12,7 @@ import { Raph } from '@endge/raph'
  * Bridge материализует входные данные в плоский props snapshot.
  */
 export class SFCVueRuntimeBridge {
-  private readonly _host: ComponentSFCRuntimeHost
+  private readonly _host: ComponentSFCRenderPort
   private readonly _onUpdate: SFCVueRuntimeBridgeUpdate
   private readonly _onBoundaryPatch: SFCVueRuntimeBridgeBoundaryPatch | null
   private _input: SFCVueRuntimeInputSource
@@ -47,7 +47,7 @@ export class SFCVueRuntimeBridge {
   }
 
   constructor(input: {
-    host: ComponentSFCRuntimeHost
+    host: ComponentSFCRenderPort
     input: SFCVueRuntimeInputSource
     onUpdate: SFCVueRuntimeBridgeUpdate
     onBoundaryPatch?: SFCVueRuntimeBridgeBoundaryPatch | null
@@ -108,7 +108,7 @@ export class SFCVueRuntimeBridge {
   /**
    * Возвращает runtime-host, для которого создан bridge.
    */
-  public get host(): ComponentSFCRuntimeHost {
+  public get host(): ComponentSFCRenderPort {
     return this._host
   }
 

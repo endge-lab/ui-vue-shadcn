@@ -1,6 +1,7 @@
-import type { FilterViewRuntimeHost } from '@endge/core'
+import type { FilterViewRenderModel, FilterViewRuntimeHost } from '@endge/core'
 
 export interface VueShadcnFilterRendererProps {
-  runtime: FilterViewRuntimeHost
+  runtime?: FilterViewRuntimeHost | null
+  model?: FilterViewRenderModel
   readonly?: boolean
 }

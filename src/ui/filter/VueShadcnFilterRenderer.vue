@@ -8,7 +8,7 @@ import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import VueShadcnFilterField from '@/ui/filter/VueShadcnFilterField.vue'
 
 const props = defineProps<VueShadcnFilterRendererProps>()
-const model = shallowRef<FilterViewRenderModel>(props.runtime.getRenderModel())
+const model = shallowRef<FilterViewRenderModel>(props.model ?? props.runtime?.getRenderModel() ?? { implementation: { kind: 'generated' }, props: {}, fields: [] })
 const adapterVersion = ref(0)
 const fields = computed(() => model.value.fields.filter(field => field.type !== 'Object'))
 const builtinProps = computed<FilterViewBuiltinProps>(() => {
@@ -17,34 +17,35 @@ const builtinProps = computed<FilterViewBuiltinProps>(() => {
 })
 const showLabels = computed(() => builtinProps.value.showLabels !== false)
 function refresh() {
-  model.value = props.runtime.getRenderModel()
+  model.value = props.model ?? props.runtime?.getRenderModel() ?? { implementation: { kind: 'generated' }, props: {}, fields: [] }
 }
 const unsubscribeAdapter = Endge.uiRegistry.subscribe(() => {
   adapterVersion.value += 1
 })
 
 function bind(runtime: VueShadcnFilterRendererProps['runtime']): void {
-  runtime.on('render:change', refresh)
+  runtime?.on('render:change', refresh)
 }
 
 function unbind(runtime: VueShadcnFilterRendererProps['runtime']): void {
-  runtime.off('render:change', refresh)
+  runtime?.off('render:change', refresh)
 }
 
 watch(() => props.runtime, (next, previous) => {
   if (previous) {
     unbind(previous)
-    model.value = next.getRenderModel()
   }
   bind(next)
+  refresh()
 }, { immediate: true })
+watch(() => props.model, refresh)
 onBeforeUnmount(() => {
   unbind(props.runtime)
   unsubscribeAdapter()
 })
 
 async function updateField(key: string, value: unknown): Promise<void> {
-  if (props.readonly) {
+  if (props.readonly || !props.runtime) {
     return
   }
   await props.runtime.setValue(key, value)

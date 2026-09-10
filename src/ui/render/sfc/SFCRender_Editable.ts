@@ -63,7 +63,7 @@ export function attachSFCEditableAttrs(
   props: Record<string, unknown>,
   context: SFCVueRenderContext,
 ): void {
-  if (!node.editable || !context.host) {
+  if (!node.editable || !context.host || context.host.readonly) {
     return
   }
   const key = editableConsumerKey(node, context)

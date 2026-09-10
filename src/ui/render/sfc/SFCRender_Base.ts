@@ -146,6 +146,10 @@ function renderOnce(
   renderFn: SFCVueRenderFunction,
 ): SFCVueRenderResult {
   const props = evaluateSFCProps(input.node.props, input.context)
+  if (input.context.host?.readonly && ['Input', 'Textarea', 'Select', 'Checkbox'].includes(input.node.tag)) {
+    props.readonly = true
+    props.disabled = true
+  }
   const styleNode = createStyleNode(input.node, props, input.context)
   input.context.styleSiblings.push(styleNode)
   const generatedClasses = getEndgeDOMStyleClasses(input.context.styleArtifacts, styleNode)
